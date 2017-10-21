@@ -1,56 +1,61 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Xml.Schema;
 
 namespace Assets.Logic.World
 {
     public static class Map
     {
+        public const int Length = 100;
+        public const int Width = 100;
+        public const int Height = 50;
 
         public static int Score = 0;
+        public static float Gravity = 0.1f;
 
-        private static readonly Voxel[,,] Voxels = new Voxel[25,10,25];
+        private static readonly Voxel[,,] Voxels = new Voxel[Width, Height, Length];
         private static readonly List<Block>[] RegisteredBlocks = new List<Block>[100];
         public static int TotalRegisteredBlocks;
         public static int TotalInfectedBlocks;
 
         private static int _maxInfectionLevel;
 
-        public static Voxel StartingVexel;
+        public static Voxel StartingVoxel;
 
         public static Voxel GetVoxel(Vector3 pos)
         {
-            var x = Mathf.FloorToInt(pos.x);
-            var y = Mathf.FloorToInt(pos.y);
-            var z = Mathf.FloorToInt(pos.z);
+            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x,0, Width));
+            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Height));
+            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Length));
 
-            if (0 <= x && x <= 25 &&
-                0 <= y && y <= 10 &&
-                0 <= z && z <= 25)
-            {
-                var rtn = Voxels[x, y, z];
+            var rtn = Voxels[x, y, z];
 
-                if (rtn != null) return rtn;
+            if (rtn != null) return rtn;
 
-                SetVoxel(pos,new Voxel {Position = new Vector3(x,y,z)});
-                rtn = Voxels[x, y, z];
+            SetVoxel(pos,new Voxel {Position = new Vector3(x,y,z)});
+            rtn = Voxels[x, y, z];
 
-                return rtn;
-            }
-
-            return null;
+            return rtn;
         }
         public static void SetVoxel(Vector3 pos, Voxel vox)
         {
-            var x = Mathf.FloorToInt(pos.x);
-            var y = Mathf.FloorToInt(pos.y);
-            var z = Mathf.FloorToInt(pos.z);
+            var x = Mathf.RoundToInt(pos.x);
+            var y = Mathf.RoundToInt(pos.y);
+            var z = Mathf.RoundToInt(pos.z);
 
-            if (0 <= x && x <= 25 &&
-                0 <= y && y <= 10 &&
-                0 <= z && z <= 25)
+            if (0 <= x && x <= Width &&
+                0 <= y && y <= Height &&
+                0 <= z && z <= Length)
                 Voxels[x, y, z] = vox;
         }
+        public static bool InsideMap(Vector3 pos)
+        {
+            return 0 < pos.x && pos.x < Width
+                   && 0 < pos.y && pos.y < Height
+                   && 0 < pos.z && pos.z < Length;
+        }
+
 
         public static void RegisterBlock(Block block)
         {
