@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Assets.Logic.World
 {
-    public static class World
+    public static class Map
     {
 
         public static int Score = 0;
@@ -13,16 +13,27 @@ namespace Assets.Logic.World
         private static readonly List<Block>[] RegisteredBlocks = new List<Block>[100];
         private static int _maxInfectionLevel = 0;
 
+        public static Voxel StartingVexel;
+
         public static Voxel GetVoxel(Vector3 pos)
         {
             var x = Mathf.FloorToInt(pos.x);
             var y = Mathf.FloorToInt(pos.y);
             var z = Mathf.FloorToInt(pos.z);
 
-            if (0 < x && x < 25 &&
-                0 < y && y < 10 &&
-                0 < z && z < 25)
-                return Voxels[x, y, z];
+            if (0 <= x && x <= 25 &&
+                0 <= y && y <= 10 &&
+                0 <= z && z <= 25)
+            {
+                var rtn = Voxels[x, y, z];
+
+                if (rtn != null) return rtn;
+
+                SetVoxel(pos,new Voxel {Position = new Vector3(x,y,z)});
+                rtn = Voxels[x, y, z];
+
+                return rtn;
+            }
 
             return null;
         }
@@ -32,15 +43,21 @@ namespace Assets.Logic.World
             var y = Mathf.FloorToInt(pos.y);
             var z = Mathf.FloorToInt(pos.z);
 
-            if (0 < x && x < 25 &&
-                0 < y && y < 10 &&
-                0 < z && z < 25)
+            if (0 <= x && x <= 25 &&
+                0 <= y && y <= 10 &&
+                0 <= z && z <= 25)
                 Voxels[x, y, z] = vox;
         }
 
         public static void RegisterBlock(Block block)
         {
-            RegisteredBlocks[block.InfectionLevel].Add(block);
+            var blocks = RegisteredBlocks[block.InfectionLevel];
+            if (blocks == null)
+            {
+                RegisteredBlocks[block.InfectionLevel] = new List<Block>();
+                blocks = RegisteredBlocks[block.InfectionLevel];
+            }
+            blocks.Add(block);
         }
 
         public static void InfectBlocksBelowLevel(int blockLevel)
@@ -48,10 +65,18 @@ namespace Assets.Logic.World
             var numBlocks = 0;
             for (var i = _maxInfectionLevel; i < blockLevel; i++)
             {
-                foreach (var block in RegisteredBlocks[i])
+                var blocks = RegisteredBlocks[i];
+                if (blocks == null)
                 {
+                    RegisteredBlocks[i] = new List<Block>();
+                    continue;
+                }
+
+                foreach (var block in blocks)
+                {
+                    if (!block.Infect()) continue;
+
                     numBlocks++;
-                    block.Infect();
                     Score += numBlocks;
                 }
             }

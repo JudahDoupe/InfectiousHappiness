@@ -81,11 +81,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Logic\Character.cs" />
-    <Compile Include="Assets\Logic\Commands\CommandReader.cs" />
-    <Compile Include="Assets\Logic\Generators\GeneratePath.cs" />
+    <Compile Include="Assets\Logic\FollowCamera.cs" />
+    <Compile Include="Assets\Logic\UI\CommandLine.cs" />
+    <Compile Include="Assets\Logic\UI\Score.cs" />
     <Compile Include="Assets\Logic\World\Block.cs" />
+    <Compile Include="Assets\Logic\World\Map.cs" />
     <Compile Include="Assets\Logic\World\Voxel.cs" />
-    <Compile Include="Assets\Logic\World\World.cs" />
+    <Compile Include="Assets\Logic\WorldGenerator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

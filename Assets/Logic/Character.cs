@@ -6,31 +6,36 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
-    public Block StandingBlock;
+    public Voxel Voxel;
+    public Vector3 Direction = Vector3.forward;
     public float Speed = 0.25f;
     public bool Stunned;
-    public Vector3 Direction = Vector3.forward;
+
+    public IEnumerator MoveToVoxel(Voxel vox)
+    {
+        Stunned = true;
+        Voxel = vox;
+
+        var block = Map.GetVoxel(vox.Position + Vector3.down).Block;
+        if (block)
+            block.Infect();
+
+        while (Vector3.Distance(transform.position, vox.Position) > 0.01)
+        {
+            transform.position = Vector3.Lerp(transform.position, vox.Position, Speed);
+            yield return new WaitForFixedUpdate();
+        }
+
+        transform.position = vox.Position;
+        Stunned = false;
+    }
 
     public void Forward()
     {
-        Block block = StandingBlock.GetNeighbor(Direction);
-        if (!Stunned && block != null)
-        {
-            var pos = block.Top;
-            StandingBlock = block;
-            StartCoroutine(MoveForward(pos));
-        }
-    }
-    private IEnumerator MoveForward(Vector3 pos)
-    {
-        Stunned = true;
-        while ( Vector3.Distance(transform.position,pos) > 0.01)
-        {
-            transform.position = Vector3.Lerp(transform.position,pos,Speed);
-            yield return new WaitForFixedUpdate();
-        }
-        transform.position = pos;
-        Stunned = false;
+        if (Stunned) return;
+
+        var vox = Map.GetVoxel(Voxel.Position + transform.forward);
+        StartCoroutine(MoveToVoxel(vox));
     }
 
     public void Right()
