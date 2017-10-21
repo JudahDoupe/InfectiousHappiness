@@ -40,7 +40,6 @@ namespace Assets.Logic
 
             var intersection = currentVox;
 
-            BlockPrefab = SecondaryBlockPrefab;
             //branch right
             currentVox = PlacePath(2, intersection.Position + _r, _r);
             currentVox = PlaceGate(currentVox.Position + _r, Vector3.right);
@@ -53,8 +52,7 @@ namespace Assets.Logic
             currentVox = PlaceGate(currentVox.Position + _l, Vector3.right);
 
             //Switch sides
-
-
+            BlockPrefab = SecondaryBlockPrefab;
 
             Character.StartCoroutine("MoveToVoxel", Map.StartingVoxel);
         }
@@ -106,16 +104,14 @@ namespace Assets.Logic
             return Map.GetVoxel(floor.transform.position);
         }
 
-        Block PlaceBlock(Voxel vox, GameObject block, int? infectionLevel = null)
+        Block PlaceBlock(Voxel vox, GameObject block, int infectionLevel = -1)
         {
             var obj = Instantiate(block, vox.Position, Quaternion.identity);
             obj.transform.parent = gameObject.transform;
             vox.Block = obj.GetComponent<Block>();
 
-            if (infectionLevel == null) return vox.Block;
-
+            vox.Block.InfectionLevel = infectionLevel;
             Map.RegisterBlock(vox.Block);
-            vox.Block.InfectionLevel = infectionLevel.Value;
 
             return vox.Block;
         }

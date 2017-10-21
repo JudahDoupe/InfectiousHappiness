@@ -87,9 +87,6 @@ namespace Assets.Logic.Commands
                 case "push":
                     Character.Push();
                     return;
-                case "pull":
-                    Character.Pull();
-                    return;
                 case "punch":
                     Character.Punch();
                     return;

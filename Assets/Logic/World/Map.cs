@@ -19,7 +19,7 @@ namespace Assets.Logic.World
         public static int TotalRegisteredBlocks;
         public static int TotalInfectedBlocks;
 
-        private static int _maxInfectionLevel;
+        private static int _infectionLevel = 0;
 
         public static Voxel StartingVoxel;
 
@@ -59,6 +59,7 @@ namespace Assets.Logic.World
 
         public static void RegisterBlock(Block block)
         {
+            if (block.InfectionLevel == -1) return;
             var blocks = RegisteredBlocks[block.InfectionLevel];
             if (blocks == null)
             {
@@ -72,26 +73,28 @@ namespace Assets.Logic.World
         public static void InfectBlocksBelowLevel(int blockLevel)
         {
             var numBlocks = 0;
-            for (var i = _maxInfectionLevel; i < blockLevel; i++)
+            while(_infectionLevel < blockLevel)
             {
-                var blocks = RegisteredBlocks[i];
+                var blocks = RegisteredBlocks[_infectionLevel];
                 if (blocks == null)
                 {
-                    RegisteredBlocks[i] = new List<Block>();
-                    continue;
+                    RegisteredBlocks[_infectionLevel] = new List<Block>();
+                    blocks = RegisteredBlocks[_infectionLevel];
                 }
 
                 foreach (var block in blocks)
                 {
-                    if (!block.Infect()) continue;
-
-                    numBlocks++;
-                    TotalInfectedBlocks++;
-                    Score += numBlocks;
+                    Debug.Log(_infectionLevel+": "+block);
+                    if (!block.IsInfected)
+                    {
+                        block.Infect();
+                        numBlocks++;
+                        Score += numBlocks;
+                        TotalInfectedBlocks++;
+                    }
                 }
+                _infectionLevel++;
             }
-            if (blockLevel > _maxInfectionLevel)
-                _maxInfectionLevel = blockLevel;
         }
     }
 }

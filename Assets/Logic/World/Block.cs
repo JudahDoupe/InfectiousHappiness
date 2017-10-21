@@ -10,11 +10,6 @@ namespace Assets.Logic.World
 
         public Material InfectedMaterial;
 
-        public Vector3 Top
-        {
-            get { return transform.position + transform.up; }
-        }
-
         public bool Infect()
         {
             if (IsInfected) return false;

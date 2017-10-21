@@ -19,7 +19,9 @@ public class Character : MonoBehaviour
 
         var block = Map.GetVoxel(vox.Position + Vector3.down).Block;
         if (block)
+        {
             block.Infect();
+        }
 
         while (Vector3.Distance(transform.position, vox.Position) > 0.01)
         {
@@ -211,10 +213,6 @@ public class Character : MonoBehaviour
     //Block Commands
 
     public void Push()
-    {
-        if (Stunned) return;
-    }
-    public void Pull()
     {
         if (Stunned) return;
     }
