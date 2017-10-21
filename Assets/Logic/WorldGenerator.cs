@@ -59,9 +59,10 @@ namespace Assets.Logic
             //branch left
             currentVox = PlacePath(2, intersection.Position + _l, _l, intersectionLevel);
             currentVox = PlaceGate(currentVox.Position + _l, Vector3.right, intersectionLevel);
-            currentVox = PlacePath(5, currentVox.Position + _l, _b, intersectionLevel);
+            PlacePath(2, currentVox.Position + _l, _l);
+            currentVox = PlacePath(5, currentVox.Position + _l, _b);
             var gateLevel = Map.TotalRegisteredBlocks + 1;
-            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 2 + _u), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 4 + _u + _r), MovableBlock);
             currentVox = PlacePath(2, currentVox.Position + _f + _l, _l);
             
             // intersection 2
@@ -90,7 +91,7 @@ namespace Assets.Logic
 
             //Puzzle 3
             intersection = currentVox;
-            intersectionLevel = Map.TotalRegisteredBlocks + 120;
+            intersectionLevel = Map.TotalRegisteredBlocks + 105;
             PlacePath(2, intersection.Position + _u, _u, intersectionLevel);
             PlacePath(3, intersection.Position + _u + _f, _u, intersectionLevel);
             PlacePath(1, intersection.Position + _u + _f + _l, _u, intersectionLevel);
