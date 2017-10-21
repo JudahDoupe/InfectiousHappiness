@@ -83,7 +83,6 @@
     <Compile Include="Assets\Logic\UI\CommandLine.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
     <Compile Include="Assets\Logic\World\Block.cs" />
-    <Compile Include="Assets\Logic\World\Bouncy.cs" />
     <Compile Include="Assets\Logic\World\Map.cs" />
     <Compile Include="Assets\Logic\World\Movable.cs" />
     <Compile Include="Assets\Logic\World\Voxel.cs" />

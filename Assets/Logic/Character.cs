@@ -10,7 +10,7 @@ public class Character : Movable
 {
 
     public static Character Instance;
-    private Block _carrying;
+    public Block _carrying;
 
     void Awake()
     {
@@ -45,8 +45,6 @@ public class Character : Movable
     {
         if (Stunned) return;
         transform.Rotate(new Vector3(0, -90, 0));
-
-        Debug.Log(transform.rotation);
     }
 
     //Special Commands

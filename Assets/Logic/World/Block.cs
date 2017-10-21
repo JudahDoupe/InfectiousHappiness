@@ -7,6 +7,7 @@ namespace Assets.Logic.World
     {
         public int InfectionLevel;
         public bool IsInfected;
+        public bool IsBouncy;
 
         public Material InfectedMaterial;
 

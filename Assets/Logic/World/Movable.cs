@@ -10,7 +10,7 @@ public class Movable : MonoBehaviour {
     public Voxel StartingVoxel;
     public float Speed = 0.25f;
     public bool Stunned;
-    public bool Infections = false;
+    public bool Infectious = false;
     public bool IsCarried;
 
     void Start()
@@ -21,14 +21,13 @@ public class Movable : MonoBehaviour {
 
     public IEnumerator MoveToVoxel(Voxel vox)
     {
-        Stunned = true;
-        Voxel.Block = null;
-        Voxel = vox;
 
-        var floor = Map.GetVoxel(vox.Position + Vector3.down).Block;
-        if (floor && Infections)
+        StartMove();
+
+        var floor = Map.GetVoxel(vox.Position - transform.up);
+        if (floor.Block && Infectious)
         {
-            floor.Infect();
+            floor.Block.Infect();
         }
 
         while (Vector3.Distance(transform.position, vox.Position) > 0.01)
@@ -37,46 +36,30 @@ public class Movable : MonoBehaviour {
             yield return new WaitForFixedUpdate();
         }
 
-        transform.position = vox.Position;
-        Voxel.Block = transform.GetComponent<Block>();
-
-        if (floor == null)
-            StartCoroutine(Fall());
-
-
-        Stunned = false;
+        Land(floor);
     }
 
-    public IEnumerator JumpOnVoxel(Voxel vox)
+    public IEnumerator JumpOnVoxel(Voxel floor)
     {
-        Stunned = true;
-        Voxel.Block = null;
-        Voxel = Map.GetVoxel(vox.Position + Vector3.up);
-        var height = Vector3.Distance(transform.position, vox.Position);
+        StartMove();
 
-        var floor = Map.GetVoxel(vox.Position).Block;
-        if (floor && Infections)
-            floor.Infect();
+        var target = Map.GetVoxel(floor.Position + Vector3.up);
+        var height = Vector3.Distance(transform.position, floor.Position);
+
+        if (floor.Block && Infectious)
+            floor.Block.Infect();
 
         var frames = Speed * 60;
         for (var t = 0; t < frames; t++)
         {
             var vOffset = (1 - t / frames) * height;
-            transform.position = Vector3.Lerp(transform.position, Voxel.Position + transform.up * vOffset, t / frames);
+            transform.position = Vector3.Lerp(transform.position, target.Position + transform.up * vOffset, t / frames);
 
             yield return new WaitForFixedUpdate();
 
         }
 
-        transform.position = Voxel.Position;
-
-        if (floor == null)
-            StartCoroutine(Fall());
-
-        Map.GetVoxel(transform.position).Block = transform.GetComponent<Block>();
-
-        Stunned = false;
-
+        Land(floor);
     }
 
     public IEnumerator Fall()
@@ -86,39 +69,71 @@ public class Movable : MonoBehaviour {
         Stunned = true;
         var velocity = 0.0f;
 
-        var block = Map.GetVoxel(Voxel.Position - transform.up).Block;
+        var potentialFloor = Map.GetVoxel(transform.position - transform.up);
 
-        while (block == null && Map.InsideMap(transform.position))
+        while (potentialFloor.Block == null && Map.InsideMap(transform.position))
         {
             velocity += Map.Gravity;
             transform.Translate(transform.up * -velocity);
-            Voxel = Map.GetVoxel(transform.position);
-            block = Map.GetVoxel(Voxel.Position - transform.up).Block;
+            potentialFloor = Map.GetVoxel(transform.position - transform.up);
             yield return new WaitForFixedUpdate();
         }
 
-        if (block)
+        if (potentialFloor.Block)
         {
-            if(Infections) block.Infect();
+            if(Infectious) potentialFloor.Block.Infect();
 
-            var dist = Vector3.Distance(transform.position, Voxel.Position);
-            var lastDist = dist;
-            while (lastDist <= dist)
-            {
-                velocity += Map.Gravity;
-                transform.Translate(transform.up * -velocity);
-                lastDist = dist;
-                dist = Vector3.Distance(transform.position, Voxel.Position);
-                yield return new WaitForFixedUpdate();
-            }
-            transform.position = Voxel.Position;
+            Land(potentialFloor);
+
         }
         else //died
         {
             StartCoroutine(MoveToVoxel(StartingVoxel));
+            var character = transform.GetComponent<Character>();
+            if (character)
+            {
+                character.Drop();
+            }
         }
 
         Stunned = false;
+    }
+
+    private void StartMove()
+    {
+        Stunned = true;
+        Voxel.Block = null;
+    }
+    private void Land(Voxel floor)
+    {
+
+        if (Character.Instance.Voxel == floor)
+        {
+            Character.Instance._carrying = GetComponent<Block>();
+            RecieveLift();
+        }
+        else if (floor.Block == null)
+        {
+            StartCoroutine(Fall());
+        }
+        else if (floor.Block.IsBouncy)
+        {
+            var v = Voxel.Position - floor.Position;
+            var target = Map.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, transform.up) * transform.up);
+
+            if (target.Block == null)
+                StartCoroutine(JumpOnVoxel(Map.GetVoxel(target.Position - transform.up)));
+            else
+                StartCoroutine(JumpOnVoxel(Map.GetVoxel(Voxel.Position - transform.up)));
+        }
+        else
+        {
+            Voxel = Map.GetVoxel(floor.Position + transform.up);
+            transform.position = Voxel.Position;
+            Voxel.Block = transform.GetComponent<Block>();
+            Stunned = false;
+        }
+
     }
 
     public void RecievePush()
@@ -171,13 +186,10 @@ public class Movable : MonoBehaviour {
     }
     public bool RecieveDrop()
     {
-        if (Stunned || !IsCarried) return false;
+        if (!IsCarried) return false;
 
         var character = Character.Instance;
 
-        IsCarried = false;
-        Voxel = Map.GetVoxel(transform.position);
-        Voxel.Block = transform.GetComponent<Block>();
 
         var target = Map.GetVoxel(character.Voxel.Position + character.transform.forward);
         var air = new List<Voxel>
@@ -186,10 +198,14 @@ public class Movable : MonoBehaviour {
         };
 
         if (target.Block == null && air.All(v => v.Block == null))
+        {
+            IsCarried = false;
+            Voxel = Map.GetVoxel(transform.position);
             StartCoroutine(JumpOnVoxel(Map.GetVoxel(target.Position - character.transform.up)));
+            transform.parent = null;
+            return true;
+        }
+        return false;
 
-        transform.parent = null;
-
-        return true;
     }
 }

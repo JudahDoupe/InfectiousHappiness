@@ -12,10 +12,10 @@ namespace Assets.Logic.World
         public const int Height = 50;
 
         public static int Score = 0;
-        public static float Gravity = 0.1f;
+        public static float Gravity = 0.01f;
 
         private static readonly Voxel[,,] Voxels = new Voxel[Width, Height, Length];
-        private static readonly List<Block>[] RegisteredBlocks = new List<Block>[100];
+        private static readonly Dictionary<int,List<Block>> RegisteredBlocks = new Dictionary<int, List<Block>>();
         public static int TotalRegisteredBlocks;
         public static int TotalInfectedBlocks;
 
@@ -60,12 +60,14 @@ namespace Assets.Logic.World
         public static void RegisterBlock(Block block)
         {
             if (block.InfectionLevel == -1) return;
-            var blocks = RegisteredBlocks[block.InfectionLevel];
-            if (blocks == null)
+
+            if (!RegisteredBlocks.ContainsKey(block.InfectionLevel))
             {
-                RegisteredBlocks[block.InfectionLevel] = new List<Block>();
-                blocks = RegisteredBlocks[block.InfectionLevel];
+                RegisteredBlocks.Add(block.InfectionLevel, new List<Block>());
             }
+
+            var blocks = RegisteredBlocks[block.InfectionLevel];
+
             blocks.Add(block);
             TotalRegisteredBlocks++;
         }
@@ -75,22 +77,20 @@ namespace Assets.Logic.World
             var numBlocks = 0;
             while(_infectionLevel < blockLevel)
             {
-                var blocks = RegisteredBlocks[_infectionLevel];
-                if (blocks == null)
+                if (!RegisteredBlocks.ContainsKey(_infectionLevel))
                 {
-                    RegisteredBlocks[_infectionLevel] = new List<Block>();
-                    blocks = RegisteredBlocks[_infectionLevel];
+                    RegisteredBlocks.Add(_infectionLevel, new List<Block>());
                 }
 
-                foreach (var block in blocks)
+                foreach (var block in RegisteredBlocks[_infectionLevel])
                 {
                     if (block.IsInfected) continue;
 
                     block.Infect();
                     numBlocks++;
-                    Score += numBlocks;
                     TotalInfectedBlocks++;
                 }
+                Score += Mathf.RoundToInt(numBlocks * 0.25f);
                 _infectionLevel++;
             }
         }
