@@ -8,6 +8,8 @@ namespace Assets.Logic
         public GameObject BlockPrefab;
         public GameObject SecondaryBlockPrefab;
         public GameObject BrainBlock;
+        public GameObject MovableBlock;
+        public GameObject BounceBlock;
         public Character Character;
 
         private readonly Vector3 _r = Vector3.right;
@@ -20,6 +22,7 @@ namespace Assets.Logic
         void Start () {
 
             Map.StartingVoxel = Map.GetVoxel(new Vector3(75, 10, 5));
+            Character.Instance.StartingVoxel = Map.StartingVoxel;
 
             //starting platform
             var currentVox = PlacePath(1, Map.StartingVoxel.Position + _d, _f);
@@ -34,8 +37,7 @@ namespace Assets.Logic
             //hallway
             currentVox = PlacePath(2, currentVox.Position + _f, _r);
             currentVox = PlacePath(2, currentVox.Position + _f + _l, _u);
-            currentVox = PlacePath(2, currentVox.Position + _f + _d, _f);
-            currentVox = PlacePath(2, currentVox.Position + _l, _l);
+            currentVox = PlacePath(3, currentVox.Position + _f + _d, _l);
             currentVox = PlacePath(3, currentVox.Position + _f, _f);
 
             var intersection = currentVox;
@@ -45,7 +47,10 @@ namespace Assets.Logic
             currentVox = PlaceGate(currentVox.Position + _r, Vector3.right);
             currentVox = PlacePath(3, currentVox.Position + _r, _r);
             currentVox = PlacePath(2, currentVox.Position + _f, _f);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 2 + _r * 3 + _u), BlockPrefab, Map.TotalRegisteredBlocks +1);
             currentVox = PlacePlatform(6, 5, currentVox.Position + _f + _l);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l), BounceBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l * 3 + _u), MovableBlock);
 
             //branch left
             currentVox = PlacePath(2, intersection.Position + _l, _l);
@@ -54,7 +59,9 @@ namespace Assets.Logic
             //Switch sides
             BlockPrefab = SecondaryBlockPrefab;
 
-            Character.StartCoroutine("MoveToVoxel", Map.StartingVoxel);
+
+
+
         }
 
         Voxel PlacePlatform(int width, int length, Vector3 startPosition)

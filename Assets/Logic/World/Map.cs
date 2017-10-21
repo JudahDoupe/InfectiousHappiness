@@ -84,14 +84,12 @@ namespace Assets.Logic.World
 
                 foreach (var block in blocks)
                 {
-                    Debug.Log(_infectionLevel+": "+block);
-                    if (!block.IsInfected)
-                    {
-                        block.Infect();
-                        numBlocks++;
-                        Score += numBlocks;
-                        TotalInfectedBlocks++;
-                    }
+                    if (block.IsInfected) continue;
+
+                    block.Infect();
+                    numBlocks++;
+                    Score += numBlocks;
+                    TotalInfectedBlocks++;
                 }
                 _infectionLevel++;
             }
