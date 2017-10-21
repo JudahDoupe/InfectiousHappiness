@@ -2,12 +2,12 @@
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Assets.Commands
+namespace Assets.Logic.Commands
 {
-    public class Reader : MonoBehaviour
+    public class CommandReader : MonoBehaviour
     {
         public InputField CommandLine;
-        public Command LastCommand;
+        public string LastCommand;
         public Character character;
 	
         void Update () {
@@ -19,21 +19,21 @@ namespace Assets.Commands
 
             if (Input.GetButtonDown("Submit"))
             {
-                var command = ParseWord(CommandLine.text);
-                if (command != Command.Unknown)
+                var command = CommandLine.text;
+
+                if (command == "")
                 {
-                    LastCommand = command;
-                    Debug.Log(command);
+                    ExecuteCommand(LastCommand);
                 }
                 else
                 {
-                    Debug.Log("Command Not Known");
+                    ExecuteCommand(command);
+                    LastCommand = command;
                 }
-                CommandLine.text = "";
             }
         }
 
-        Command ParseWord(string input)
+        void ExecuteCommand(string input)
         {
             input = input.ToLower();
 
@@ -42,13 +42,17 @@ namespace Assets.Commands
                 case "f":
                 case "forward":
                     character.Forward();
-                    return Command.Forward;
+                    return;
+                case "r":
                 case "right":
-                    return Command.Right;
+                    character.Right();
+                    return;
+                case "l":
                 case "left":
-                    return Command.Left;
+                    character.Left();
+                    return;
                 default:
-                    return Command.Unknown;
+                    return;
             }
         }
 

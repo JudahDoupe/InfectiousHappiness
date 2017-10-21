@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.3p2</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -78,13 +80,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Logic\Blocks\Block.cs" />
     <Compile Include="Assets\Logic\Character.cs" />
-    <Compile Include="Assets\Logic\Commands\Command.cs" />
-    <Compile Include="Assets\Logic\Commands\Reader.cs" />
-    <Compile Include="Assets\Logic\Commands\Spreader.cs" />
+    <Compile Include="Assets\Logic\Commands\CommandReader.cs" />
     <Compile Include="Assets\Logic\Generators\GeneratePath.cs" />
-    <Compile Include="Assets\Logic\Utilities\Direction.cs" />
+    <Compile Include="Assets\Logic\World\Block.cs" />
+    <Compile Include="Assets\Logic\World\Voxel.cs" />
+    <Compile Include="Assets\Logic\World\World.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>
