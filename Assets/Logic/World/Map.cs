@@ -11,7 +11,10 @@ namespace Assets.Logic.World
 
         private static readonly Voxel[,,] Voxels = new Voxel[25,10,25];
         private static readonly List<Block>[] RegisteredBlocks = new List<Block>[100];
-        private static int _maxInfectionLevel = 0;
+        public static int TotalRegisteredBlocks;
+        public static int TotalInfectedBlocks;
+
+        private static int _maxInfectionLevel;
 
         public static Voxel StartingVexel;
 
@@ -58,6 +61,7 @@ namespace Assets.Logic.World
                 blocks = RegisteredBlocks[block.InfectionLevel];
             }
             blocks.Add(block);
+            TotalRegisteredBlocks++;
         }
 
         public static void InfectBlocksBelowLevel(int blockLevel)
@@ -77,6 +81,7 @@ namespace Assets.Logic.World
                     if (!block.Infect()) continue;
 
                     numBlocks++;
+                    TotalInfectedBlocks++;
                     Score += numBlocks;
                 }
             }

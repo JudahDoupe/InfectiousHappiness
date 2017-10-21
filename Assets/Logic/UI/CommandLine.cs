@@ -44,9 +44,14 @@ namespace Assets.Logic.Commands
 
             switch (input)
             {
+                //movement
                 case "f":
                 case "forward":
                     Character.Forward();
+                    return;
+                case "b":
+                case "back":
+                    Character.Back();
                     return;
                 case "r":
                 case "right":
@@ -56,6 +61,47 @@ namespace Assets.Logic.Commands
                 case "left":
                     Character.Left();
                     return;
+
+                //specical
+                case "jump":
+                    Character.Jump();
+                    return;
+                case "bounce":
+                    Character.Bounce();
+                    return;
+                case "leap":
+                    Character.Leap();
+                    return;
+
+                case "climb":
+                    Character.Climb();
+                    return;
+                case "vault":
+                    Character.Vault();
+                    return;
+                case "switch":
+                    Character.Switch();
+                    return;
+
+                //block interactions
+                case "push":
+                    Character.Push();
+                    return;
+                case "pull":
+                    Character.Pull();
+                    return;
+                case "punch":
+                    Character.Punch();
+                    return;
+
+                case "lift":
+                    Character.Lift();
+                    return;
+                case "drop":
+                    Character.Drop();
+                    return;
+
+                //misc
                 case "ls":
                     //open menu
                     return;
@@ -68,10 +114,10 @@ namespace Assets.Logic.Commands
         private IEnumerator CommandFail()
         {
             Placeholder.text = "Invalid Command";
-            Placeholder.material.color = new Color(1,0,0,0.5f);
+            Placeholder.color = new Color(1,0,0,1f);
             yield return new WaitForSeconds(1);
             Placeholder.text = "Enter command...";
-            Placeholder.material.color = new Color(1, 1, 1, 0.5f);
+            Placeholder.color = new Color(1, 1, 1, 0.5f);
         }
 
     }
