@@ -80,6 +80,8 @@
   <ItemGroup>
     <Compile Include="Assets\Logic\Character.cs" />
     <Compile Include="Assets\Logic\FollowCamera.cs" />
+    <Compile Include="Assets\Logic\Music.cs" />
+    <Compile Include="Assets\Logic\SoundFX.cs" />
     <Compile Include="Assets\Logic\UI\CommandLine.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
     <Compile Include="Assets\Logic\World\Block.cs" />

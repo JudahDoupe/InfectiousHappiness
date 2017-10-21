@@ -13,6 +13,8 @@ public class Movable : MonoBehaviour {
     public bool Infectious = false;
     public bool IsCarried;
 
+    private bool _falling;
+
     void Start()
     {
         Voxel = Map.GetVoxel(transform.position);
@@ -42,9 +44,11 @@ public class Movable : MonoBehaviour {
     public IEnumerator JumpOnVoxel(Voxel floor)
     {
         StartMove();
+        _falling = true;
 
         var target = Map.GetVoxel(floor.Position + Vector3.up);
         var height = Vector3.Distance(transform.position, floor.Position);
+
 
         if (floor.Block && Infectious)
             floor.Block.Infect();
@@ -70,6 +74,7 @@ public class Movable : MonoBehaviour {
         var velocity = 0.0f;
 
         var potentialFloor = Map.GetVoxel(transform.position - transform.up);
+        _falling = true;
 
         while (potentialFloor.Block == null && Map.InsideMap(transform.position))
         {
@@ -93,6 +98,7 @@ public class Movable : MonoBehaviour {
             if (character)
             {
                 character.Drop();
+                SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Death);
             }
         }
 
@@ -118,6 +124,7 @@ public class Movable : MonoBehaviour {
         }
         else if (floor.Block.IsBouncy)
         {
+            SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
             var v = Voxel.Position - floor.Position;
             var target = Map.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, transform.up) * transform.up);
 
@@ -128,6 +135,9 @@ public class Movable : MonoBehaviour {
         }
         else
         {
+            if(_falling && transform.GetComponent<Block>())
+                SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
+            _falling = false;
             Voxel = Map.GetVoxel(floor.Position + transform.up);
             transform.position = Voxel.Position;
             Voxel.Block = transform.GetComponent<Block>();
@@ -145,7 +155,10 @@ public class Movable : MonoBehaviour {
         var target = Map.GetVoxel(transform.position + direction);
 
         if (target.Block == null)
+        {
+            SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Push);
             StartCoroutine(MoveToVoxel(target));
+        }
     }
     public void RecievePunch()
     {
@@ -160,7 +173,11 @@ public class Movable : MonoBehaviour {
         };
 
         if (target.Block == null && air.All(v => v.Block == null))
+        {
             StartCoroutine(MoveToVoxel(target));
+            SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
+            SoundFX.Instance.PlayClip(SoundFX.Instance.PunchVoice);
+        }
     }
     public bool RecieveLift()
     {

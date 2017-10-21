@@ -63,7 +63,10 @@ public class Character : Movable
         };
 
         if (air.All(v => v.Block == null))
+        {
+            SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Jump);
             StartCoroutine(JumpOnVoxel(target));
+        }
     }
     public void Leap()
     {
@@ -81,11 +84,10 @@ public class Character : Movable
         };
 
         if (air.All(v => v.Block == null))
+        {
+            SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Jump);   
             StartCoroutine(JumpOnVoxel(target));
-    }
-    public void Bounce()
-    {
-        if (Stunned) return;
+        }
     }
 
     public void Climb()
@@ -160,6 +162,7 @@ public class Character : Movable
 
         if (!block) return;
 
+        SoundFX.Instance.PlayClip(SoundFX.Instance.LiftVoice);
         var moveable = block.gameObject.GetComponent<Movable>();
         if (moveable && moveable.RecieveLift())
             _carrying = block;
@@ -169,6 +172,7 @@ public class Character : Movable
         if (Stunned || _carrying == null) return;
 
         var moveable = _carrying.gameObject.GetComponent<Movable>();
+        SoundFX.Instance.PlayClip(SoundFX.Instance.DropVoice);
         if (moveable && moveable.RecieveDrop())
             _carrying = null;
     }
