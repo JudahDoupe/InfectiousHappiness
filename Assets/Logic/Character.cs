@@ -124,7 +124,10 @@ public class Character : Movable
         if (Stunned) return;
 
         transform.Rotate(new Vector3(0, 0, 180));
+        //Camera.main.transform.Rotate(new Vector3(0, 0, 180));
         StartCoroutine(Fall());
+
+        Debug.Log(transform.rotation);
     }
 
     //Block Commands

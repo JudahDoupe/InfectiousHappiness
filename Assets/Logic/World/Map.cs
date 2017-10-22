@@ -14,14 +14,23 @@ namespace Assets.Logic.World
         public static int Score = 0;
         public static float Gravity = 0.01f;
 
-        private static readonly Voxel[,,] Voxels = new Voxel[Width, Height, Length];
-        private static readonly Dictionary<int,List<Block>> RegisteredBlocks = new Dictionary<int, List<Block>>();
+        private static Voxel[,,] Voxels = new Voxel[Width, Height, Length];
+        private static Dictionary<int,List<Block>> RegisteredBlocks = new Dictionary<int, List<Block>>();
         public static int TotalRegisteredBlocks;
         public static int TotalInfectedBlocks;
 
-        private static int _infectionLevel = 0;
+        public static int _infectionLevel = 0;
 
         public static Voxel StartingVoxel;
+
+        public static void Reset()
+        {
+            Voxels = new Voxel[Width, Height, Length];
+            RegisteredBlocks = new Dictionary<int, List<Block>>();
+            TotalRegisteredBlocks = 0;
+            TotalInfectedBlocks = 0;
+            _infectionLevel = 0;
+        }
 
         public static Voxel GetVoxel(Vector3 pos)
         {
@@ -70,6 +79,16 @@ namespace Assets.Logic.World
 
             blocks.Add(block);
             TotalRegisteredBlocks++;
+        }
+
+        public static void UnregisterBlock(Block block)
+        {
+            if (block.InfectionLevel == -1 || !RegisteredBlocks.ContainsKey(block.InfectionLevel)) return;
+
+            var blocks = RegisteredBlocks[block.InfectionLevel];
+
+            blocks.Remove(block);
+            TotalRegisteredBlocks--;
         }
 
         public static void InfectBlocksBelowLevel(int blockLevel)

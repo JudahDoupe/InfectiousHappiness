@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Logic;
 using Assets.Logic.World;
 using UnityEngine;
 
@@ -79,7 +80,7 @@ public class Movable : MonoBehaviour {
         while (potentialFloor.Block == null && Map.InsideMap(transform.position))
         {
             velocity += Map.Gravity;
-            transform.Translate(transform.up * -velocity);
+            transform.Translate(-transform.up * velocity);
             potentialFloor = Map.GetVoxel(transform.position - transform.up);
             yield return new WaitForFixedUpdate();
         }

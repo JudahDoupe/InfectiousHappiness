@@ -4,8 +4,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Assets.Logic.Commands
-{
+
     public class CommandLine : MonoBehaviour
     {
         public InputField Input;
@@ -63,6 +62,7 @@ namespace Assets.Logic.Commands
                 case "roll":
                 case "go":
                     Character.Forward();
+                    Commands.Instance.Unlock(Commands.Instance.Forward);
                     return;
 
                 case "b":
@@ -81,7 +81,8 @@ namespace Assets.Logic.Commands
                 case "about-face":
                 case "face-about":
                     Character.Back();
-                    return;
+                    Commands.Instance.Unlock(Commands.Instance.Back);
+                return;
 
                 case "r":
                 case "right":
@@ -98,7 +99,7 @@ namespace Assets.Logic.Commands
                 case "right-about":
                 case "about-right":
                     Character.Right();
-                    return;
+                return;
 
                 case "l":
                 case "left":
@@ -114,7 +115,7 @@ namespace Assets.Logic.Commands
                 case "left-about":
                 case "about-left":
                     Character.Left();
-                    return;
+                return;
 
                 //specical
                 case "j":
@@ -127,7 +128,8 @@ namespace Assets.Logic.Commands
                 case "rebound":
                 case "pep":
                     Character.Jump();
-                    return;
+                    Commands.Instance.Unlock(Commands.Instance.Jump);
+                return;
 
                 case "leap":
                 case "surge":
@@ -136,6 +138,7 @@ namespace Assets.Logic.Commands
                 case "upspring":
                 case "caper":
                     Character.Leap();
+                    Commands.Instance.Unlock(Commands.Instance.Leap);
                     return;
 
                 case "c":
@@ -149,11 +152,13 @@ namespace Assets.Logic.Commands
                 case "atop":
                 case "escalate":
                     Character.Climb();
-                    return;
+                    Commands.Instance.Unlock(Commands.Instance.Climb);
+                return;
 
                 case "vault":
                     Character.Vault();
-                    return;
+                    Commands.Instance.Unlock(Commands.Instance.Vault);
+                return;
 
                 case "switch":
                 case "toggle":
@@ -173,7 +178,8 @@ namespace Assets.Logic.Commands
                 case "exert":
                 case "nudge":
                 case "poke":
-                    Character.Push();
+                    Commands.Instance.Unlock(Commands.Instance.Push);
+                Character.Push();
                     return;
 
                 case "pun":
@@ -213,7 +219,8 @@ namespace Assets.Logic.Commands
                 case "shoulder":
                 case "transplant":
                 case "truck":
-                    Character.Lift();
+                    Commands.Instance.Unlock(Commands.Instance.Lift);
+                Character.Lift();
                     return;
 
                 case "drop":
@@ -254,12 +261,18 @@ namespace Assets.Logic.Commands
                 case "unseat":
                 case "volley":
                 case "waft":
-                    Character.Drop();
+                    Commands.Instance.Unlock(Commands.Instance.Drop);
+                Character.Drop();
                     return;
 
                 //misc
                 case "ls":
-                    //open menu
+                case "help":
+                    Commands.Instance.Open();
+                    return;
+                case "close":
+                case "exit":
+                Commands.Instance.Close();
                     return;
                 default:
                     StartCoroutine(CommandFail());
@@ -277,4 +290,3 @@ namespace Assets.Logic.Commands
         }
 
     }
-}

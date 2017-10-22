@@ -5,11 +5,14 @@ namespace Assets.Logic
 {
     public class WorldGenerator : MonoBehaviour
     {
+        public static WorldGenerator Instance;
+
         public GameObject BlockPrefab;
         public GameObject SecondaryBlockPrefab;
         public GameObject BrainBlock;
         public GameObject MovableBlock;
         public GameObject BounceBlock;
+        public GameObject GoalBlock;
         public Character Character;
 
         private readonly Vector3 _r = Vector3.right;
@@ -19,7 +22,14 @@ namespace Assets.Logic
         private readonly Vector3 _u = Vector3.up;
         private readonly Vector3 _d = Vector3.down;
 
-        void Start () {
+        void Start()
+        {
+            Instance = this;
+            Go();
+
+        }
+
+        public void Go () {
 
             Map.StartingVoxel = Map.GetVoxel(new Vector3(75, 10, 5));
             Character.Instance.StartingVoxel = Map.StartingVoxel;
@@ -55,6 +65,7 @@ namespace Assets.Logic
             currentVox = PlacePlatform(6, 5, currentVox.Position + _f + _l);
             PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l), BounceBlock);
             PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l * 3 + _u), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2), GoalBlock, Map.TotalRegisteredBlocks);
 
             //branch left
             currentVox = PlacePath(2, intersection.Position + _l, _l, intersectionLevel);
@@ -78,7 +89,8 @@ namespace Assets.Logic
             PlacePath(1, currentVox.Position + _b * 5 + _r * 2 + _u, _u, puzzleLevel);
             PlacePath(2, currentVox.Position + _b * 5 + _r + _u, _u, puzzleLevel);
             PlacePath(3, currentVox.Position + _b * 5 + _u, _u, puzzleLevel);
-            PlacePath(3, currentVox.Position + _b * 5 + _l * 2 + _u, _u, puzzleLevel);
+            var goal = PlacePath(3, currentVox.Position + _b * 5 + _l * 2 + _u, _u, puzzleLevel);
+            PlaceBlock(goal, GoalBlock, Map.TotalRegisteredBlocks + 2);
             currentVox = PlacePlatform(7, 6, currentVox.Position + _b * 6 + _l * 3);
             PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 4 + _l * 4), BounceBlock);
 
@@ -144,13 +156,160 @@ namespace Assets.Logic
 
 
             currentVox = PlaceGate(intersection.Position + _u * 6 + _f * 6 + _r, _r);
-            currentVox = PlacePath(11, currentVox.Position + _r, _r);
+            currentVox = PlacePath(1, currentVox.Position + _r, _r);
+            //currentVox = PlaceGate(currentVox.Position + _f, _f);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b * 3), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _u), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u), BlockPrefab);
+
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 4 + _d * 2), BlockPrefab);
             currentVox = PlaceGate(currentVox.Position + _f, _f);
 
-            BlockPrefab = SecondaryBlockPrefab;
-            currentVox = PlacePath(10, currentVox.Position + _f, _f);
 
-            //Switch sides
+            /*
+           //Switch sides
+
+           //Right brain yeeeeah
+           //****hint block here****
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 10), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _l + _d), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r + _u), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _l), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _l * 9), BlockPrefab);
+           //****hint block here****
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 2), BlockPrefab);
+
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 4), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _u), MovableBlock);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _l * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d + _r), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _l * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r * 10), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _l), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 2 + _b * 37), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 3 + _f), BounceBlock);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d * 3 + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d * 3), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 3), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 3), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 3), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+
+           // SWITCH DEBUGGING PLEASE DELETE BEFORE EXPORT********************************************************************************************************************************************
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b * 26), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 2), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _u * 2), BounceBlock);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _d * 2), BlockPrefab);
+           currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 3), BlockPrefab);
+           // SRSLY***********************************************************************************************************************************************************************************
+
+           */
 
         }
 
@@ -206,6 +365,8 @@ namespace Assets.Logic
 
         Block PlaceBlock(Voxel vox, GameObject block, int infectionLevel = -1)
         {
+            if (vox.Block != null)
+                RemoveBlock(vox);
             var obj = Instantiate(block, vox.Position, Quaternion.identity);
             obj.transform.parent = gameObject.transform;
             vox.Block = obj.GetComponent<Block>();
@@ -216,10 +377,23 @@ namespace Assets.Logic
             return vox.Block;
         }
 
+        Voxel PlaceBlock2(Voxel vox, GameObject block, int infectionLevel = -1)
+        {
+            var obj = Instantiate(block, vox.Position, Quaternion.identity);
+            obj.transform.parent = gameObject.transform;
+            vox.Block = obj.GetComponent<Block>();
+
+            vox.Block.InfectionLevel = infectionLevel;
+            Map.RegisterBlock(vox.Block);
+
+            return vox;
+        }
+
         void RemoveBlock(Voxel vox)
         {
-            //Destroy(vox.Block.gameObject);
-            //vox.Block = null;
+            Map.UnregisterBlock(vox.Block);
+            Destroy(vox.Block.gameObject);
+            vox.Block = null;
         }
     }
 }

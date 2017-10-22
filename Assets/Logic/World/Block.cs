@@ -8,8 +8,19 @@ namespace Assets.Logic.World
         public int InfectionLevel;
         public bool IsInfected;
         public bool IsBouncy;
+        public bool IsGoal;
 
         public Material InfectedMaterial;
+
+        void Update()
+        {
+            if (IsGoal)
+            {
+                var topBlock = Map.GetVoxel(transform.position + Vector3.up).Block;
+                if (topBlock && topBlock.GetComponent<Movable>())
+                    Map.InfectBlocksBelowLevel(InfectionLevel);
+            }
+        }
 
         public bool Infect()
         {
