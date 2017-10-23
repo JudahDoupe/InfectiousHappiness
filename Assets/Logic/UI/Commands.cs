@@ -37,6 +37,9 @@ public class Commands : MonoBehaviour
     {
         switch (Map._infectionLevel)
         {
+            case 22:
+                Unlock(Climb);
+                break;
             case 42:
                 Unlock(Push);
                 break;

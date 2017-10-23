@@ -110,7 +110,7 @@ namespace Assets.Logic
             PlaceBlock(Map.GetVoxel(intersection.Position + _u + _f + _l * 4), MovableBlock);
             //row 3
             PlacePath(3, intersection.Position + _u + _f * 3, _u, intersectionLevel);
-            PlacePath(2, intersection.Position + _u + _f * 3 + _l, _u, intersectionLevel);
+            PlacePath(3, intersection.Position + _u + _f * 3 + _l, _u, intersectionLevel);
             PlacePath(3, intersection.Position + _u + _f * 3 + _l * 2, _u, intersectionLevel);
             PlacePath(2, intersection.Position + _u + _f * 3 + _l * 3, _u, intersectionLevel);
             PlacePath(2, intersection.Position + _u + _f * 3 + _l * 4, _u, intersectionLevel);
@@ -121,8 +121,8 @@ namespace Assets.Logic
             PlacePath(4, intersection.Position + _u + _f * 4 + _l * 2, _u, intersectionLevel);
             PlacePath(5, intersection.Position + _u + _f * 4 + _l * 3, _u, intersectionLevel);
             PlacePath(3, intersection.Position + _u + _f * 4 + _l * 4, _u, intersectionLevel);
-            PlacePath(5, intersection.Position + _u + _f * 4 + _l * 5, _u, intersectionLevel);
-            PlacePath(5, intersection.Position + _u + _f * 4 + _l * 6, _u, intersectionLevel);
+            PlacePath(2, intersection.Position + _u + _f * 4 + _l * 5, _u, intersectionLevel);
+            PlacePath(2, intersection.Position + _u + _f * 4 + _l * 6, _u, intersectionLevel);
             //row 5
             PlacePath(5, intersection.Position + _u + _f * 5, _u, intersectionLevel);
             PlacePath(2, intersection.Position + _u + _f * 5 + _l, _u, intersectionLevel);
