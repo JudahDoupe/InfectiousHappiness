@@ -1,3 +1,3 @@
 # InfectiousHappiness
 
-[latest build](github.com/JudahDoupe/InfectiousHappiness/raw/master/Build/Build.zip)
+[latest build](https://github.com/JudahDoupe/InfectiousHappiness/blob/master/Build/Build.zip)
