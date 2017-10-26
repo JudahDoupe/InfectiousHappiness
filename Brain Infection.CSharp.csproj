@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.3p2</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -78,18 +80,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Logic\Character.cs" />
-    <Compile Include="Assets\Logic\FollowCamera.cs" />
-    <Compile Include="Assets\Logic\Music.cs" />
-    <Compile Include="Assets\Logic\SoundFX.cs" />
+    <Compile Include="Assets\Logic\Audio\Music.cs" />
+    <Compile Include="Assets\Logic\Audio\SoundFX.cs" />
     <Compile Include="Assets\Logic\UI\CommandLine.cs" />
     <Compile Include="Assets\Logic\UI\Commands.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
     <Compile Include="Assets\Logic\World\Block.cs" />
+    <Compile Include="Assets\Logic\World\Character.cs" />
+    <Compile Include="Assets\Logic\World\FollowCamera.cs" />
     <Compile Include="Assets\Logic\World\Map.cs" />
-    <Compile Include="Assets\Logic\World\Movable.cs" />
-    <Compile Include="Assets\Logic\World\Voxel.cs" />
-    <Compile Include="Assets\Logic\WorldGenerator.cs" />
+    <Compile Include="Assets\Logic\World\Movement.cs" />
+    <Compile Include="Assets\Logic\World\WorldGenerator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

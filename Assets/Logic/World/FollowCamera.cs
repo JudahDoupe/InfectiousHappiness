@@ -18,16 +18,16 @@ public class FollowCamera : MonoBehaviour
             Height -= Speed;
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
-            Character.Instance.Left();
+            Character.TurnLeft();
         if (Input.GetKeyDown(KeyCode.LeftArrow))
-            Character.Instance.Right();
+            Character.TurnRight();
 
         Height = Mathf.Clamp(Height, 0, 15);
 
         var newPos = Character.transform.position
                      + (Character.transform.forward * -Setback)
                      + (Character.transform.up * Height);
-        transform.position = Vector3.Lerp(transform.position,newPos, Character.Speed / 5);
+        transform.position = Vector3.Lerp(transform.position,newPos, Speed/4);
 
         Vector3 direction = (Character.transform.position + Character.transform.up * Height / 2) - transform.position;
         Quaternion toRotation = Quaternion.LookRotation(direction);

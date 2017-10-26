@@ -61,7 +61,7 @@ using System.Collections.Generic;
                 case "stride":
                 case "roll":
                 case "go":
-                    Character.Forward();
+                    Character.MoveForward();
                     Commands.Instance.Unlock(Commands.Instance.Forward);
                     return;
 
@@ -80,7 +80,7 @@ using System.Collections.Generic;
                 case "aback":
                 case "about-face":
                 case "face-about":
-                    Character.Back();
+                    Character.MoveBack();
                     Commands.Instance.Unlock(Commands.Instance.Back);
                 return;
 
@@ -98,7 +98,7 @@ using System.Collections.Generic;
                 case "gyre":
                 case "right-about":
                 case "about-right":
-                    Character.Right();
+                    Character.TurnRight();
                 return;
 
                 case "l":
@@ -114,7 +114,7 @@ using System.Collections.Generic;
                 case "rotate":
                 case "left-about":
                 case "about-left":
-                    Character.Left();
+                    Character.TurnLeft();
                 return;
 
                 //specical

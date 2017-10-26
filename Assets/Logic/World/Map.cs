@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using System.Xml.Schema;
+using System;
 
 namespace Assets.Logic.World
 {
@@ -12,96 +13,122 @@ namespace Assets.Logic.World
         public const int Height = 50;
 
         public static int Score = 0;
-        public static float Gravity = 0.01f;
+        public static int InfectionLevel = 0;
 
-        private static Voxel[,,] Voxels = new Voxel[Width, Height, Length];
-        private static Dictionary<int,List<Block>> RegisteredBlocks = new Dictionary<int, List<Block>>();
         public static int TotalRegisteredBlocks;
         public static int TotalInfectedBlocks;
 
-        public static int _infectionLevel = 0;
-
         public static Voxel StartingVoxel;
+        public static Vector3 GravityDirection = new Vector3(0,-1,0);
+        public static float GravityMultiplier = 0.01f;
+        public static Vector3 GravityVector
+        {
+            get { return GravityDirection * GravityMultiplier; }
+        }
 
+
+        private static Voxel[,,] _voxels = new Voxel[Width, Height, Length];
+        private static Dictionary<int,List<Block>> _registeredBlocks = new Dictionary<int, List<Block>>();
+
+        /* Map */
         public static void Reset()
         {
-            Voxels = new Voxel[Width, Height, Length];
-            RegisteredBlocks = new Dictionary<int, List<Block>>();
+            _voxels = new Voxel[Width, Height, Length];
+            _registeredBlocks = new Dictionary<int, List<Block>>();
             TotalRegisteredBlocks = 0;
             TotalInfectedBlocks = 0;
-            _infectionLevel = 0;
+            InfectionLevel = 0;
         }
-
-        public static Voxel GetVoxel(Vector3 pos)
-        {
-            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x,0, Width));
-            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Height));
-            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Length));
-
-            var rtn = Voxels[x, y, z];
-
-            if (rtn != null) return rtn;
-
-            SetVoxel(pos,new Voxel {Position = new Vector3(x,y,z)});
-            rtn = Voxels[x, y, z];
-
-            return rtn;
-        }
-        public static void SetVoxel(Vector3 pos, Voxel vox)
-        {
-            var x = Mathf.RoundToInt(pos.x);
-            var y = Mathf.RoundToInt(pos.y);
-            var z = Mathf.RoundToInt(pos.z);
-
-            if (0 <= x && x <= Width &&
-                0 <= y && y <= Height &&
-                0 <= z && z <= Length)
-                Voxels[x, y, z] = vox;
-        }
-        public static bool InsideMap(Vector3 pos)
+        public static bool IsInsideMap(Vector3 pos)
         {
             return 0 < pos.x && pos.x < Width
                    && 0 < pos.y && pos.y < Height
                    && 0 < pos.z && pos.z < Length;
         }
 
+        /* Voxels */
+        public static Voxel GetVoxel(Vector3 pos)
+        {
+            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x,0, Width));
+            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Height));
+            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Length));
 
+            var rtn = _voxels[x, y, z];
+            if (rtn == null)
+            {
+                var newPos = new Vector3(x, y, z);
+                rtn = SetVoxel(newPos, new Voxel { Position = newPos });
+            }
+            return rtn;
+        }
+        public static Voxel SetVoxel(Vector3 pos, Voxel newVox)
+        {
+            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x, 0, Width));
+            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Height));
+            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Length));
+
+            if (_voxels[x, y, z] != null)
+                ClearVoxel(_voxels[x, y, z]);
+            _voxels[x, y, z] = newVox;
+            return _voxels[x, y, z];
+        }
+        public static Voxel ClearVoxel(Voxel vox)
+        {
+            if (!vox.Block) return vox;
+
+            UnregisterBlock(vox.Block);
+            UnityEngine.Object.Destroy(vox.Block.gameObject);
+            vox.Block = null;
+
+            return vox;
+        }
+        public static Voxel ClearVoxel(Vector3 pos)
+        {
+            return ClearVoxel(GetVoxel(pos));
+        }
+
+        /* Blocks */
+        public static Voxel PlaceBlock(Vector3 pos, GameObject prefab, int infectionLevel)
+        {
+            var vox = ClearVoxel(pos);
+            var obj = UnityEngine.Object.Instantiate(prefab, vox.Position, Quaternion.identity);
+            vox.Block = obj.GetComponent<Block>();
+
+            vox.Block.InfectionLevel = infectionLevel;
+            RegisterBlock(vox.Block);
+
+            return vox;
+        }
         public static void RegisterBlock(Block block)
         {
             if (block.InfectionLevel == -1) return;
 
-            if (!RegisteredBlocks.ContainsKey(block.InfectionLevel))
-            {
-                RegisteredBlocks.Add(block.InfectionLevel, new List<Block>());
-            }
+            if (!_registeredBlocks.ContainsKey(block.InfectionLevel))
+                _registeredBlocks.Add(block.InfectionLevel, new List<Block>());
 
-            var blocks = RegisteredBlocks[block.InfectionLevel];
+            _registeredBlocks[block.InfectionLevel].Add(block);
 
-            blocks.Add(block);
             TotalRegisteredBlocks++;
         }
-
         public static void UnregisterBlock(Block block)
         {
-            if (block.InfectionLevel == -1 || !RegisteredBlocks.ContainsKey(block.InfectionLevel)) return;
+            if (!_registeredBlocks.ContainsKey(block.InfectionLevel) || !_registeredBlocks[block.InfectionLevel].Contains(block)) return;
 
-            var blocks = RegisteredBlocks[block.InfectionLevel];
+            _registeredBlocks[block.InfectionLevel].Remove(block);
 
-            blocks.Remove(block);
             TotalRegisteredBlocks--;
         }
-
-        public static void InfectBlocksBelowLevel(int blockLevel)
+        public static void InfectBlocksBelowLevel(int infectionLevel)
         {
             var numBlocks = 0;
-            while(_infectionLevel < blockLevel)
+            while(InfectionLevel < infectionLevel)
             {
-                if (!RegisteredBlocks.ContainsKey(_infectionLevel))
+                if (!_registeredBlocks.ContainsKey(InfectionLevel))
                 {
-                    RegisteredBlocks.Add(_infectionLevel, new List<Block>());
+                    _registeredBlocks.Add(InfectionLevel, new List<Block>());
                 }
 
-                foreach (var block in RegisteredBlocks[_infectionLevel])
+                foreach (var block in _registeredBlocks[InfectionLevel])
                 {
                     if (block.IsInfected) continue;
 
@@ -110,8 +137,14 @@ namespace Assets.Logic.World
                     TotalInfectedBlocks++;
                 }
                 Score += Mathf.RoundToInt(numBlocks * 0.25f);
-                _infectionLevel++;
+                InfectionLevel++;
             }
         }
+    }
+
+    public class Voxel
+    {
+        public Vector3 Position;
+        public Block Block;
     }
 }

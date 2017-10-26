@@ -32,7 +32,6 @@ namespace Assets.Logic
         public void Go () {
 
             Map.StartingVoxel = Map.GetVoxel(new Vector3(75, 10, 5));
-            Character.Instance.StartingVoxel = Map.StartingVoxel;
 
             //starting platform
             var currentVox = PlacePlatform(3, 3, Map.StartingVoxel.Position + _l + _b + _d);
@@ -182,13 +181,13 @@ namespace Assets.Logic
             currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u), BlockPrefab);
 
             currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 4 + _d * 2), BlockPrefab);
-            currentVox = PlaceGate(currentVox.Position + _f, _f);
+            currentVox = PlaceBlock2(Map.GetVoxel(Map.StartingVoxel.Position + Vector3.forward - Vector3.up),BounceBlock);
 
 
             /*
            //Switch sides
 
-           //Right brain yeeeeah
+           //TurnRight brain yeeeeah
            //****hint block here****
            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u * 10), BlockPrefab);
 
