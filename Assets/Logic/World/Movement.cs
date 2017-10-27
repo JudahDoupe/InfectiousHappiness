@@ -68,6 +68,22 @@ public class Movement : MonoBehaviour
     }
     private bool JumpPathClear(Voxel vox)
     {
+        var height = Vector3.Distance(Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
+        for (var i = 1; i <= height; i++)
+        {
+            if (Map.GetVoxel(transform.position - Map.GravityDirection * i).Block != null)
+                return false;
+        }
+
+        //TODO: detect blocks in arc
+        var direction = (vox.Position - transform.position).normalized;
+        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
+
+        for (var i = 1; i <= distance; i++)
+        {
+            if (Map.GetVoxel(transform.position + (-Map.GravityDirection * height) + direction * i).Block != null)
+                return false;
+        }
         return true;
     }
 
@@ -75,12 +91,10 @@ public class Movement : MonoBehaviour
     {
         BeginMovement();
 
-        var direction = (vox.Position - transform.position).normalized;
-        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-
-        for (var i = 1; i <= distance * 60 / Speed; i++)
+        while (Vector3.Distance(transform.position,vox.Position) > (Speed / 60f))
         {
-            transform.position += direction / 60 * Speed;
+            var direction = (vox.Position - transform.position).normalized;
+            transform.position += direction * (Speed / 60f);
             yield return new WaitForFixedUpdate();
         }
 
@@ -90,19 +104,22 @@ public class Movement : MonoBehaviour
     {
         BeginMovement();
 
-        var floor = Map.GetVoxel(vox.Position - transform.up);
-        if (floor.Block && gameObject.GetComponent<Character>())
-            floor.Block.Infect();
+        var start = transform.position;
 
-        var target = Map.GetVoxel(vox.Position);
-        var height = Vector3.Distance(transform.position, floor.Position);
-
-        var frames = Speed * 60;
-        for (var t = 0; t < frames; t++)
+        var height = Vector3.Distance( Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
+        for (var i = 0f; i < height; i += Speed / 60f)
         {
-            var vOffset = (1 - t / frames) * height;
-            transform.position = Vector3.Lerp(transform.position, target.Position + transform.up * vOffset, t / frames);
+            transform.position = start + -Map.GravityDirection * i;
+            yield return new WaitForFixedUpdate();
+        }
 
+        //TODO: arc to vox
+        var direction = (vox.Position - transform.position).normalized;
+        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
+
+        for (var i = 0f; i < distance; i += Speed / 60f)
+        {
+            transform.position = start + (-Map.GravityDirection * height) + direction * i;
             yield return new WaitForFixedUpdate();
         }
 
@@ -118,22 +135,16 @@ public class Movement : MonoBehaviour
 
         while (potentialFloor.Block == null && Map.IsInsideMap(transform.position))
         {
-            velocity = velocity + Map.GravityDirection;
+            velocity = velocity + Map.GravityVector;
             transform.Translate(velocity);
-            yield return new WaitForFixedUpdate();
             potentialFloor = Map.GetVoxel(transform.position - transform.up);
+            yield return new WaitForFixedUpdate();
         }
 
         if (potentialFloor.Block != null)
-        {
-            if (gameObject.GetComponent<Character>())
-                potentialFloor.Block.Infect();
             EndMovement();
-        }
         else
-        {
             Reset();
-        }
     }
 
     private void Bounce()
