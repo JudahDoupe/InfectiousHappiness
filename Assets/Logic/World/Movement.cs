@@ -68,22 +68,25 @@ public class Movement : MonoBehaviour
     }
     private bool JumpPathClear(Voxel vox)
     {
+        var currentVox = Map.GetVoxel(transform.position);
         var height = Vector3.Distance(Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
-        for (var i = 1; i <= height; i++)
+        for (var i = 0; i <= height; i++)
         {
-            if (Map.GetVoxel(transform.position - Map.GravityDirection * i).Block != null)
+            var voxInPath = Map.GetVoxel(transform.position - Map.GravityDirection * i);
+            if (voxInPath != currentVox && voxInPath.Block != null)
                 return false;
         }
 
-        //TODO: detect blocks in arc
         var direction = (vox.Position - transform.position).normalized;
         var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-
-        for (var i = 1; i <= distance; i++)
+        for (var t = 0f; t <= distance; t += 0.5f)
         {
-            if (Map.GetVoxel(transform.position + (-Map.GravityDirection * height) + direction * i).Block != null)
+            var jumpHeight = -(t * t) + distance * t;
+            var voxInPath = Map.GetVoxel(transform.position + (-Map.GravityDirection * (height + jumpHeight)) + direction * t);
+            if (voxInPath != currentVox && voxInPath.Block != null)
                 return false;
         }
+
         return true;
     }
 
@@ -91,39 +94,40 @@ public class Movement : MonoBehaviour
     {
         BeginMovement();
 
-        while (Vector3.Distance(transform.position,vox.Position) > (Speed / 60f))
+        var start = transform.position;
+        var direction = (vox.Position - transform.position).normalized;
+        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
+
+        for (var t = 0f; t < distance; t += (Speed / 60f))
         {
-            var direction = (vox.Position - transform.position).normalized;
-            transform.position += direction * (Speed / 60f);
+            transform.position = start + direction * t;
             yield return new WaitForFixedUpdate();
         }
 
-        EndMovement();
+        EndMovement(vox);
     }
     private IEnumerator ExecuteJump(Voxel vox)
     {
         BeginMovement();
 
         var start = transform.position;
-
         var height = Vector3.Distance( Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
-        for (var i = 0f; i < height; i += Speed / 60f)
+        for (var t = 0f; t <= height; t += (Speed / 60f))
         {
-            transform.position = start + -Map.GravityDirection * i;
+            transform.position = start -Map.GravityDirection * t;
             yield return new WaitForFixedUpdate();
         }
 
-        //TODO: arc to vox
         var direction = (vox.Position - transform.position).normalized;
         var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-
-        for (var i = 0f; i < distance; i += Speed / 60f)
+        for (var t = 0f; t <= distance; t += (Speed / 1.8f / 60f))
         {
-            transform.position = start + (-Map.GravityDirection * height) + direction * i;
+            var jumpHeight = -(t * t) + distance * t;
+            transform.position = start + (-Map.GravityDirection * (height + jumpHeight)) + direction * t;
             yield return new WaitForFixedUpdate();
         }
 
-        EndMovement();
+        EndMovement(vox);
     }
     private IEnumerator ExecuteFall()
     {
@@ -165,10 +169,13 @@ public class Movement : MonoBehaviour
         _lastVoxel.Block = null;
         return true;
     }
-    private bool EndMovement()
+    private bool EndMovement(Voxel vox = null)
     {
         IsStunned = false;
-        var floor = Map.GetVoxel(transform.position - transform.up);
+        if (vox == null)
+            vox = Map.GetVoxel(transform.position);
+
+        var floor = Map.GetVoxel(vox.Position - transform.up);
 
         if (floor.Block == null)
         {
@@ -183,7 +190,7 @@ public class Movement : MonoBehaviour
             return false;
         }
 
-        if (floor.Block && gameObject.GetComponent<Character>())
+        if (gameObject.GetComponent<Character>())
             floor.Block.Infect();
 
         if (_isFalling && transform.GetComponent<Block>())
@@ -191,11 +198,9 @@ public class Movement : MonoBehaviour
 
         _isFalling = false;
 
-        _lastVoxel = Map.GetVoxel(transform.position);
+        _lastVoxel = vox;
         _lastVoxel.Block = transform.GetComponent<Block>();
         transform.position = _lastVoxel.Position;
-
-        floor.Block.Infect();
 
         return true;
     }
