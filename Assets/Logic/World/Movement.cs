@@ -6,11 +6,12 @@ using Assets.Logic;
 using Assets.Logic.World;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 public class Movement : MonoBehaviour
 {
 
     public Voxel StartingVoxel;
-    public float Speed = 0.25f;
+    public float Speed = 10;
     public bool IsStunned;
     public bool IsBeingCarried;
 
@@ -135,13 +136,13 @@ public class Movement : MonoBehaviour
         BeginMovement();
 
         var velocity = Vector3.zero;
-        var potentialFloor = Map.GetVoxel(transform.position - transform.up);
+        var potentialFloor = Map.GetVoxel(transform.position + Map.GravityDirection);
 
         while (potentialFloor.Block == null && Map.IsInsideMap(transform.position))
         {
             velocity = velocity + Map.GravityVector;
             transform.Translate(velocity);
-            potentialFloor = Map.GetVoxel(transform.position - transform.up);
+            potentialFloor = Map.GetVoxel(transform.position + Map.GravityDirection);
             yield return new WaitForFixedUpdate();
         }
 
@@ -175,16 +176,16 @@ public class Movement : MonoBehaviour
         if (vox == null)
             vox = Map.GetVoxel(transform.position);
 
-        var floor = Map.GetVoxel(vox.Position - transform.up);
+        var floor = Map.GetVoxel(vox.Position + Map.GravityDirection);
 
-        if (floor.Block == null)
+        if (floor.Block == null && !IsBeingCarried)
         {
             if (!Fall())
                 Reset();
             return false;
         }
 
-        if (floor.Block.Type == BlockType.Bouncy)
+        if (floor.Block != null && floor.Block.Type == BlockType.Bouncy)
         {
             Bounce();
             return false;

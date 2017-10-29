@@ -107,14 +107,22 @@ public class Character : MonoBehaviour
 
         var block = Map.GetVoxel(transform.position + transform.forward).Block;
 
-        if (block) block.Lift(this);
+        if (!block) return;
+
+        block.transform.parent = transform;
+        block.Lift(this);
+        Load = block;
     }
     public void Drop()
     {
         if (_movement.IsStunned) return;
 
-        var block = Map.GetVoxel(transform.position + transform.forward).Block;
+        var block = Load;
 
-        if (block) block.Drop(this);
+        if (!block) return;
+
+        block.transform.parent = null;
+        block.Drop(this);
+        Load = null;
     }
 }

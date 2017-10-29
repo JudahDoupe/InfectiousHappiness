@@ -14,6 +14,8 @@ namespace Assets.Logic.World
 
         private Movement _movement;
 
+
+
         void Start()
         {
             _movement = gameObject.GetComponent<Movement>();
@@ -49,7 +51,8 @@ namespace Assets.Logic.World
             if (IsCarried || Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(lifter.transform.position + lifter.transform.up));
+            _movement.IsBeingCarried = true;
+            _movement.StartCoroutine("JumpToVoxel", Map.GetVoxel(lifter.transform.position + lifter.transform.up));
             return true;
         }
         public bool Drop(Character dropper)
@@ -57,7 +60,8 @@ namespace Assets.Logic.World
             if (IsCarried || Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(dropper.transform.position + dropper.transform.forward));
+            _movement.IsBeingCarried = false;
+            _movement.StartCoroutine("JumpToVoxel", Map.GetVoxel(dropper.transform.position + dropper.transform.forward));
             return true;
         }
         public bool Infect()
