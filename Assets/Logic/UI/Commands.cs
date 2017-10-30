@@ -72,6 +72,7 @@ public class Commands : MonoBehaviour
 
     public void Unlock(GameObject image)
     {
+        if (image == null) return;
         if (image.activeSelf) return;
 
         image.SetActive(true);

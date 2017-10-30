@@ -14,29 +14,54 @@ public class Movement : MonoBehaviour
     public float Speed = 10;
     public bool IsStunned;
     public bool IsBeingCarried;
+    public Voxel LastVoxel;
 
-    private Voxel _lastVoxel;
     private bool _isFalling;
 
     void Start()
     {
-        _lastVoxel = Map.GetVoxel(transform.position);
-        StartingVoxel = _lastVoxel;
+        LastVoxel = Map.GetVoxel(transform.position);
+        StartingVoxel = LastVoxel;
     }
 
     public bool MoveToVoxel(Voxel vox)
     {
-        if (!MovePathClear(vox) || IsStunned) return false;
+        if (IsStunned) return false;
 
-        StartCoroutine(ExecuteMove(vox));
+        var start = Map.GetVoxel(transform.position);
+
+        var direction = (vox.Position - start.Position).normalized;
+        var distance = Vector3.Distance(start.Position, vox.Position);
+
+        if (!MovePathClear(direction, distance)) return false;
+        Debug.Log("Moving");
+
+        BeginMovement();
+        StartCoroutine(ExecuteMove(direction, distance));
 
         return true;
     }
     public bool JumpToVoxel(Voxel vox)
     {
-        if (!JumpPathClear(vox) || IsStunned) return false;
+        if (IsStunned)
+            return false;
 
-        StartCoroutine(ExecuteJump(vox));
+        var start = Map.GetVoxel(transform.position);
+
+        var startHeight = Vector3.Scale(start.Position, -Map.GravityDirection).magnitude;
+        var endHeight = Vector3.Scale(vox.Position, -Map.GravityDirection).magnitude;
+        var height = endHeight - startHeight < 0 ? 0 : endHeight - startHeight;
+
+        var parabolaStart = Map.GetVoxel(start.Position - Map.GravityDirection * height);
+
+        var direction = (vox.Position - parabolaStart.Position).normalized;
+        var distance = Vector3.Distance(parabolaStart.Position, vox.Position);
+
+        if (!JumpPathClear(direction, distance, height))
+            return false;
+
+        BeginMovement();
+        StartCoroutine(ExecuteJump(direction, distance, height));
 
         return true;
     }
@@ -51,94 +76,82 @@ public class Movement : MonoBehaviour
     }
     public void Reset()
     {
-        StartCoroutine(ExecuteMove(StartingVoxel));
+        var start = Map.GetVoxel(transform.position);
+
+        var direction = (StartingVoxel.Position - start.Position).normalized;
+        var distance = Vector3.Distance(start.Position, StartingVoxel.Position);
+
+        StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
     }
 
-    private bool MovePathClear(Voxel vox) 
+    private bool MovePathClear(Vector3 direction, float distance) 
     {
-        var direction = (vox.Position - transform.position).normalized;
-        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-
+        var start = Map.GetVoxel(transform.position);
         for (var i = 1; i <= distance; i++)
         {
-            if (Map.GetVoxel(transform.position + direction * i).Block != null)
+            if (Map.GetVoxel(start.Position + direction * i).HasBlock())
                 return false;
         }
         return true;
     }
-    private bool JumpPathClear(Voxel vox)
+    private bool JumpPathClear(Vector3 direction, float distance, float height)
     {
-        var currentVox = Map.GetVoxel(transform.position);
-        var height = Vector3.Distance(Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
+        var start = Map.GetVoxel(transform.position);
         for (var i = 0; i <= height; i++)
         {
-            var voxInPath = Map.GetVoxel(transform.position - Map.GravityDirection * i);
-            if (voxInPath != currentVox && voxInPath.Block != null)
+            var voxInPath = Map.GetVoxel(start.Position - Map.GravityDirection * i);
+            if (voxInPath != start && voxInPath.HasBlock())
                 return false;
         }
 
-        var direction = (vox.Position - transform.position).normalized;
-        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-        for (var t = 0f; t <= distance; t += 0.5f)
+        for (var x = 0f; x <= distance; x += 0.5f)
         {
-            var jumpHeight = -(t * t) + distance * t;
-            var voxInPath = Map.GetVoxel(transform.position + (-Map.GravityDirection * (height + jumpHeight)) + direction * t);
-            if (voxInPath != currentVox && voxInPath.Block != null)
+            var y = -(x * x) + distance * x;
+            var voxInPath = Map.GetVoxel(start.Position + (-Map.GravityDirection * (y + height)) + direction * x);
+            if (voxInPath != start && voxInPath.HasBlock())
                 return false;
         }
-
         return true;
     }
 
-    private IEnumerator ExecuteMove(Voxel vox)
+    private IEnumerator ExecuteMove(Vector3 direction, float distance)
     {
-        BeginMovement();
-
         var start = transform.position;
-        var direction = (vox.Position - transform.position).normalized;
-        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
 
-        for (var t = 0f; t < distance; t += (Speed / 60f))
+        for (var t = 0f; t <= distance; t += (Speed / 60f))
         {
             transform.position = start + direction * t;
             yield return new WaitForFixedUpdate();
         }
 
-        EndMovement(vox);
+        EndMovement();
     }
-    private IEnumerator ExecuteJump(Voxel vox)
+    private IEnumerator ExecuteJump(Vector3 direction, float distance, float height)
     {
-        BeginMovement();
+        var start = Map.GetVoxel(transform.position);
 
-        var start = transform.position;
-        var height = Vector3.Distance( Vector3.Scale(vox.Position, -Map.GravityDirection), Vector3.Scale(transform.position, -Map.GravityDirection));
         for (var t = 0f; t <= height; t += (Speed / 60f))
         {
-            transform.position = start -Map.GravityDirection * t;
+            transform.position = start.Position -Map.GravityDirection * t;
             yield return new WaitForFixedUpdate();
         }
 
-        var direction = (vox.Position - transform.position).normalized;
-        var distance = Mathf.RoundToInt(Vector3.Distance(transform.position, vox.Position));
-        for (var t = 0f; t <= distance; t += (Speed / 1.8f / 60f))
+        for (var x = 0f; x <= distance; x += (Speed / 1.8f / 60f))
         {
-            var jumpHeight = -(t * t) + distance * t;
-            transform.position = start + (-Map.GravityDirection * (height + jumpHeight)) + direction * t;
+            var y = -(x * x) + distance * x;
+            transform.position = start.Position + (-Map.GravityDirection * (y + height)) + direction * x;
             yield return new WaitForFixedUpdate();
         }
 
-        EndMovement(vox);
+        EndMovement();
     }
     private IEnumerator ExecuteFall()
     {
-
-        BeginMovement();
-
         var velocity = Vector3.zero;
         var potentialFloor = Map.GetVoxel(transform.position + Map.GravityDirection);
 
-        while (potentialFloor.Block == null && Map.IsInsideMap(transform.position))
+        while (!potentialFloor.HasBlock() && Map.IsInsideMap(transform.position))
         {
             velocity = velocity + Map.GravityVector;
             transform.Translate(velocity);
@@ -146,7 +159,7 @@ public class Movement : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
-        if (potentialFloor.Block != null)
+        if (potentialFloor.HasBlock())
             EndMovement();
         else
             Reset();
@@ -157,52 +170,53 @@ public class Movement : MonoBehaviour
         var floor = Map.GetVoxel(transform.position + Map.GravityDirection);
 
         SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
-        var v = _lastVoxel.Position - floor.Position;
+        var v = LastVoxel.Position - floor.Position;
         var target = Map.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -Map.GravityDirection) * -Map.GravityDirection);
 
         if(!JumpToVoxel(target))
-            StartCoroutine(ExecuteJump(_lastVoxel));
+            JumpToVoxel(LastVoxel);
     }
 
     private bool BeginMovement()
     {
         IsStunned = true;
-        _lastVoxel.Block = null;
+        LastVoxel.Empty();
+        LastVoxel = Map.GetVoxel(transform.position);
+        
         return true;
     }
     private bool EndMovement(Voxel vox = null)
     {
-        IsStunned = false;
-        if (vox == null)
-            vox = Map.GetVoxel(transform.position);
+        if (IsBeingCarried) return false;
 
+        IsStunned = false;
+
+        if (vox == null) vox = Map.GetVoxel(transform.position);
         var floor = Map.GetVoxel(vox.Position + Map.GravityDirection);
 
-        if (floor.Block == null && !IsBeingCarried)
+        if (!floor.HasBlock())
         {
-            if (!Fall())
-                Reset();
+            if(!Fall())Reset();
             return false;
         }
 
-        if (floor.Block != null && floor.Block.Type == BlockType.Bouncy)
+        if (floor.GetBlock().Type == BlockType.Bouncy)
         {
             Bounce();
             return false;
         }
 
         if (gameObject.GetComponent<Character>())
-            floor.Block.Infect();
+            floor.GetBlock().Infect();
 
         if (_isFalling && transform.GetComponent<Block>())
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
 
         _isFalling = false;
-
-        _lastVoxel = vox;
-        _lastVoxel.Block = transform.GetComponent<Block>();
-        transform.position = _lastVoxel.Position;
+        LastVoxel = vox;
+        LastVoxel.Fill(gameObject);
 
         return true;
     }
+
 }

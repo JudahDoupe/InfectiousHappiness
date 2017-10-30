@@ -364,35 +364,21 @@ namespace Assets.Logic
 
         Block PlaceBlock(Voxel vox, GameObject block, int infectionLevel = -1)
         {
-            if (vox.Block != null)
-                RemoveBlock(vox);
-            var obj = Instantiate(block, vox.Position, Quaternion.identity);
-            obj.transform.parent = gameObject.transform;
-            vox.Block = obj.GetComponent<Block>();
+            Map.PlaceNewBlock(vox.Position, block, infectionLevel);
 
-            vox.Block.InfectionLevel = infectionLevel;
-            Map.RegisterBlock(vox.Block);
-
-            return vox.Block;
+            return vox.GetBlock();
         }
 
         Voxel PlaceBlock2(Voxel vox, GameObject block, int infectionLevel = -1)
         {
-            var obj = Instantiate(block, vox.Position, Quaternion.identity);
-            obj.transform.parent = gameObject.transform;
-            vox.Block = obj.GetComponent<Block>();
-
-            vox.Block.InfectionLevel = infectionLevel;
-            Map.RegisterBlock(vox.Block);
+            Map.PlaceNewBlock(vox.Position, block, infectionLevel);
 
             return vox;
         }
 
         void RemoveBlock(Voxel vox)
         {
-            Map.UnregisterBlock(vox.Block);
-            Destroy(vox.Block.gameObject);
-            vox.Block = null;
+            vox.Destroy();
         }
     }
 }

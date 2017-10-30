@@ -88,41 +88,43 @@ public class Character : MonoBehaviour
     {
         if (_movement.IsStunned) return;
 
-        var block = Map.GetVoxel(transform.position + transform.forward).Block;
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
-        if (block) block.Push(this);
+        if (vox.HasBlock()) vox.GetBlock().Push(this);
     }
     public void Punch()
     {
         if (_movement.IsStunned) return;
 
-        var block = Map.GetVoxel(transform.position + transform.forward).Block;
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
-        if (block) block.Punch(this);
+        if (vox.HasBlock()) vox.GetBlock().Punch(this);
     }
 
     public void Lift()
     {
         if (_movement.IsStunned) return;
 
-        var block = Map.GetVoxel(transform.position + transform.forward).Block;
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
-        if (!block) return;
+        if (!vox.HasBlock()) return;
 
-        block.transform.parent = transform;
-        block.Lift(this);
-        Load = block;
+        Load = vox.GetBlock();
+        if (!Load.Lift(this))
+        {
+            Load = null;
+            return;
+        }
+
+        Load.transform.parent = transform;
     }
     public void Drop()
     {
-        if (_movement.IsStunned) return;
+        if (_movement.IsStunned || Load == null) return;
 
-        var block = Load;
+        if (!Load.Drop(this)) return;
 
-        if (!block) return;
-
-        block.transform.parent = null;
-        block.Drop(this);
+        Load.transform.parent = null;
         Load = null;
     }
 }

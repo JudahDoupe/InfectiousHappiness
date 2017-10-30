@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Linq;
 using System.Xml.Schema;
 using System;
+using System.Security.AccessControl;
 
 namespace Assets.Logic.World
 {
@@ -68,34 +69,21 @@ namespace Assets.Logic.World
             var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Length));
 
             if (_voxels[x, y, z] != null)
-                ClearVoxel(_voxels[x, y, z]);
+                _voxels[x, y, z].Destroy();
             _voxels[x, y, z] = newVox;
             return _voxels[x, y, z];
         }
-        public static Voxel ClearVoxel(Voxel vox)
-        {
-            if (!vox.Block) return vox;
-
-            UnregisterBlock(vox.Block);
-            UnityEngine.Object.Destroy(vox.Block.gameObject);
-            vox.Block = null;
-
-            return vox;
-        }
-        public static Voxel ClearVoxel(Vector3 pos)
-        {
-            return ClearVoxel(GetVoxel(pos));
-        }
 
         /* Blocks */
-        public static Voxel PlaceBlock(Vector3 pos, GameObject prefab, int infectionLevel)
+        public static Voxel PlaceNewBlock(Vector3 pos, GameObject prefab, int infectionLevel)
         {
-            var vox = ClearVoxel(pos);
+            var vox = GetVoxel(pos);
+            vox.Destroy();
             var obj = UnityEngine.Object.Instantiate(prefab, vox.Position, Quaternion.identity);
-            vox.Block = obj.GetComponent<Block>();
+            vox.Fill(obj);
 
-            vox.Block.InfectionLevel = infectionLevel;
-            RegisterBlock(vox.Block);
+            vox.GetBlock().InfectionLevel = infectionLevel;
+            RegisterBlock(vox.GetBlock());
 
             return vox;
         }
@@ -112,7 +100,7 @@ namespace Assets.Logic.World
         }
         public static void UnregisterBlock(Block block)
         {
-            if (!_registeredBlocks.ContainsKey(block.InfectionLevel) || !_registeredBlocks[block.InfectionLevel].Contains(block)) return;
+            if (block == null || !_registeredBlocks.ContainsKey(block.InfectionLevel) || !_registeredBlocks[block.InfectionLevel].Contains(block)) return;
 
             _registeredBlocks[block.InfectionLevel].Remove(block);
 
@@ -145,6 +133,61 @@ namespace Assets.Logic.World
     public class Voxel
     {
         public Vector3 Position;
-        public Block Block; 
+        private GameObject _obj;
+        private Block _block;
+        private Character _character;
+
+        public GameObject Fill(GameObject obj)
+        {
+            obj.transform.position = Position;
+            _block = obj.GetComponent<Block>();
+            _character = obj.GetComponent<Character>();
+            _obj = obj;
+            return obj;
+        }
+        public GameObject Empty()
+        {
+            var obj = _obj;
+            _block = null;
+            _character = null;
+            _obj = null;
+            return obj;
+        }
+        public void Destroy()
+        {
+            Map.UnregisterBlock(_block);
+            UnityEngine.Object.Destroy(_obj);
+            _block = null;
+            _obj = null;
+            _character = null;
+        }
+
+        public bool IsEmpty()
+        {
+            return _obj == null;
+        }
+
+        public bool HasBlock()
+        {
+            return _block != null;
+        }
+        public Block GetBlock()
+        {
+            return _block;
+        }
+
+        public bool HasCharacter()
+        {
+            return _character != null;
+        }
+        public Character GetCharacter()
+        {
+            return _character;
+        }
+
+        public GameObject GetObject()
+        {
+            return _obj;
+        }
     }
 }

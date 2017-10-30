@@ -9,12 +9,10 @@ namespace Assets.Logic.World
         public BlockType Type = BlockType.Static;
         public int InfectionLevel;
         public bool IsInfected;
-        public bool IsCarried;
         public Material InfectedMaterial;
 
         private Movement _movement;
-
-
+        private Voxel _topVoxel;
 
         void Start()
         {
@@ -26,8 +24,9 @@ namespace Assets.Logic.World
         {
             if (Type == BlockType.Goal)
             {
-                var topBlock = Map.GetVoxel(transform.position + Vector3.up).Block;
-                if (topBlock && topBlock.GetComponent<Movement>())
+                if(_topVoxel == null)
+                    _topVoxel = Map.GetVoxel(transform.position - Map.GravityDirection);
+                if (_topVoxel.HasBlock() && _topVoxel.GetBlock().Type == BlockType.Movable)
                     Map.InfectBlocksBelowLevel(InfectionLevel);
             }
         }
@@ -48,21 +47,27 @@ namespace Assets.Logic.World
         }
         public bool Lift(Character lifter)
         {
-            if (IsCarried || Type != BlockType.Movable) return false;
+            if (_movement.IsBeingCarried || Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
             _movement.IsBeingCarried = true;
-            _movement.StartCoroutine("JumpToVoxel", Map.GetVoxel(lifter.transform.position + lifter.transform.up));
+            _movement.JumpToVoxel(Map.GetVoxel(lifter.transform.position + lifter.transform.up));
             return true;
         }
         public bool Drop(Character dropper)
         {
-            if (IsCarried || Type != BlockType.Movable) return false;
+            if (!_movement.IsBeingCarried || Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
+
             _movement.IsBeingCarried = false;
-            _movement.StartCoroutine("JumpToVoxel", Map.GetVoxel(dropper.transform.position + dropper.transform.forward));
-            return true;
+            _movement.IsStunned = false;
+            if (_movement.JumpToVoxel(Map.GetVoxel(dropper.transform.position + dropper.transform.forward)))
+                return true;
+
+            _movement.IsBeingCarried = true;
+            _movement.IsStunned = true;
+            return false;
         }
         public bool Infect()
         {
