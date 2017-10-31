@@ -47,26 +47,25 @@ namespace Assets.Logic.World
         }
         public bool Lift(Character lifter)
         {
-            if (_movement.IsBeingCarried || Type != BlockType.Movable) return false;
+            if (Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-            _movement.IsBeingCarried = true;
+            _movement.Parent(lifter.Movement);
             _movement.JumpToVoxel(Map.GetVoxel(lifter.transform.position + lifter.transform.up));
             return true;
         }
         public bool Drop(Character dropper)
         {
-            if (!_movement.IsBeingCarried || Type != BlockType.Movable) return false;
+            if (Type != BlockType.Movable) return false;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
 
-            _movement.IsBeingCarried = false;
-            _movement.IsStunned = false;
+            _movement.UnParent();
             if (_movement.JumpToVoxel(Map.GetVoxel(dropper.transform.position + dropper.transform.forward)))
                 return true;
 
-            _movement.IsBeingCarried = true;
-            _movement.IsStunned = true;
+            _movement.Parent(dropper.Movement);
+            _movement.MoveToVoxel(Map.GetVoxel(transform.position));
             return false;
         }
         public bool Infect()

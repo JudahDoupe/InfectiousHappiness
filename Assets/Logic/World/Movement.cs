@@ -9,19 +9,18 @@ using UnityEngine;
 // ReSharper disable once CheckNamespace
 public class Movement : MonoBehaviour
 {
-
     public Voxel StartingVoxel;
     public float Speed = 10;
     public bool IsStunned;
-    public bool IsBeingCarried;
-    public Voxel LastVoxel;
 
     private bool _isFalling;
+    private Voxel _lastVoxel;
+    private Movement _parent;
 
-    void Start()
+    public void Start()
     {
-        LastVoxel = Map.GetVoxel(transform.position);
-        StartingVoxel = LastVoxel;
+        _lastVoxel = Map.GetVoxel(transform.position);
+        StartingVoxel = _lastVoxel;
     }
 
     public bool MoveToVoxel(Voxel vox)
@@ -67,7 +66,7 @@ public class Movement : MonoBehaviour
     }
     public bool Fall()
     {
-        if (IsBeingCarried) return false;
+        if (_parent != null) return false;
 
         _isFalling = true;
         StartCoroutine(ExecuteFall());
@@ -85,6 +84,18 @@ public class Movement : MonoBehaviour
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
     }
 
+    public void Parent(Movement parent)
+    {
+        _parent = parent;
+        transform.parent = parent.transform;
+    }
+    public void UnParent()
+    {
+        _parent = null;
+        transform.parent = null;
+        IsStunned = false;
+    }
+
     private bool MovePathClear(Vector3 direction, float distance) 
     {
         var start = Map.GetVoxel(transform.position);
@@ -94,6 +105,18 @@ public class Movement : MonoBehaviour
                 return false;
         }
         return true;
+    }
+    private IEnumerator ExecuteMove(Vector3 direction, float distance)
+    {
+        var start = transform.position;
+
+        for (var t = 0f; t <= distance; t += (Speed / 60f))
+        {
+            transform.position = start + direction * t;
+            yield return new WaitForFixedUpdate();
+        }
+
+        EndMovement();
     }
     private bool JumpPathClear(Vector3 direction, float distance, float height)
     {
@@ -113,19 +136,6 @@ public class Movement : MonoBehaviour
                 return false;
         }
         return true;
-    }
-
-    private IEnumerator ExecuteMove(Vector3 direction, float distance)
-    {
-        var start = transform.position;
-
-        for (var t = 0f; t <= distance; t += (Speed / 60f))
-        {
-            transform.position = start + direction * t;
-            yield return new WaitForFixedUpdate();
-        }
-
-        EndMovement();
     }
     private IEnumerator ExecuteJump(Vector3 direction, float distance, float height)
     {
@@ -170,26 +180,24 @@ public class Movement : MonoBehaviour
         var floor = Map.GetVoxel(transform.position + Map.GravityDirection);
 
         SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
-        var v = LastVoxel.Position - floor.Position;
+        var v = _lastVoxel.Position - floor.Position;
         var target = Map.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -Map.GravityDirection) * -Map.GravityDirection);
 
         if(!JumpToVoxel(target))
-            JumpToVoxel(LastVoxel);
+            JumpToVoxel(_lastVoxel);
     }
 
     private bool BeginMovement()
     {
         IsStunned = true;
-        LastVoxel.Empty();
-        LastVoxel = Map.GetVoxel(transform.position);
+        _lastVoxel.Empty();
+        _lastVoxel = Map.GetVoxel(transform.position);
         
         return true;
     }
     private bool EndMovement(Voxel vox = null)
     {
-        if (IsBeingCarried) return false;
-
-        IsStunned = false;
+        if (_parent != null) return false;
 
         if (vox == null) vox = Map.GetVoxel(transform.position);
         var floor = Map.GetVoxel(vox.Position + Map.GravityDirection);
@@ -200,6 +208,7 @@ public class Movement : MonoBehaviour
             return false;
         }
 
+        IsStunned = false;
         if (floor.GetBlock().Type == BlockType.Bouncy)
         {
             Bounce();
@@ -213,8 +222,8 @@ public class Movement : MonoBehaviour
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
 
         _isFalling = false;
-        LastVoxel = vox;
-        LastVoxel.Fill(gameObject);
+        _lastVoxel = vox;
+        _lastVoxel.Fill(gameObject);
 
         return true;
     }
