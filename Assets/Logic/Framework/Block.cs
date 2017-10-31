@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Assets.Logic.UI;
 using Assets.Logic.World;
+using System.Linq;
 using UnityEngine;
 
 namespace Assets.Logic.Framework
@@ -14,6 +15,7 @@ namespace Assets.Logic.Framework
 
         private Movement _movement;
         private Voxel _topVoxel;
+        private bool goalMet;
 
         void Start()
         {
@@ -27,8 +29,11 @@ namespace Assets.Logic.Framework
             {
                 if(_topVoxel == null)
                     _topVoxel = Map.GetVoxel(transform.position - Map.GravityDirection);
-                if (_topVoxel.HasBlock() && _topVoxel.GetBlock().Type == BlockType.Movable)
+                if (!goalMet && _topVoxel.HasBlock() && _topVoxel.GetBlock().Type == BlockType.Movable)
+                {
                     StartCoroutine(ActivateRandomBlocks(Map.CurrentLevel.GetAllBlocks()));
+                    goalMet = true;
+                }
             }
         }
 
@@ -84,12 +89,15 @@ namespace Assets.Logic.Framework
 
         private IEnumerator ActivateRandomBlocks(List<Block> blocks)
         {
-            while (blocks.Count > 0)
+            blocks = blocks.OrderBy(x => Random.Range(0,100)).ToList();
+            var i = 0;
+            var speed = 5;
+            foreach (var block in blocks)
             {
-                var i = Random.Range(0, blocks.Count - 1);
-                blocks[i].Activate();
-                blocks.RemoveAt(i);
-                yield return new WaitForSeconds(0.1f);
+                block.Activate();
+                if(i == 0)
+                    yield return new WaitForFixedUpdate();
+                i = (i + 1) % speed;
             }
         }
     }

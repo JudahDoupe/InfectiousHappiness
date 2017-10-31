@@ -34,7 +34,6 @@ public class Movement : MonoBehaviour
         var distance = Vector3.Distance(start.Position, vox.Position);
 
         if (!MovePathClear(direction, distance)) return false;
-        Debug.Log("Moving");
 
         BeginMovement();
         StartCoroutine(ExecuteMove(direction, distance));

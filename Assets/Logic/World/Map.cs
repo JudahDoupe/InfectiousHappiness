@@ -32,7 +32,13 @@ namespace Assets.Logic.World
 
         public static bool IsInsideMap(Vector3 worldPos)
         {
-            return CurrentLevel == null ? false : CurrentLevel.IsInsideMap(worldPos - CurrentLevel.WorldPostition);
+            if (CurrentLevel == null)
+                return false;
+
+            var localPos = worldPos - CurrentLevel.WorldPostition;
+            return 0 < localPos.x && localPos.x < Level.Size
+                   && 0 < localPos.y && localPos.y < Level.Size
+                   && 0 < localPos.z && localPos.z < Level.Size;
         }
     }
 }

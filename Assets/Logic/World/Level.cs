@@ -8,14 +8,12 @@ namespace Assets.Logic.World
 {
     public class Level{
 
-        /* Voxels */
         public const int Size = 50;
         public Voxel StartingVoxel;
         public Vector3 WorldPostition = new Vector3(0,0,0);
 
         private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
-        /* Constructors */
         public Level(Vector3 position)
         {
             WorldPostition = position;
@@ -38,7 +36,6 @@ namespace Assets.Logic.World
             return;
         }
 
-        /* Voxels */
         public int Blocks;
         public int ActiveBlocks;
         public Voxel GetVoxel(Vector3 localPos)
@@ -73,17 +70,9 @@ namespace Assets.Logic.World
             Blocks++;
             return vox;
         }
-        public List<Block> GetAllBlocks()
+        public List<Block> GetAllBlocks(BlockType type = BlockType.Static)
         {
-            return (from Voxel voxel in _voxels where voxel != null && voxel.HasBlock() && voxel.GetBlock().Type == BlockType.Static select voxel.GetBlock()).ToList();
-        }
-
-        /* General */
-        public bool IsInsideMap(Vector3 localPos)
-        {
-            return 0 < localPos.x && localPos.x < Size
-                   && 0 < localPos.y && localPos.y < Size
-                   && 0 < localPos.z && localPos.z < Size;
+            return (from Voxel voxel in _voxels where voxel != null && voxel.HasBlock() && voxel.GetBlock().Type == type select voxel.GetBlock()).ToList();
         }
 
     }
