@@ -32,10 +32,10 @@ namespace Assets.Logic
 
         public void Go () {
 
-            Map.CurrentLevel.StartingVoxel = Map.CurrentLevel.GetVoxel(new Vector3(75, 10, 5));
+            Map.CurrentLevel.StartingVoxel = Map.GetVoxel(new Vector3(75, 10, 5));
 
             //starting platform
-            var currentVox = PlacePlatform(3, 3, Map.CurrentLevel.StartingVoxel.Position + _l + _b + _d);
+            var currentVox = PlacePlatform(3, 3, Map.StartingVoxel.Position + _l + _b + _d);
 
             //S-bend
             currentVox = PlacePath(3, currentVox.Position + _l + _f, _f);
@@ -59,19 +59,19 @@ namespace Assets.Logic
             currentVox = PlacePath(2, currentVox.Position + _f, _f);
 
             //puzzle 1
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _f * 2 + _r * 3 + _u), BlockPrefab);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _f * 4 + _r * 3 + _u), BlockPrefab);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 2 + _r * 3 + _u), BlockPrefab);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 4 + _r * 3 + _u), BlockPrefab);
             currentVox = PlacePlatform(6, 5, currentVox.Position + _f + _l);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 2 + _l), BounceBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 2 + _l * 3 + _u), MovableBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 2), GoalBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l), BounceBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _l * 3 + _u), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2), GoalBlock);
 
             //branch left
             currentVox = PlacePath(2, intersection.Position + _l, _l);
             currentVox = PlaceGate(currentVox.Position + _l, Vector3.right);
             PlacePath(2, currentVox.Position + _l, _l);
             currentVox = PlacePath(5, currentVox.Position + _l, _b);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _f * 4 + _u + _r), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _f * 4 + _u + _r), MovableBlock);
             currentVox = PlacePath(2, currentVox.Position + _f + _l, _l);
             
             // intersection 2
@@ -81,20 +81,20 @@ namespace Assets.Logic
 
             currentVox = PlacePath(2, intersection.Position , _b);
             currentVox = PlaceGate(currentVox.Position + _b, _f);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 3 + _r * 3 + _u + _l), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 3 + _r * 3 + _u + _l), MovableBlock);
             PlacePath(1, currentVox.Position + _b * 5 + _r * 2 + _u, _u);
             PlacePath(2, currentVox.Position + _b * 5 + _r + _u, _u);
             PlacePath(3, currentVox.Position + _b * 5 + _u, _u);
             var goal = PlacePath(3, currentVox.Position + _b * 5 + _l * 2 + _u, _u);
             PlaceBlock(goal, GoalBlock);
             currentVox = PlacePlatform(7, 6, currentVox.Position + _b * 6 + _l * 3);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 4 + _l * 4), BounceBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 4 + _l * 4), BounceBlock);
 
 
             //Puzzle 3 path
             currentVox = PlaceGate(intersection.Position + _l, _l);
             currentVox = PlacePath(3, currentVox.Position + _b + _l, _f);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 2 + _u), MovableBlock);
+            PlaceBlock(Map.GetVoxel(currentVox.Position + _b * 2 + _u), MovableBlock);
             currentVox = PlacePath(2, currentVox.Position + _l, _l);
 
             //Puzzle 3
@@ -102,7 +102,7 @@ namespace Assets.Logic
             PlacePath(2, intersection.Position + _u, _u);
             PlacePath(3, intersection.Position + _u + _f, _u);
             PlacePath(1, intersection.Position + _u + _f + _l, _u);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _u + _f + _l * 4), MovableBlock);
+            PlaceBlock(Map.GetVoxel(intersection.Position + _u + _f + _l * 4), MovableBlock);
             //row 3
             PlacePath(3, intersection.Position + _u + _f * 3, _u);
             PlacePath(3, intersection.Position + _u + _f * 3 + _l, _u);
@@ -135,17 +135,17 @@ namespace Assets.Logic
             PlacePath(5, intersection.Position + _u + _f * 6 + _l * 5, _u);
 
             PlacePlatform(7, 7, intersection.Position + _l * 6 + _f);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _u ), BounceBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 4 + _l + _u * 2), BounceBlock); 
-            PlaceBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 5 + _l * 2 + _u * 3), BounceBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 3 + _u * 4 + _r), MovableBlock);
+            PlaceBlock(Map.GetVoxel(intersection.Position + _f * 2 + _u ), BounceBlock);
+            PlaceBlock(Map.GetVoxel(intersection.Position + _f * 4 + _l + _u * 2), BounceBlock); 
+            PlaceBlock(Map.GetVoxel(intersection.Position + _f * 5 + _l * 2 + _u * 3), BounceBlock);
+            PlaceBlock(Map.GetVoxel(intersection.Position + _f * 3 + _u * 4 + _r), MovableBlock);
 
             //row 2
-            RemoveBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _l));
-            RemoveBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _l * 2));
-            RemoveBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _l * 3));
-            RemoveBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _l * 4));
-            RemoveBlock(Map.CurrentLevel.GetVoxel(intersection.Position + _f * 2 + _l * 5));
+            RemoveBlock(Map.GetVoxel(intersection.Position + _f * 2 + _l));
+            RemoveBlock(Map.GetVoxel(intersection.Position + _f * 2 + _l * 2));
+            RemoveBlock(Map.GetVoxel(intersection.Position + _f * 2 + _l * 3));
+            RemoveBlock(Map.GetVoxel(intersection.Position + _f * 2 + _l * 4));
+            RemoveBlock(Map.GetVoxel(intersection.Position + _f * 2 + _l * 5));
 
             //Path to other side
 
@@ -153,31 +153,31 @@ namespace Assets.Logic
             currentVox = PlaceGate(intersection.Position + _u * 6 + _f * 6 + _r, _r);
             currentVox = PlacePath(1, currentVox.Position + _r, _r);
             //currentVox = PlaceGate(currentVox.Position + _f, _f);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _f), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _f), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _f), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _d), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _d), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _r), BlockPrefab);
 
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _b * 3), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _b), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _f + _u), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _u), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b * 3), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _b), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f + _u), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _u), BlockPrefab);
 
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(currentVox.Position + _f * 4 + _d * 2), BlockPrefab);
-            currentVox = PlaceBlock2(Map.CurrentLevel.GetVoxel(Map.CurrentLevel.StartingVoxel.Position + Vector3.forward - Vector3.up),BounceBlock);
+            currentVox = PlaceBlock2(Map.GetVoxel(currentVox.Position + _f * 4 + _d * 2), BlockPrefab);
+            currentVox = PlaceBlock2(Map.GetVoxel(Map.StartingVoxel.Position + Vector3.forward - Vector3.up),BounceBlock);
 
 
             /*
@@ -315,7 +315,7 @@ namespace Assets.Logic
             {
                 for (var j = 0; j < width; j++)
                 {
-                    vox = Map.CurrentLevel.GetVoxel(startPosition + Vector3.forward * i + Vector3.right * j);
+                    vox = Map.GetVoxel(startPosition + Vector3.forward * i + Vector3.right * j);
 
                     PlaceBlock(vox, BlockPrefab);
                 }
@@ -329,7 +329,7 @@ namespace Assets.Logic
 
             for (var i = 0; i < length; i++)
             {
-                vox = Map.CurrentLevel.GetVoxel(startPosition + direction * i);
+                vox = Map.GetVoxel(startPosition + direction * i);
 
                 PlaceBlock(vox, BlockPrefab);
             }
@@ -338,21 +338,21 @@ namespace Assets.Logic
 
         Voxel PlaceGate(Vector3 startPosition, Vector3 direction, int? infectionLevel = null)
         {
-            var floor = PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition),BlockPrefab).transform;
+            var floor = PlaceBlock(Map.GetVoxel(startPosition),BlockPrefab).transform;
             floor.forward = direction;
 
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition - floor.up), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition - floor.up + floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition - floor.up - floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition - floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.up + floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.up - floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.up * 2 + floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.up * 2 - floor.right), BrainBlock);
-            PlaceBlock(Map.CurrentLevel.GetVoxel(startPosition + floor.up * 2), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition - floor.up), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition - floor.up + floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition - floor.up - floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition - floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.up + floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.up - floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.up * 2 + floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.up * 2 - floor.right), BrainBlock);
+            PlaceBlock(Map.GetVoxel(startPosition + floor.up * 2), BrainBlock);
 
-            return Map.CurrentLevel.GetVoxel(floor.transform.position);
+            return Map.GetVoxel(floor.transform.position);
         }
 
         Block PlaceBlock(Voxel vox, GameObject block)

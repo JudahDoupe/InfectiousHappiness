@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Logic.Framework;
 using UnityEngine;
 
@@ -7,25 +8,17 @@ namespace Assets.Logic.World
 {
     public class Level{
 
-        /* Gravity */
-        public Vector3 GravityDirection = new Vector3(0, -1, 0);
-        public float GravityMultiplier = 0.01f;
-        public Vector3 GravityVector
-        {
-            get { return GravityDirection * GravityMultiplier; }
-        }
-
         /* Voxels */
         public const int Size = 50;
         public Voxel StartingVoxel;
+        public Vector3 WorldPostition = new Vector3(0,0,0);
 
-        private Vector3 _worldPostition = new Vector3(0,0,0);
-        private Voxel[,,] _voxels = new Voxel[Size, Size, Size];
+        private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
         /* Constructors */
         public Level(Vector3 position)
         {
-            _worldPostition = position;
+            WorldPostition = position;
         }
         public Level(string path)
         {
@@ -48,52 +41,49 @@ namespace Assets.Logic.World
         /* Voxels */
         public int Blocks;
         public int ActiveBlocks;
-        public Voxel GetVoxel(Vector3 pos)
+        public Voxel GetVoxel(Vector3 localPos)
         {
-            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x, 0, Size));
-            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Size));
-            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Size));
+            var x = Mathf.RoundToInt(Mathf.Clamp(localPos.x, 0, Size-1));
+            var y = Mathf.RoundToInt(Mathf.Clamp(localPos.y, 0, Size-1));
+            var z = Mathf.RoundToInt(Mathf.Clamp(localPos.z, 0, Size-1));
 
             var rtn = _voxels[x, y, z];
             if (rtn != null) return rtn;
 
             var newPos = new Vector3(x, y, z);
-            return SetVoxel(newPos, new Voxel { Position = newPos });
+            return SetVoxel(newPos, new Voxel { Position = newPos + WorldPostition });
         }
-        public Voxel SetVoxel(Vector3 pos, Voxel newVox)
+        public Voxel SetVoxel(Vector3 localPos, Voxel newVox)
         {
-            var x = Mathf.RoundToInt(Mathf.Clamp(pos.x, 0, Size));
-            var y = Mathf.RoundToInt(Mathf.Clamp(pos.y, 0, Size));
-            var z = Mathf.RoundToInt(Mathf.Clamp(pos.z, 0, Size));
+            var x = Mathf.RoundToInt(Mathf.Clamp(localPos.x, 0, Size-1));
+            var y = Mathf.RoundToInt(Mathf.Clamp(localPos.y, 0, Size-1));
+            var z = Mathf.RoundToInt(Mathf.Clamp(localPos.z, 0, Size-1));
 
-            _voxels[x, y, z].Destroy();
+            if(_voxels[x, y, z] != null)
+                _voxels[x, y, z].Destroy();
             _voxels[x, y, z] = newVox;
             return _voxels[x, y, z];
         }
-        public Voxel PlaceNewBlock(Vector3 pos, GameObject prefab)
+        public Voxel PlaceNewBlock(Vector3 localPos, GameObject prefab)
         {
-            var vox = GetVoxel(pos);
+            var vox = GetVoxel(localPos);
             vox.Destroy();
-            var obj = UnityEngine.Object.Instantiate(prefab, vox.Position, Quaternion.identity);
+            var obj = Object.Instantiate(prefab, vox.Position, Quaternion.identity);
             vox.Fill(obj);
             Blocks++;
             return vox;
         }
-        public void ActivateAllBlocks()
+        public List<Block> GetAllBlocks()
         {
-            foreach (var voxel in _voxels)
-            {
-                if (voxel.HasBlock())
-                    voxel.GetBlock().Activate();
-            }
+            return (from Voxel voxel in _voxels where voxel != null && voxel.HasBlock() && voxel.GetBlock().Type == BlockType.Static select voxel.GetBlock()).ToList();
         }
 
         /* General */
-        public bool IsInsideMap(Vector3 pos)
+        public bool IsInsideMap(Vector3 localPos)
         {
-            return 0 < pos.x && pos.x < Size
-                   && 0 < pos.y && pos.y < Size
-                   && 0 < pos.z && pos.z < Size;
+            return 0 < localPos.x && localPos.x < Size
+                   && 0 < localPos.y && localPos.y < Size
+                   && 0 < localPos.z && localPos.z < Size;
         }
 
     }

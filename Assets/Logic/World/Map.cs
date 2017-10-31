@@ -12,5 +12,27 @@ namespace Assets.Logic.World
         public static List<Level> Levels = new List<Level>();
         public static Level CurrentLevel;
 
+        public static Voxel StartingVoxel
+        {
+            get { return CurrentLevel == null ? new Voxel {Position = Vector3.zero} : CurrentLevel.StartingVoxel; }
+        }
+
+        /* Gravity */
+        public static Vector3 GravityDirection = new Vector3(0, -1, 0);
+        public static float GravityMultiplier = 0.01f;
+        public static Vector3 GravityVector
+        {
+            get { return GravityDirection * GravityMultiplier; }
+        }
+
+        public static Voxel GetVoxel(Vector3 worldPos)
+        {
+            return CurrentLevel == null ? null : CurrentLevel.GetVoxel(worldPos - CurrentLevel.WorldPostition);
+        }
+
+        public static bool IsInsideMap(Vector3 worldPos)
+        {
+            return CurrentLevel == null ? false : CurrentLevel.IsInsideMap(worldPos - CurrentLevel.WorldPostition);
+        }
     }
 }

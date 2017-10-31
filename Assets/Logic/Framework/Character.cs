@@ -24,19 +24,19 @@ public class Character : MonoBehaviour
 
     public void MoveForward()
     {
-        Movement.MoveToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.forward));
+        Movement.MoveToVoxel(Map.GetVoxel(transform.position + transform.forward));
     }
     public void MoveBack()
     {
-        Movement.MoveToVoxel(Map.CurrentLevel.GetVoxel(transform.position - transform.forward));
+        Movement.MoveToVoxel(Map.GetVoxel(transform.position - transform.forward));
     }
     public void MoveRight()
     {
-        Movement.MoveToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.right));
+        Movement.MoveToVoxel(Map.GetVoxel(transform.position + transform.right));
     }
     public void MoveLeft()
     {
-        Movement.MoveToVoxel(Map.CurrentLevel.GetVoxel(transform.position - transform.right));
+        Movement.MoveToVoxel(Map.GetVoxel(transform.position - transform.right));
     }
 
     public void TurnRight()
@@ -54,24 +54,24 @@ public class Character : MonoBehaviour
 
     public void Jump()
     {
-        Movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.forward * 2));
+        Movement.JumpToVoxel(Map.GetVoxel(transform.position + transform.forward * 2));
     }
     public void Leap()
     {
-        Movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.forward * 3));
+        Movement.JumpToVoxel(Map.GetVoxel(transform.position + transform.forward * 3));
     }
 
     public void Climb()
     {
-        Movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.forward - Map.CurrentLevel.GravityDirection));
+        Movement.JumpToVoxel(Map.GetVoxel(transform.position + transform.forward - Map.GravityDirection));
     }
     public void Vault()
     {
-        Movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(transform.position + transform.forward - Map.CurrentLevel.GravityDirection * 2));
+        Movement.JumpToVoxel(Map.GetVoxel(transform.position + transform.forward - Map.GravityDirection * 2));
     }
     public void Switch()
     {
-        Map.CurrentLevel.GravityDirection = -Map.CurrentLevel.GravityDirection;
+        Map.GravityDirection = -Map.GravityDirection;
         transform.Rotate(new Vector3(0, 0, 180));
         Movement.Fall();
     }
@@ -88,7 +88,7 @@ public class Character : MonoBehaviour
     {
         if (Movement.IsStunned) return;
 
-        var vox = Map.CurrentLevel.GetVoxel(transform.position + transform.forward);
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
         if (vox.HasBlock()) vox.GetBlock().Push(this);
     }
@@ -96,7 +96,7 @@ public class Character : MonoBehaviour
     {
         if (Movement.IsStunned) return;
 
-        var vox = Map.CurrentLevel.GetVoxel(transform.position + transform.forward);
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
         if (vox.HasBlock()) vox.GetBlock().Punch(this);
     }
@@ -105,7 +105,7 @@ public class Character : MonoBehaviour
     {
         if (Movement.IsStunned) return;
 
-        var vox = Map.CurrentLevel.GetVoxel(transform.position + transform.forward);
+        var vox = Map.GetVoxel(transform.position + transform.forward);
 
         if (!vox.HasBlock()) return;
 

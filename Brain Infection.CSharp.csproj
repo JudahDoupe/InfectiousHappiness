@@ -90,6 +90,7 @@
     <Compile Include="Assets\Logic\World\(old)WorldGenerator.cs" />
     <Compile Include="Assets\Logic\World\Level.cs" />
     <Compile Include="Assets\Logic\World\Levels\DevLevel.cs" />
+    <Compile Include="Assets\Logic\World\Levels\LevelBuilder.cs" />
     <Compile Include="Assets\Logic\World\Map.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
