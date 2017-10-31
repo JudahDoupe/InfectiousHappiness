@@ -35,7 +35,7 @@ public class Commands : MonoBehaviour
 
     void Update()
     {
-        switch (Map.InfectionLevel)
+        switch (Map.CurrentLevel.ActiveBlocks)
         {
             case 22:
                 Unlock(Climb);

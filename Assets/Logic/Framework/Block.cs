@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Assets.Logic.UI;
+using Assets.Logic.World;
 using UnityEngine;
 
-namespace Assets.Logic.World
+namespace Assets.Logic.Framework
 {
     public class Block : MonoBehaviour
     {
         public BlockType Type = BlockType.Static;
-        public int InfectionLevel;
-        public bool IsInfected;
-        public Material InfectedMaterial;
+        public Material ActivatedMaterial;
+        public bool IsActivated;
 
         private Movement _movement;
         private Voxel _topVoxel;
@@ -25,9 +24,9 @@ namespace Assets.Logic.World
             if (Type == BlockType.Goal)
             {
                 if(_topVoxel == null)
-                    _topVoxel = Map.GetVoxel(transform.position - Map.GravityDirection);
+                    _topVoxel = Map.CurrentLevel.GetVoxel(transform.position - Map.CurrentLevel.GravityDirection);
                 if (_topVoxel.HasBlock() && _topVoxel.GetBlock().Type == BlockType.Movable)
-                    Map.InfectBlocksBelowLevel(InfectionLevel);
+                    Map.CurrentLevel.ActivateAllBlocks();
             }
         }
 
@@ -36,14 +35,14 @@ namespace Assets.Logic.World
             if (Type != BlockType.Movable) return;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Push);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(transform.position + pusher.transform.forward));
+            _movement.StartCoroutine("MoveToVoxel", Map.CurrentLevel.GetVoxel(transform.position + pusher.transform.forward));
         }
         public void Punch(Character puncher)
         {
             if (Type != BlockType.Movable) return;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(transform.position + puncher.transform.forward * 2));
+            _movement.StartCoroutine("MoveToVoxel", Map.CurrentLevel.GetVoxel(transform.position + puncher.transform.forward * 2));
         }
         public bool Lift(Character lifter)
         {
@@ -51,7 +50,7 @@ namespace Assets.Logic.World
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
             _movement.Parent(lifter.Movement);
-            _movement.JumpToVoxel(Map.GetVoxel(lifter.transform.position + lifter.transform.up));
+            _movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(lifter.transform.position + lifter.transform.up));
             return true;
         }
         public bool Drop(Character dropper)
@@ -61,22 +60,22 @@ namespace Assets.Logic.World
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
 
             _movement.UnParent();
-            if (_movement.JumpToVoxel(Map.GetVoxel(dropper.transform.position + dropper.transform.forward)))
+            if (_movement.JumpToVoxel(Map.CurrentLevel.GetVoxel(dropper.transform.position + dropper.transform.forward)))
                 return true;
 
             _movement.Parent(dropper.Movement);
-            _movement.MoveToVoxel(Map.GetVoxel(transform.position));
+            _movement.MoveToVoxel(Map.CurrentLevel.GetVoxel(transform.position));
             return false;
         }
-        public bool Infect()
+        public bool Activate()
         {
-            if (IsInfected) return false;
+            if (IsActivated) return false;
 
-            IsInfected = true;
-            Map.Score++;
-            Map.InfectBlocksBelowLevel(InfectionLevel);
+            IsActivated = true;
+            Map.CurrentLevel.ActiveBlocks++;
+            Score.Value++;
 
-            gameObject.GetComponentInChildren<MeshRenderer>().material = InfectedMaterial;
+            gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
 
             return true;
         }

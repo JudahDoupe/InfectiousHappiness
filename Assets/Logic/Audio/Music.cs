@@ -17,15 +17,15 @@ public class Music : MonoBehaviour
         Track3.timeSamples = Track1.timeSamples;
         Track4.timeSamples = Track1.timeSamples;
 
-        var track2Min = 10;
-        var track2Max = 30;
-        var track3Min = 50;
-        var track3Max = 75;
-        var track4Min = 75;
-        var track4Max = 90;
+        var track2Min = 0;
+        var track2Max = Map.CurrentLevel.Blocks * 2 / 5;
+        var track3Min = Map.CurrentLevel.Blocks * 1 / 5;
+        var track3Max = Map.CurrentLevel.Blocks * 3 / 5;
+        var track4Min = Map.CurrentLevel.Blocks * 2 / 5;
+        var track4Max = Map.CurrentLevel.Blocks * 4 / 5;
 
-        Track2.volume = Mathf.Clamp((Map.TotalInfectedBlocks - track2Min) / track2Max, 0, 1);
-        Track3.volume = Mathf.Clamp((Map.TotalInfectedBlocks - track3Min) / track3Max, 0, 1);
-        Track4.volume = Mathf.Clamp((Map.TotalInfectedBlocks - track4Min) / track4Max, 0, 1);
+        Track2.volume = Mathf.Clamp((Map.CurrentLevel.ActiveBlocks - track2Min) / track2Max, 0, 1);
+        Track3.volume = Mathf.Clamp((Map.CurrentLevel.ActiveBlocks - track3Min) / track3Max, 0, 1);
+        Track4.volume = Mathf.Clamp((Map.CurrentLevel.ActiveBlocks - track4Min) / track4Max, 0, 1);
     }
 }

@@ -8,6 +8,8 @@ namespace Assets.Logic.UI
     {
         private Text _text;
 
+        public static int Value;
+
         void Start ()
         {
             _text = gameObject.GetComponent<Text>();
@@ -15,7 +17,7 @@ namespace Assets.Logic.UI
 	
         void Update ()
         {
-            _text.text = Map.Score.ToString();
+            _text.text = Value.ToString();
         }
     }
 }
