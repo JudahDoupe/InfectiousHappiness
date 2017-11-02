@@ -1,5 +1,4 @@
-﻿using Assets.Logic.World;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace Assets.Logic.UI

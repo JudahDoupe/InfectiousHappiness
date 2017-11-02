@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Assets.Logic.World;
+using Assets.Logic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,7 +35,8 @@ public class Commands : MonoBehaviour
 
     void Update()
     {
-        switch (Map.CurrentLevel.ActiveBlocks)
+        /*
+        switch (World.CurrentLevel.ActiveBlocks)
         {
             case 22:
                 Unlock(Climb);
@@ -50,7 +51,7 @@ public class Commands : MonoBehaviour
             default:
                 break;
         }
-
+        */
     }
 
 

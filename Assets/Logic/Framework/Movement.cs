@@ -4,7 +4,6 @@ using System.Linq;
 using System.Xml.Schema;
 using Assets.Logic;
 using Assets.Logic.Framework;
-using Assets.Logic.World;
 using UnityEngine;
 
 // ReSharper disable once CheckNamespace
@@ -20,7 +19,7 @@ public class Movement : MonoBehaviour
 
     public void Start()
     {
-        _lastVoxel = Map.GetVoxel(transform.position);
+        _lastVoxel = World.GetVoxel(transform.position);
         StartingVoxel = _lastVoxel;
     }
 
@@ -28,7 +27,7 @@ public class Movement : MonoBehaviour
     {
         if (IsStunned) return false;
 
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
 
         var direction = (vox.Position - start.Position).normalized;
         var distance = Vector3.Distance(start.Position, vox.Position);
@@ -45,13 +44,13 @@ public class Movement : MonoBehaviour
         if (IsStunned)
             return false;
 
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
 
-        var startHeight = Vector3.Scale(start.Position, -Map.GravityDirection).magnitude;
-        var endHeight = Vector3.Scale(vox.Position, -Map.GravityDirection).magnitude;
+        var startHeight = Vector3.Scale(start.Position, -World.GravityVector.normalized).magnitude;
+        var endHeight = Vector3.Scale(vox.Position, -World.GravityVector.normalized).magnitude;
         var height = endHeight - startHeight < 0 ? 0 : endHeight - startHeight;
 
-        var parabolaStart = Map.GetVoxel(start.Position - Map.GravityDirection * height);
+        var parabolaStart = World.GetVoxel(start.Position - World.GravityVector.normalized * height);
 
         var direction = (vox.Position - parabolaStart.Position).normalized;
         var distance = Vector3.Distance(parabolaStart.Position, vox.Position);
@@ -73,7 +72,7 @@ public class Movement : MonoBehaviour
     }
     public void Reset()
     {
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
 
         var direction = (StartingVoxel.Position - start.Position).normalized;
         var distance = Vector3.Distance(start.Position, StartingVoxel.Position);
@@ -96,10 +95,10 @@ public class Movement : MonoBehaviour
 
     private bool MovePathClear(Vector3 direction, float distance) 
     {
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
         for (var i = 1; i <= distance; i++)
         {
-            if (Map.GetVoxel(start.Position + direction * i).HasBlock())
+            if (World.GetVoxel(start.Position + direction * i).HasBlock())
                 return false;
         }
         return true;
@@ -118,10 +117,10 @@ public class Movement : MonoBehaviour
     }
     private bool JumpPathClear(Vector3 direction, float distance, float height)
     {
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
         for (var i = 0; i <= height; i++)
         {
-            var voxInPath = Map.GetVoxel(start.Position - Map.GravityDirection * i);
+            var voxInPath = World.GetVoxel(start.Position - World.GravityVector.normalized * i);
             if (voxInPath != start && voxInPath.HasBlock())
                 return false;
         }
@@ -129,7 +128,7 @@ public class Movement : MonoBehaviour
         for (var x = 0f; x <= distance; x += 0.5f)
         {
             var y = -(x * x) + distance * x;
-            var voxInPath = Map.GetVoxel(start.Position + (-Map.GravityDirection * (y + height)) + direction * x);
+            var voxInPath = World.GetVoxel(start.Position + (-World.GravityVector.normalized * (y + height)) + direction * x);
             if (voxInPath != start && voxInPath.HasBlock())
                 return false;
         }
@@ -137,18 +136,18 @@ public class Movement : MonoBehaviour
     }
     private IEnumerator ExecuteJump(Vector3 direction, float distance, float height)
     {
-        var start = Map.GetVoxel(transform.position);
+        var start = World.GetVoxel(transform.position);
 
         for (var t = 0f; t <= height; t += (Speed / 60f))
         {
-            transform.position = start.Position - Map.GravityDirection * t;
+            transform.position = start.Position - World.GravityVector.normalized * t;
             yield return new WaitForFixedUpdate();
         }
 
         for (var x = 0f; x <= distance; x += (Speed / 1.8f / 60f))
         {
             var y = -(x * x) + distance * x;
-            transform.position = start.Position + (-Map.GravityDirection * (y + height)) + direction * x;
+            transform.position = start.Position + (-World.GravityVector.normalized * (y + height)) + direction * x;
             yield return new WaitForFixedUpdate();
         }
 
@@ -157,13 +156,13 @@ public class Movement : MonoBehaviour
     private IEnumerator ExecuteFall()
     {
         var velocity = Vector3.zero;
-        var potentialFloor = Map.GetVoxel(transform.position + Map.GravityDirection);
+        var potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
 
-        while (!potentialFloor.HasBlock() && Map.IsInsideMap(transform.position))
+        while (!potentialFloor.HasBlock() && World.IsInsideWorld(transform.position))
         {
-            velocity = velocity + Map.GravityVector;
+            velocity = velocity + World.GravityVector;
             transform.Translate(velocity);
-            potentialFloor = Map.GetVoxel(transform.position + Map.GravityDirection);
+            potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
             yield return new WaitForFixedUpdate();
         }
 
@@ -175,11 +174,11 @@ public class Movement : MonoBehaviour
 
     private void Bounce()
     {
-        var floor = Map.GetVoxel(transform.position + Map.GravityDirection);
+        var floor = World.GetVoxel(transform.position + World.GravityVector.normalized);
 
         SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
         var v = _lastVoxel.Position - floor.Position;
-        var target = Map.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -Map.GravityDirection) * -Map.GravityDirection);
+        var target = World.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -World.GravityVector.normalized) * -World.GravityVector.normalized);
 
         if(!JumpToVoxel(target))
             JumpToVoxel(_lastVoxel);
@@ -189,7 +188,7 @@ public class Movement : MonoBehaviour
     {
         IsStunned = true;
         _lastVoxel.Empty();
-        _lastVoxel = Map.GetVoxel(transform.position);
+        _lastVoxel = World.GetVoxel(transform.position);
         
         return true;
     }
@@ -197,8 +196,8 @@ public class Movement : MonoBehaviour
     {
         if (_parent != null) return false;
 
-        if (vox == null) vox = Map.GetVoxel(transform.position);
-        var floor = Map.GetVoxel(vox.Position + Map.GravityDirection);
+        if (vox == null) vox = World.GetVoxel(transform.position);
+        var floor = World.GetVoxel(vox.Position + World.GravityVector.normalized);
 
         if (!floor.HasBlock())
         {

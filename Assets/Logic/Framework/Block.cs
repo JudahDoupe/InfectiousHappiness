@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Assets.Logic.UI;
-using Assets.Logic.World;
 using System.Linq;
 using UnityEngine;
 
@@ -28,12 +27,7 @@ namespace Assets.Logic.Framework
             if (Type == BlockType.Goal)
             {
                 if(_topVoxel == null)
-                    _topVoxel = Map.GetVoxel(transform.position - Map.GravityDirection);
-                if (!goalMet && _topVoxel.HasBlock() && _topVoxel.GetBlock().Type == BlockType.Movable)
-                {
-                    StartCoroutine(ActivateRandomBlocks(Map.CurrentLevel.GetAllBlocks()));
-                    goalMet = true;
-                }
+                    _topVoxel = World.GetVoxel(transform.position - World.GravityVector.normalized);
             }
         }
 
@@ -42,14 +36,14 @@ namespace Assets.Logic.Framework
             if (Type != BlockType.Movable) return;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Push);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(transform.position + pusher.transform.forward));
+            _movement.StartCoroutine("MoveToVoxel", World.GetVoxel(transform.position + pusher.transform.forward));
         }
         public void Punch(Character puncher)
         {
             if (Type != BlockType.Movable) return;
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-            _movement.StartCoroutine("MoveToVoxel", Map.GetVoxel(transform.position + puncher.transform.forward * 2));
+            _movement.StartCoroutine("MoveToVoxel", World.GetVoxel(transform.position + puncher.transform.forward * 2));
         }
         public bool Lift(Character lifter)
         {
@@ -57,7 +51,7 @@ namespace Assets.Logic.Framework
 
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
             _movement.Parent(lifter.Movement);
-            _movement.JumpToVoxel(Map.GetVoxel(lifter.transform.position + lifter.transform.up));
+            _movement.JumpToVoxel(World.GetVoxel(lifter.transform.position + lifter.transform.up));
             return true;
         }
         public bool Drop(Character dropper)
@@ -67,11 +61,11 @@ namespace Assets.Logic.Framework
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
 
             _movement.UnParent();
-            if (_movement.JumpToVoxel(Map.GetVoxel(dropper.transform.position + dropper.transform.forward)))
+            if (_movement.JumpToVoxel(World.GetVoxel(dropper.transform.position + dropper.transform.forward)))
                 return true;
 
             _movement.Parent(dropper.Movement);
-            _movement.MoveToVoxel(Map.GetVoxel(transform.position));
+            _movement.MoveToVoxel(World.GetVoxel(transform.position));
             return false;
         }
         public bool Activate()
@@ -79,7 +73,6 @@ namespace Assets.Logic.Framework
             if (IsActivated) return false;
 
             IsActivated = true;
-            Map.CurrentLevel.ActiveBlocks++;
             Score.Value++;
 
             gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
@@ -87,19 +80,7 @@ namespace Assets.Logic.Framework
             return true;
         }
 
-        private IEnumerator ActivateRandomBlocks(List<Block> blocks)
-        {
-            blocks = blocks.OrderBy(x => Random.Range(0,100)).ToList();
-            var i = 0;
-            var speed = 5;
-            foreach (var block in blocks)
-            {
-                block.Activate();
-                if(i == 0)
-                    yield return new WaitForFixedUpdate();
-                i = (i + 1) % speed;
-            }
-        }
+
     }
 
     public enum BlockType
