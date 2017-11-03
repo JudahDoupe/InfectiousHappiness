@@ -21,11 +21,13 @@ public class Music : MonoBehaviour
 
     public AudioSource AddTrack(AudioClip track, Room room)
     {
+        if (!enabled) return null;
+
         var src = gameObject.AddComponent<AudioSource>();
         src.clip = track;
-        _tracks.Add(src);
-        src.Play();
         src.loop = true;
+        src.Play();
+        _tracks.Add(src);
         StartCoroutine(AdjustTrackVolume(src, room));
         return src;
     }

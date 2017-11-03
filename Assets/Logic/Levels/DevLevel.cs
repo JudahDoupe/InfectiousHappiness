@@ -48,6 +48,7 @@ public class DevLevel : LevelBuilder {
     void BuildMovementBlockRoom()
     {
         CurrentRoom = Rooms[2];
+
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(10, 0, 4));
         CurrentRoom.FillVoxel(new Vector3(8, 1, 2), MovableBlock);
         CurrentRoom.FillVoxel(new Vector3(4, 1, 2), FloorBlock);
@@ -61,6 +62,7 @@ public class DevLevel : LevelBuilder {
     void BuildPipeBlockRoom()
     {
         CurrentRoom = Rooms[3];
+
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         CurrentRoom.FillVoxel(new Vector3(3, 1, 3), GoalBlock);
 
@@ -70,6 +72,7 @@ public class DevLevel : LevelBuilder {
     void BuildSwitchBlockRoom()
     {
         CurrentRoom = Rooms[4];
+
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         CurrentRoom.FillVoxel(new Vector3(3, 1, 3), GoalBlock);
 
