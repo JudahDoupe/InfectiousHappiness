@@ -25,8 +25,8 @@ public class DevLevel : LevelBuilder {
         CurrentRoom.FillVoxel(new Vector3(2, 0, 4), FloorBlock);
         CurrentRoom.FillVoxel(new Vector3(0, 0, 2), FloorBlock);
         CurrentRoom.FillVoxel(new Vector3(4, 0, 2), FloorBlock);
-        
-        CurrentRoom.AssignTrack(RoomTracks[0]);
+
+        CurrentRoom.FinishBuilding();
     }
 
     void BuildMobilityRoom()
@@ -42,7 +42,7 @@ public class DevLevel : LevelBuilder {
         PlacePath(new Vector3(1, 0, 10), new Vector3(1, 3, 10));
         CurrentRoom.FillVoxel(new Vector3(1, 3, 10), GoalBlock);
 
-        CurrentRoom.AssignTrack(RoomTracks[1]);
+        CurrentRoom.FinishBuilding();
     }
 
     void BuildMovementBlockRoom()
@@ -55,7 +55,7 @@ public class DevLevel : LevelBuilder {
         CurrentRoom.FillVoxel(new Vector3(2, 1, 2), FloorBlock);
         CurrentRoom.FillVoxel(new Vector3(2, 2, 2), GoalBlock);
 
-        CurrentRoom.AssignTrack(RoomTracks[2]);
+        CurrentRoom.FinishBuilding();
     }
 
     void BuildPipeBlockRoom()
@@ -64,7 +64,7 @@ public class DevLevel : LevelBuilder {
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         CurrentRoom.FillVoxel(new Vector3(3, 1, 3), GoalBlock);
 
-        CurrentRoom.AssignTrack(RoomTracks[3]);
+        CurrentRoom.FinishBuilding();
     }
 
     void BuildSwitchBlockRoom()
@@ -72,5 +72,7 @@ public class DevLevel : LevelBuilder {
         CurrentRoom = Rooms[4];
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         CurrentRoom.FillVoxel(new Vector3(3, 1, 3), GoalBlock);
+
+        CurrentRoom.FinishBuilding();
     }
 }

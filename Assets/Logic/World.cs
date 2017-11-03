@@ -1,18 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.Logic.Framework;
 using UnityEngine;
 
 namespace Assets.Logic
 {
-    public static class World
+    public class World : MonoBehaviour
     {
+        void Awake()
+        {
+            if (Instance == null) Instance = this;
+        }
+
         // Properties
+        public static World Instance;
         public static Voxel SpawnVoxel
         {
             get { return ActiveLevel == null ? new Voxel { Position = Vector3.zero } : ActiveLevel.SpawnVoxel; }
         }
         public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
+        public Music Music;
 
         // Levels
         private static readonly List<Level> _levels = new List<Level>();
@@ -48,6 +56,21 @@ namespace Assets.Logic
         public static bool IsInsideWorld(Vector3 worldPos)
         {
             return GetLevel(worldPos) != null;
+        }
+
+        // Coroutines
+        public IEnumerator RandomlyActivateBlocks(List<Block> blocks)
+        {
+            blocks = blocks.OrderBy(x => Random.Range(0, 100)).ToList();
+            var i = 0;
+            var speed = 5;
+            foreach (var block in blocks)
+            {
+                block.Activate();
+                if (i == 0)
+                    yield return new WaitForFixedUpdate();
+                i = (i + 1) % speed;
+            }
         }
     }
 
@@ -107,11 +130,11 @@ namespace Assets.Logic
     public class Room
     {
         private readonly Level _level;
-        private AudioSource _track;
         public Vector3 LevelPostition;
+        private bool _finishedBuilding;
         public bool IsComplete
         {
-            get { return Goals.All(g => g.IsActivated); }
+            get { return _finishedBuilding && Goals.All(g => g.IsActivated); }
         }
         
         public List<Block> Floor = new List<Block>();
@@ -163,15 +186,15 @@ namespace Assets.Logic
 
             return vox;
         }
-        public void AssignTrack(AudioSource track)
+
+        public void FinishBuilding()
         {
-            _track = track;
-            Async.Instance.AdjustTrackVolume(this, _track);
+            _finishedBuilding = true;
         }
         public void CompleteRoom()
         {
             if (!IsComplete) return;
-            Async.Instance.RandomlyActivateBlocks(Floor);
+            World.Instance.StartCoroutine("RandomlyActivateBlocks",Floor);
         }
     }
 

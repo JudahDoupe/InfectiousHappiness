@@ -6,27 +6,37 @@ using UnityEngine;
 
 public class Music : MonoBehaviour
 {
-    public List<AudioSource> Tracks = new List<AudioSource>();
-
-    void Start()
-    {
-        var tracks = transform.GetComponents<AudioSource>();
-
-        foreach (var audioSource in tracks)
-        {
-            if(!Tracks.Contains(audioSource))
-                Tracks.Add(audioSource);
-        }
-    }
+    private readonly List<AudioSource> _tracks = new List<AudioSource>();
 
     void Update()
     {
-        var baseTrack = Tracks.FirstOrDefault();
+        var baseTrack = _tracks.FirstOrDefault();
         if (!baseTrack) return;
         
-        foreach (var track in Tracks)
+        foreach (var track in _tracks)
         {
             track.timeSamples = baseTrack.timeSamples;
         }
+    }
+
+    public AudioSource AddTrack(AudioClip track, Room room)
+    {
+        var src = gameObject.AddComponent<AudioSource>();
+        src.clip = track;
+        _tracks.Add(src);
+        src.Play();
+        src.loop = true;
+        StartCoroutine(AdjustTrackVolume(src, room));
+        return src;
+    }
+
+    private IEnumerator AdjustTrackVolume(AudioSource track, Room room)
+    {
+        while (!room.IsComplete)
+        {
+            track.volume = room.Floor.Count(x => x.IsActivated) / (room.Floor.Count + 0f);
+            yield return new WaitForSeconds(1);
+        }
+        track.volume = 1;
     }
 }

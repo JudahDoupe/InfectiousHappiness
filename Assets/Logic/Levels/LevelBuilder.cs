@@ -5,6 +5,13 @@ using UnityEngine;
 
 public class LevelBuilder : MonoBehaviour
 {
+    [System.Serializable]
+    public struct RoomData
+    {
+        public Vector3 LevelPos;
+        public AudioClip Track;
+    }
+
     public GameObject FloorBlock;
     public GameObject MovableBlock;
     public GameObject GoalBlock;
@@ -12,8 +19,7 @@ public class LevelBuilder : MonoBehaviour
 
     public Vector3 SpawnPosition;
     public Vector3 WorldPosition;
-    public List<Vector3> RoomPositions = new List<Vector3>();
-    public List<AudioSource> RoomTracks = new List<AudioSource>();
+    public List<RoomData> RoomInfo = new List<RoomData>();
 
     private Level _level;
     public List<Room> Rooms = new List<Room>();
@@ -24,9 +30,14 @@ public class LevelBuilder : MonoBehaviour
         _level = World.AddLevel(WorldPosition);
         _level.SpawnVoxel = _level.GetVoxel(SpawnPosition);
 
-        foreach (var roomPosition in RoomPositions)
+        foreach (var data in RoomInfo)
         {
-            Rooms.Add(_level.AddRoom(roomPosition));
+            var room = _level.AddRoom(data.LevelPos);
+            Rooms.Add(room);
+            if (data.Track != null)
+            {
+                World.Instance.Music.AddTrack(data.Track, room);
+            }
         }
     }
 
