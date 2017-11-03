@@ -10,7 +10,7 @@ public class Async : MonoBehaviour
 {
     public static Async Instance;
 
-    void Start()
+    void Awake()
     {
         if (Instance == null)
             Instance = this;

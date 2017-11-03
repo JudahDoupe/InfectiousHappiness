@@ -18,7 +18,7 @@ public class Character : MonoBehaviour
         Movement = gameObject.GetComponent<Movement>();
         if (Movement == null)
             gameObject.AddComponent<Movement>();
-        Movement.StartingVoxel = World.SpawnVoxel;
+        Movement.SpawnVoxel = World.SpawnVoxel;
         Movement.Fall();
     }
 

@@ -10,15 +10,23 @@ namespace Assets.Logic
         // Properties
         public static Voxel SpawnVoxel
         {
-            get { return CurrentLevel == null ? new Voxel { Position = Vector3.zero } : CurrentLevel.SpawnVoxel; }
+            get { return ActiveLevel == null ? new Voxel { Position = Vector3.zero } : ActiveLevel.SpawnVoxel; }
         }
         public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
 
         // Levels
         private static readonly List<Level> _levels = new List<Level>();
-        public static Level CurrentLevel
+        public static Level ActiveLevel;
+        public static Level ActivateLevel(Vector3 worldPos)
         {
-            get { return _levels.First(); }
+            var newLevel = GetLevel(worldPos);
+            if (ActiveLevel != newLevel)
+                ActiveLevel = newLevel;
+            return newLevel;
+        }
+        public static Level GetLevel(Vector3 worldPos)
+        {
+            return _levels.FirstOrDefault(level => level.IsInsideLevel(worldPos));
         }
         public static Level AddLevel(Vector3 position)
         {
@@ -34,17 +42,12 @@ namespace Assets.Logic
         // Queries
         public static Voxel GetVoxel(Vector3 worldPos)
         {
-            return CurrentLevel == null ? null : CurrentLevel.GetVoxel(worldPos - CurrentLevel.WorldPostition);
+            var level = GetLevel(worldPos);
+            return level == null ? null : level.GetVoxel(worldPos - level.WorldPostition);
         }
         public static bool IsInsideWorld(Vector3 worldPos)
         {
-            if (CurrentLevel == null)
-                return false;
-
-            var localPos = worldPos - CurrentLevel.WorldPostition;
-            return 0 < localPos.x && localPos.x < Level.Size
-                   && 0 < localPos.y && localPos.y < Level.Size
-                   && 0 < localPos.z && localPos.z < Level.Size;
+            return GetLevel(worldPos) != null;
         }
     }
 
@@ -85,6 +88,15 @@ namespace Assets.Logic
 
             return _voxels[x, y, z] ??
                    (_voxels[x, y, z] = new Voxel {Position = new Vector3(x, y, z) + WorldPostition});
+        }
+
+        // Queries
+        public bool IsInsideLevel(Vector3 worldPos)
+        {
+            var localPos = worldPos - WorldPostition;
+            return 0 <= localPos.x && localPos.x <= Size - 1
+                   && 0 <= localPos.y && localPos.y <= Size - 1
+                   && 0 <= localPos.z && localPos.z <= Size - 1;
         }
     }
 
@@ -132,7 +144,7 @@ namespace Assets.Logic
         public void AssignTrack(AudioSource track)
         {
             _track = track;
-            Async.Instance.AdjustTrackVolume(this,_track);
+            Async.Instance.AdjustTrackVolume(this, _track);
         }
         public void CompleteRoom()
         {

@@ -10,7 +10,13 @@ public class Music : MonoBehaviour
 
     void Start()
     {
-        Tracks.AddRange(transform.GetComponents<AudioSource>());
+        var tracks = transform.GetComponents<AudioSource>();
+
+        foreach (var audioSource in tracks)
+        {
+            if(!Tracks.Contains(audioSource))
+                Tracks.Add(audioSource);
+        }
     }
 
     void Update()

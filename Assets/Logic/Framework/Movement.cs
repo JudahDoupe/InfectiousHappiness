@@ -9,7 +9,7 @@ using UnityEngine;
 // ReSharper disable once CheckNamespace
 public class Movement : MonoBehaviour
 {
-    public Voxel StartingVoxel;
+    public Voxel SpawnVoxel;
     public float Speed = 10;
     public bool IsStunned;
 
@@ -20,7 +20,7 @@ public class Movement : MonoBehaviour
     public void Start()
     {
         _lastVoxel = World.GetVoxel(transform.position);
-        StartingVoxel = _lastVoxel;
+        SpawnVoxel = _lastVoxel;
     }
 
     public bool MoveToVoxel(Voxel vox)
@@ -65,6 +65,9 @@ public class Movement : MonoBehaviour
     }
     public bool Fall()
     {
+        if(World.GetVoxel(transform.position + World.GravityVector.normalized) == null)
+            return false;
+
         _isFalling = true;
         StartCoroutine(ExecuteFall());
 
@@ -74,8 +77,8 @@ public class Movement : MonoBehaviour
     {
         var start = World.GetVoxel(transform.position);
 
-        var direction = (StartingVoxel.Position - start.Position).normalized;
-        var distance = Vector3.Distance(start.Position, StartingVoxel.Position);
+        var direction = (SpawnVoxel.Position - start.Position).normalized;
+        var distance = Vector3.Distance(start.Position, SpawnVoxel.Position);
 
         StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
@@ -158,7 +161,7 @@ public class Movement : MonoBehaviour
         var velocity = Vector3.zero;
         var potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
 
-        while (!potentialFloor.HasBlock() && World.IsInsideWorld(transform.position))
+        while (potentialFloor != null && !potentialFloor.HasBlock() && World.IsInsideWorld(transform.position))
         {
             velocity = velocity + World.GravityVector;
             transform.Translate(velocity);
@@ -166,7 +169,7 @@ public class Movement : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
-        if (potentialFloor.HasBlock())
+        if (potentialFloor != null && potentialFloor.HasBlock())
             EndMovement();
         else
             Reset();
@@ -199,7 +202,7 @@ public class Movement : MonoBehaviour
         if (vox == null) vox = World.GetVoxel(transform.position);
         var floor = World.GetVoxel(vox.Position + World.GravityVector.normalized);
 
-        if (!floor.HasBlock())
+        if (floor == null || !floor.HasBlock())
         {
             if(!Fall())Reset();
             return false;

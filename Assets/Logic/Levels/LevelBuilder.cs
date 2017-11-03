@@ -13,6 +13,7 @@ public class LevelBuilder : MonoBehaviour
     public Vector3 SpawnPosition;
     public Vector3 WorldPosition;
     public List<Vector3> RoomPositions = new List<Vector3>();
+    public List<AudioSource> RoomTracks = new List<AudioSource>();
 
     private Level _level;
     public List<Room> Rooms = new List<Room>();
