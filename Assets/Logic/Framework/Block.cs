@@ -11,10 +11,10 @@ namespace Assets.Logic.Framework
         public BlockType Type = BlockType.Static;
         public Material ActivatedMaterial;
         public bool IsActivated;
+        public Room Room;
 
         private Movement _movement;
         private Voxel _topVoxel;
-        private bool goalMet;
 
         void Start()
         {
@@ -74,6 +74,13 @@ namespace Assets.Logic.Framework
 
             IsActivated = true;
             Score.Value++;
+
+            switch (Type)
+            {
+                case BlockType.Goal:
+                    Room.CompleteRoom();
+                    break;
+            }
 
             gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
 

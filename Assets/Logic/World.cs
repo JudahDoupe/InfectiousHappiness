@@ -66,7 +66,11 @@ namespace Assets.Logic
         
         // Rooms
         private readonly List<Room> _rooms = new List<Room>();
-        public Room CurrentRoom;
+
+        public Room GetRoom(Vector3 position)
+        {
+            return _rooms.FirstOrDefault();
+        }
         public Room AddRoom(Vector3 position)
         {
             var room = new Room(position, this);
@@ -128,6 +132,7 @@ namespace Assets.Logic
             var block = obj.GetComponent<Block>();
             if (block)
             {
+                block.Room = this;
                 switch (block.Type)
                 {
                     case BlockType.Static:
@@ -135,6 +140,23 @@ namespace Assets.Logic
                         break;
                     case BlockType.Goal:
                         Goals.Add(block);
+                        break;
+                }
+            }
+
+            return vox;
+        }
+        public Voxel DestroyVoxel(Voxel vox)
+        {
+            if (vox.HasBlock())
+            {
+                switch (vox.GetBlock().Type)
+                {
+                    case BlockType.Static:
+                        Floor.Remove(vox.GetBlock());
+                        break;
+                    case BlockType.Goal:
+                        Goals.Remove(vox.GetBlock());
                         break;
                 }
             }
@@ -149,7 +171,6 @@ namespace Assets.Logic
         public void CompleteRoom()
         {
             if (!IsComplete) return;
-
             Async.Instance.RandomlyActivateBlocks(Floor);
         }
     }
@@ -182,6 +203,8 @@ namespace Assets.Logic
         {
             if(_obj != null)
                 Object.Destroy(_obj);
+            if (_block != null && _block.Room != null)
+                _block.Room.DestroyVoxel(this);
             _block = null;
             _obj = null;
             _character = null;
