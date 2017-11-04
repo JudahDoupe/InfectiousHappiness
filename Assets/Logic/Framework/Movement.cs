@@ -82,8 +82,6 @@ public class Movement : MonoBehaviour
         var v = _lastVoxel.Position - floor.Position;
         var target = World.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -World.GravityVector.normalized) * -World.GravityVector.normalized);
 
-        Debug.Log("Beef");
-
         if(!JumpToVoxel(target))
             JumpToVoxel(_lastVoxel);
     }

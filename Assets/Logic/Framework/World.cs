@@ -13,14 +13,41 @@ namespace Assets.Logic
             if (Instance == null) Instance = this;
         }
 
+        void Update()
+        {
+            var baseTrack = _tracks.FirstOrDefault();
+            if (!baseTrack) return;
+
+            foreach (var track in _tracks)
+            {
+                track.timeSamples = baseTrack.timeSamples;
+            }
+        }
+
         // Properties
+        public bool PlayMusic = true;
         public static World Instance;
         public static Voxel SpawnVoxel
         {
             get { return ActiveLevel == null ? new Voxel { Position = Vector3.zero } : ActiveLevel.SpawnVoxel; }
         }
         public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
-        public Music Music;
+
+        // Music
+        private static List<AudioSource> _tracks = new List<AudioSource>();
+        public static AudioSource AddTrack(AudioClip track, Room room)
+        {
+            if (!Instance.PlayMusic) return null;
+
+            var src = Instance.gameObject.AddComponent<AudioSource>();
+            src.clip = track;
+            src.loop = true;
+            _tracks.Add(src);
+            room.Track = src;
+            src.Play();
+            Instance.StartCoroutine("AdjustTrackVolume",room);
+            return src;
+        }
 
         // Levels
         private static readonly List<Level> _levels = new List<Level>();
@@ -71,6 +98,15 @@ namespace Assets.Logic
                     yield return new WaitForFixedUpdate();
                 i = (i + 1) % speed;
             }
+        }
+        public IEnumerator AdjustTrackVolume(Room room)
+        {
+            while (!room.IsComplete)
+            {
+                room.Track.volume = room.Floor.Count(x => x.IsActivated) / (room.Floor.Count + 0f);
+                yield return new WaitForSeconds(1);
+            }
+            room.Track.volume = 1;
         }
     }
 
@@ -129,23 +165,23 @@ namespace Assets.Logic
 
     public class Room
     {
-        private readonly Level _level;
+        // Properties
+        public AudioSource Track;
         public Vector3 LevelPostition;
-        private bool _finishedBuilding;
-        public bool IsComplete
-        {
-            get { return _finishedBuilding && Goals.All(g => g.IsActivated); }
-        }
-        
+
         public List<Block> Floor = new List<Block>();
         public List<Block> Goals = new List<Block>();
 
+        private readonly Level _level;
+        private bool _finishedBuilding;
+        
         public Room(Vector3 position, Level level)
         {
             LevelPostition = position;
             _level = level;
         }
 
+        // Commands
         public Voxel FillVoxel(Vector3 roomPos, GameObject prefab)
         {
             var vox = _level.GetVoxel(roomPos + LevelPostition);
@@ -158,7 +194,7 @@ namespace Assets.Logic
                 block.Room = this;
                 switch (block.Type)
                 {
-                    case BlockType.Static:
+                    case BlockType.Floor:
                         Floor.Add(block);
                         break;
                     case BlockType.Goal:
@@ -175,7 +211,7 @@ namespace Assets.Logic
             {
                 switch (vox.GetBlock().Type)
                 {
-                    case BlockType.Static:
+                    case BlockType.Floor:
                         Floor.Remove(vox.GetBlock());
                         break;
                     case BlockType.Goal:
@@ -186,7 +222,6 @@ namespace Assets.Logic
 
             return vox;
         }
-
         public void FinishBuilding()
         {
             _finishedBuilding = true;
@@ -194,7 +229,13 @@ namespace Assets.Logic
         public void CompleteRoom()
         {
             if (!IsComplete) return;
-            World.Instance.StartCoroutine("RandomlyActivateBlocks",Floor);
+            World.Instance.StartCoroutine("RandomlyActivateBlocks", Floor);
+        }
+        
+        // Queries
+        public bool IsComplete
+        {
+            get { return _finishedBuilding && Goals.All(g => g.IsActivated); }
         }
     }
 
@@ -261,4 +302,5 @@ namespace Assets.Logic
             return _obj;
         }
     }
+
 }

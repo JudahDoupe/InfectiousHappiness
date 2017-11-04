@@ -36,7 +36,7 @@ public class LevelBuilder : MonoBehaviour
             Rooms.Add(room);
             if (data.Track != null)
             {
-                World.Instance.Music.AddTrack(data.Track, room);
+                World.AddTrack(data.Track, room);
             }
         }
     }

@@ -80,16 +80,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Logic\Audio\Music.cs" />
     <Compile Include="Assets\Logic\Audio\SoundFX.cs" />
-    <Compile Include="Assets\Logic\Framework\Blocks\Block.cs" />
-    <Compile Include="Assets\Logic\Framework\Blocks\Bounce.cs" />
-    <Compile Include="Assets\Logic\Framework\Blocks\Floor.cs" />
-    <Compile Include="Assets\Logic\Framework\Blocks\Pipe.cs" />
-    <Compile Include="Assets\Logic\Framework\Blocks\Switch.cs" />
+    <Compile Include="Assets\Logic\Framework\Block.cs" />
     <Compile Include="Assets\Logic\Framework\Character.cs" />
     <Compile Include="Assets\Logic\Framework\FollowCamera.cs" />
-    <Compile Include="Assets\Logic\Framework\Goal.cs" />
     <Compile Include="Assets\Logic\Framework\Movement.cs" />
     <Compile Include="Assets\Logic\Framework\World.cs" />
     <Compile Include="Assets\Logic\Levels\DevLevel.cs" />

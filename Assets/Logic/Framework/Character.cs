@@ -45,19 +45,14 @@ public class Character : MonoBehaviour
     {
         if (GetForwardBlock() != null)
             Climb();
-        else if (GetForwardGap() == null)
+        else if (GetForwardGap() == null && GetForwardGapFloor() == null)
             Jump();
         else
             Movement.MoveToVoxel(World.GetVoxel(transform.position + transform.forward));
     }
     public void Back()
     {
-        if (GetForwardBlock() != null)
-            Climb();
-        else if (GetForwardGap() == null)
-            Jump();
-        else
-            Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.forward));
+        Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.forward));
     }
     public void Right()
     {
@@ -149,6 +144,14 @@ public class Character : MonoBehaviour
     public Block GetForwardGap()
     {
         var vox = World.GetVoxel(transform.position + transform.forward - transform.up);
+        if (vox != null && vox.HasBlock())
+            return vox.GetBlock();
+
+        return null;
+    }
+    public Block GetForwardGapFloor()
+    {
+        var vox = World.GetVoxel(transform.position + transform.forward - transform.up * 2);
         if (vox != null && vox.HasBlock())
             return vox.GetBlock();
 
