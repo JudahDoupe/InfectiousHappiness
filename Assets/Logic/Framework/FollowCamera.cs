@@ -12,16 +12,6 @@ public class FollowCamera : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (Input.GetKey(KeyCode.UpArrow))
-            Height += Speed;
-        if (Input.GetKey(KeyCode.DownArrow))
-            Height -= Speed;
-
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-            Character.TurnLeft();
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-            Character.TurnRight();
-
         Height = Mathf.Clamp(Height, 0, 15);
 
         var newPos = Character.transform.position

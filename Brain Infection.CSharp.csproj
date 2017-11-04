@@ -82,16 +82,19 @@
   <ItemGroup>
     <Compile Include="Assets\Logic\Audio\Music.cs" />
     <Compile Include="Assets\Logic\Audio\SoundFX.cs" />
-    <Compile Include="Assets\Logic\Framework\Block.cs" />
+    <Compile Include="Assets\Logic\Framework\Blocks\Block.cs" />
+    <Compile Include="Assets\Logic\Framework\Blocks\Bounce.cs" />
+    <Compile Include="Assets\Logic\Framework\Blocks\Floor.cs" />
+    <Compile Include="Assets\Logic\Framework\Blocks\Pipe.cs" />
+    <Compile Include="Assets\Logic\Framework\Blocks\Switch.cs" />
     <Compile Include="Assets\Logic\Framework\Character.cs" />
     <Compile Include="Assets\Logic\Framework\FollowCamera.cs" />
+    <Compile Include="Assets\Logic\Framework\Goal.cs" />
     <Compile Include="Assets\Logic\Framework\Movement.cs" />
+    <Compile Include="Assets\Logic\Framework\World.cs" />
     <Compile Include="Assets\Logic\Levels\DevLevel.cs" />
     <Compile Include="Assets\Logic\Levels\LevelBuilder.cs" />
-    <Compile Include="Assets\Logic\UI\CommandLine.cs" />
-    <Compile Include="Assets\Logic\UI\Commands.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
-    <Compile Include="Assets\Logic\World.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

@@ -23,6 +23,7 @@ public class Movement : MonoBehaviour
         SpawnVoxel = _lastVoxel;
     }
 
+    // Commands
     public bool MoveToVoxel(Voxel vox)
     {
         if (IsStunned) return false;
@@ -73,6 +74,19 @@ public class Movement : MonoBehaviour
 
         return true;
     }
+    public void Bounce()
+    {
+        var floor = World.GetVoxel(transform.position + World.GravityVector.normalized);
+
+        SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
+        var v = _lastVoxel.Position - floor.Position;
+        var target = World.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -World.GravityVector.normalized) * -World.GravityVector.normalized);
+
+        Debug.Log("Beef");
+
+        if(!JumpToVoxel(target))
+            JumpToVoxel(_lastVoxel);
+    }
     public void Reset()
     {
         var start = World.GetVoxel(transform.position);
@@ -83,7 +97,6 @@ public class Movement : MonoBehaviour
         StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
     }
-
     public void Parent(Movement parent)
     {
         _parent = parent;
@@ -96,6 +109,7 @@ public class Movement : MonoBehaviour
         IsStunned = false;
     }
 
+    // Utilities
     private bool MovePathClear(Vector3 direction, float distance) 
     {
         var start = World.GetVoxel(transform.position);
@@ -175,17 +189,6 @@ public class Movement : MonoBehaviour
             Reset();
     }
 
-    private void Bounce()
-    {
-        var floor = World.GetVoxel(transform.position + World.GravityVector.normalized);
-
-        SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
-        var v = _lastVoxel.Position - floor.Position;
-        var target = World.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -World.GravityVector.normalized) * -World.GravityVector.normalized);
-
-        if(!JumpToVoxel(target))
-            JumpToVoxel(_lastVoxel);
-    }
 
     private bool BeginMovement()
     {
@@ -197,31 +200,25 @@ public class Movement : MonoBehaviour
     }
     private bool EndMovement(Voxel vox = null)
     {
-        if (_parent != null) return false;
-
         if (vox == null) vox = World.GetVoxel(transform.position);
         var floor = World.GetVoxel(vox.Position + World.GravityVector.normalized);
 
-        if (floor == null || !floor.HasBlock())
+        if (_parent == null && (floor == null || !floor.HasBlock()))
         {
-            if(!Fall())Reset();
+            if(!Fall())
+                Reset();
             return false;
         }
 
-        IsStunned = false;
-        if (floor.GetBlock().Type == BlockType.Bouncy)
-        {
-            Bounce();
-            return false;
-        }
-
-        if (gameObject.GetComponent<Character>())
-            floor.GetBlock().Activate();
 
         if (_isFalling && transform.GetComponent<Block>())
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
 
+        IsStunned = false;
         _isFalling = false;
+
+        if (_parent != null || !floor.GetBlock().Stand(this)) return false;
+
         _lastVoxel = vox;
         _lastVoxel.Fill(gameObject);
 

@@ -22,111 +22,137 @@ public class Character : MonoBehaviour
         Movement.Fall();
     }
 
-    //Movement Commands
+    void Update()
+    {
+        if (Input.GetButtonDown("Up"))
+            Forward();
+        else if (Input.GetButtonDown("Down"))
+            Back();
+        else if (Input.GetButtonDown("Left"))
+            Left();
+        else if (Input.GetButtonDown("Right"))
+            Right();
+        else if (Input.GetButtonDown("Jump"))
+            Jump();
+        else if (Input.GetButtonDown("Primary"))
+            Primary();
+        else if (Input.GetButtonDown("Secondary"))
+            Secondary();
+    }
 
-    public void MoveForward()
+    // Input Commands
+    public void Forward()
     {
-        Movement.MoveToVoxel(World.GetVoxel(transform.position + transform.forward));
+        if (GetForwardBlock() != null)
+            Climb();
+        else if (GetForwardGap() == null)
+            Jump();
+        else
+            Movement.MoveToVoxel(World.GetVoxel(transform.position + transform.forward));
     }
-    public void MoveBack()
+    public void Back()
     {
-        Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.forward));
+        if (GetForwardBlock() != null)
+            Climb();
+        else if (GetForwardGap() == null)
+            Jump();
+        else
+            Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.forward));
     }
-    public void MoveRight()
+    public void Right()
     {
-        Movement.MoveToVoxel(World.GetVoxel(transform.position + transform.right));
-    }
-    public void MoveLeft()
-    {
-        Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.right));
-    }
-
-    public void TurnRight()
-    {
-        if (Movement.IsStunned) return;
         transform.Rotate(new Vector3(0, 90, 0));
     }
-    public void TurnLeft()
+    public void Left()
     {
-        if (Movement.IsStunned) return;
         transform.Rotate(new Vector3(0, -90, 0));
     }
+    public void Primary()
+    {
+        if (Movement.IsStunned) return;
+        var f = GetForwardBlock();
+        if (f == null) return;
 
-    //Special Commands
+        switch (f.Type)
+        {
+            case BlockType.Movable:
+                f.Push(this);
+                break;
+            case BlockType.Switch:
+                f.Activate(this);
+                break;
+            case BlockType.Pipe:
+                f.Activate(this);
+                break;
+            default:
+                break;
+        }
+    }
+    public void Secondary()
+    {
+        if (Movement.IsStunned) return;
+        if (Load != null)
+        {
+            Load.Drop(this);
+            return;
+        }
 
+        var f = GetForwardBlock();
+        if (f == null) return;
+
+        switch (f.Type)
+        {
+            case BlockType.Movable:
+                f.Lift(this);
+                break;
+            case BlockType.Switch:
+                f.Activate(this);
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Movement
     public void Jump()
     {
         Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward * 2));
     }
-    public void Leap()
-    {
-        Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward * 3));
-    }
-
     public void Climb()
     {
         Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward - World.GravityVector.normalized));
     }
-    public void Vault()
-    {
-        Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward - World.GravityVector.normalized * 2));
-    }
-    public void Switch()
-    {
-        World.GravityVector = -World.GravityVector;
-        transform.Rotate(new Vector3(0, 0, 180));
-        Movement.Fall();
-    }
-
     public void Die()
     {
-        Drop();
-        //SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Death);
+        if (Load != null)
+            Load.Drop(this);
+        SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Death);
     }
 
-    //Block Commands
-
-    public void Push()
+    // Queries
+    public Block GetFloorBlock()
     {
-        if (Movement.IsStunned) return;
+        var vox = World.GetVoxel(transform.position - transform.up);
+        if (vox != null && vox.HasBlock())
+            return vox.GetBlock();
 
+        return null;
+    }
+    public Block GetForwardBlock()
+    {
         var vox = World.GetVoxel(transform.position + transform.forward);
+        if (vox != null && vox.HasBlock())
+            return vox.GetBlock();
 
-        if (vox.HasBlock()) vox.GetBlock().Push(this);
+        return null;
     }
-    public void Punch()
+    public Block GetForwardGap()
     {
-        if (Movement.IsStunned) return;
+        var vox = World.GetVoxel(transform.position + transform.forward - transform.up);
+        if (vox != null && vox.HasBlock())
+            return vox.GetBlock();
 
-        var vox = World.GetVoxel(transform.position + transform.forward);
-
-        if (vox.HasBlock()) vox.GetBlock().Punch(this);
+        return null;
     }
 
-    public void Lift()
-    {
-        if (Movement.IsStunned) return;
-
-        var vox = World.GetVoxel(transform.position + transform.forward);
-
-        if (!vox.HasBlock()) return;
-
-        Load = vox.GetBlock();
-        if (!Load.Lift(this))
-        {
-            Load = null;
-            return;
-        }
-
-        Load.transform.parent = transform;
-    }
-    public void Drop()
-    {
-        if (Movement.IsStunned || Load == null) return;
-
-        if (!Load.Drop(this)) return;
-
-        Load.transform.parent = null;
-        Load = null;
-    }
 }
