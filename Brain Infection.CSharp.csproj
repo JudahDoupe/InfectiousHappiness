@@ -83,7 +83,7 @@
     <Compile Include="Assets\Logic\Audio\SoundFX.cs" />
     <Compile Include="Assets\Logic\Framework\Block.cs" />
     <Compile Include="Assets\Logic\Framework\Character.cs" />
-    <Compile Include="Assets\Logic\Framework\FollowCamera.cs" />
+    <Compile Include="Assets\Logic\Framework\Camera.cs" />
     <Compile Include="Assets\Logic\Framework\Movement.cs" />
     <Compile Include="Assets\Logic\Framework\World.cs" />
     <Compile Include="Assets\Logic\Levels\DevLevel.cs" />
