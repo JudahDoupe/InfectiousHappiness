@@ -64,6 +64,37 @@ public class Movement : MonoBehaviour
 
         return true;
     }
+    public void Push(Character pusher)
+    {
+        if (IsStunned) return;
+
+        SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Push);
+        StartCoroutine("MoveToVoxel", World.GetVoxel(transform.position + pusher.transform.forward));
+    }
+    public bool Lift(Character lifter)
+    {
+        if (IsStunned) return false;
+
+        lifter.Movement.IsStunned = true;
+        lifter.Load = this;
+        SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
+        Parent(lifter.Movement);
+        JumpToVoxel(World.GetVoxel(lifter.transform.position + lifter.transform.up));
+        return true;
+    }
+    public bool Drop(Character dropper)
+    {
+        if (IsStunned) return false;
+
+        dropper.Load = null;
+        UnParent();
+        if (JumpToVoxel(World.GetVoxel(transform.position + dropper.transform.forward)))
+            return true;
+
+        Parent(dropper.Movement);
+        MoveToVoxel(World.GetVoxel(transform.position));
+        return false;
+    }
     public bool Fall()
     {
         if(World.GetVoxel(transform.position + World.GravityVector.normalized) == null)
@@ -94,17 +125,6 @@ public class Movement : MonoBehaviour
 
         StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
-    }
-    public void Parent(Movement parent)
-    {
-        _parent = parent;
-        transform.parent = parent.transform;
-    }
-    public void UnParent()
-    {
-        _parent = null;
-        transform.parent = null;
-        IsStunned = false;
     }
 
     // Utilities
@@ -173,7 +193,7 @@ public class Movement : MonoBehaviour
         var velocity = Vector3.zero;
         var potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
 
-        while (potentialFloor != null && !potentialFloor.HasBlock() && World.IsInsideWorld(transform.position))
+        while ((potentialFloor == null || potentialFloor.IsEmpty()) && World.IsInsideWorld(transform.position))
         {
             velocity = velocity + World.GravityVector;
             transform.Translate(velocity);
@@ -181,33 +201,50 @@ public class Movement : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
-        if (potentialFloor != null && potentialFloor.HasBlock())
-            EndMovement();
-        else
+        if (!World.IsInsideWorld(transform.position))
             Reset();
+        else
+            EndMovement();
     }
 
+    private void Parent(Movement parent)
+    {
+        _parent = parent;
+        transform.parent = parent.transform;
+    }
+    private void UnParent()
+    {
+        _parent = null;
+        transform.parent = null;
+        IsStunned = false;
+    }
 
-    private bool BeginMovement()
+    private void BeginMovement()
     {
         IsStunned = true;
         _lastVoxel.Empty();
         _lastVoxel = World.GetVoxel(transform.position);
-        
-        return true;
     }
-    private bool EndMovement(Voxel vox = null)
+    private void EndMovement(Voxel vox = null)
     {
         if (vox == null) vox = World.GetVoxel(transform.position);
         var floor = World.GetVoxel(vox.Position + World.GravityVector.normalized);
 
-        if (_parent == null && (floor == null || !floor.HasBlock()))
+        if (floor != null && floor.HasCharacter() && _parent == null)
+        {
+            IsStunned = false;
+            Lift(floor.GetCharacter());
+            return;
+        }
+
+        if (floor == null || floor.IsEmpty())
         {
             if(!Fall())
                 Reset();
-            return false;
+            return;
         }
 
+        /* Clear to stop moving */
 
         if (_isFalling && transform.GetComponent<Block>())
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
@@ -215,12 +252,18 @@ public class Movement : MonoBehaviour
         IsStunned = false;
         _isFalling = false;
 
-        if (_parent != null || !floor.GetBlock().Stand(this)) return false;
+        if (_parent != null)
+        {
+            _parent.IsStunned = false;
+            return;
+        }
+        if (!floor.GetBlock().Stand(this))
+            return;
+
+        /* Clear to land */
 
         _lastVoxel = vox;
         _lastVoxel.Fill(gameObject);
-
-        return true;
     }
 
 }

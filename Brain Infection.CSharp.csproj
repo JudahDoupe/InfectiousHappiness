@@ -89,10 +89,10 @@
     <Compile Include="Assets\Logic\UI\Score.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Skybox Shaders\Gradient Skybox.shader" />
-    <None Include="Assets\Skybox Shaders\Horizon With Sun Skybox.shader" />
-    <None Include="Assets\Skybox Shaders\Horizontal Skybox.shader" />
-    <None Include="Assets\Skybox Shaders\RGBM Cubed Skybox.shader" />
+    <None Include="Assets\Art\Skyboxes\Skybox Shaders\Gradient Skybox.shader" />
+    <None Include="Assets\Art\Skyboxes\Skybox Shaders\Horizon With Sun Skybox.shader" />
+    <None Include="Assets\Art\Skyboxes\Skybox Shaders\Horizontal Skybox.shader" />
+    <None Include="Assets\Art\Skyboxes\Skybox Shaders\RGBM Cubed Skybox.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

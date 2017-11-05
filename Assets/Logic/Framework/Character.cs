@@ -10,7 +10,7 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
 
-    public Block Load;
+    public Movement Load;
     public Movement Movement;
 
     void Start()
@@ -71,7 +71,7 @@ public class Character : MonoBehaviour
         switch (f.Type)
         {
             case BlockType.Movable:
-                f.Push(this);
+                f.GetComponent<Movement>().Push(this);
                 break;
             case BlockType.Switch:
                 f.Activate(this);
@@ -86,6 +86,7 @@ public class Character : MonoBehaviour
     public void Secondary()
     {
         if (Movement.IsStunned) return;
+
         if (Load != null)
         {
             Load.Drop(this);
@@ -98,7 +99,7 @@ public class Character : MonoBehaviour
         switch (f.Type)
         {
             case BlockType.Movable:
-                f.Lift(this);
+                f.GetComponent<Movement>().Lift(this);
                 break;
             case BlockType.Switch:
                 f.Activate(this);
