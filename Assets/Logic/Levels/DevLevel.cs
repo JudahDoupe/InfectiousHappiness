@@ -65,12 +65,17 @@ public class DevLevel : LevelBuilder {
         CurrentRoom = Rooms[3];
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
-        PlacePipe(new Vector3(3, 1, 5), new Vector3(3, 5, 5));
-        PlacePipe(new Vector3(3, 6, 5), new Vector3(3, 6, 2));
-        PlacePipe(new Vector3(3, 6, 2), new Vector3(3, 4, 2));
+        PlacePipe(new Vector3(1, 1, 2), new Vector3(1, 1, 5));
+        PlacePipe(new Vector3(1, 1, 5), new Vector3(1, 3, 5));
+        PlacePipe(new Vector3(1, 3, 5), new Vector3(3, 3, 5));
+        PlacePipe(new Vector3(3, 3, 5), new Vector3(3, 7, 5));
+        PlacePipe(new Vector3(3, 7, 5), new Vector3(3, 7, 2));
+        PlacePipe(new Vector3(3, 7, 1), new Vector3(3, 6, 1));
 
-        PlaceFloor(new Vector3(2, 1, 0), new Vector3(4, 2, 2));
-        CurrentRoom.FillVoxel(new Vector3(3, 2, 1), GoalBlock);
+        PlaceFloor(new Vector3(2, 1, 0), new Vector3(4, 3, 2));
+        CurrentRoom.FillVoxel(new Vector3(3, 3, 1), GoalBlock);
+
+        PlacePipe(new Vector3(5, 1, 5), new Vector3(5, 1, 1));
 
         CurrentRoom.FinishBuilding();
     }

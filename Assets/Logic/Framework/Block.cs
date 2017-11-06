@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Logic.UI;
 using System.Linq;
@@ -14,12 +15,17 @@ namespace Assets.Logic.Framework
         public Room Room;
 
         private Voxel _topVoxel;
+        private Material _originalMaterial;
 
         void Start()
         {
             var movement = gameObject.GetComponent<Movement>();
             if (Type == BlockType.Movable && movement == null)
                 gameObject.AddComponent<Movement>();
+
+            var mesh = gameObject.GetComponentInChildren<MeshRenderer>();
+            if (mesh)
+                _originalMaterial = mesh.material;
         }
         void Update()
         {
@@ -27,6 +33,34 @@ namespace Assets.Logic.Framework
             {
                 if(_topVoxel == null)
                     _topVoxel = World.GetVoxel(transform.position - World.GravityVector.normalized);
+            }
+            if (Type == BlockType.Pipe)
+            {
+                var neighbors = World.GetNeighboringVoxels(transform.position)
+                    .Where(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe).ToList();
+
+                if (neighbors.Count() > 1)
+                {
+                    var direction = (neighbors[0].Position - neighbors[1].Position).normalized;
+
+                    if (Mathf.Abs(direction.x) > 0.999)
+                        transform.localScale = new Vector3(1.5f, 0.75f, 0.75f);
+                    else if (Mathf.Abs(direction.y) > 0.999)
+                        transform.localScale = new Vector3(0.75f, 1.5f, 0.75f);
+                    else if (Mathf.Abs(direction.z) > 0.999)
+                        transform.localScale = new Vector3(0.75f, 0.75f, 1.5f);
+                    else
+                        transform.localScale = new Vector3(1, 1, 1);
+
+                    gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+
+                }
+                else
+                {
+                    transform.localScale = new Vector3(1,1,1);
+                    if(_originalMaterial != null)
+                        gameObject.GetComponentInChildren<MeshRenderer>().material = _originalMaterial;
+                }
             }
         }
 
@@ -80,7 +114,6 @@ namespace Assets.Logic.Framework
                     return true;
             }
         }
-
 
         public Stack<Voxel> GetPipePath(Stack<Voxel> currentPath = null)
         {
