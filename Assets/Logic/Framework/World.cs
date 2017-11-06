@@ -80,6 +80,18 @@ namespace Assets.Logic
             var level = GetLevel(worldPos);
             return level == null ? null : level.GetVoxel(worldPos - level.WorldPostition);
         }
+        public static List<Voxel> GetNeighboringVoxels(Vector3 worldPos)
+        {
+            return new List<Voxel>
+            {
+                GetVoxel(worldPos + Vector3.forward),
+                GetVoxel(worldPos + Vector3.back),
+                GetVoxel(worldPos + Vector3.up),
+                GetVoxel(worldPos + Vector3.down),
+                GetVoxel(worldPos + Vector3.left),
+                GetVoxel(worldPos + Vector3.right),
+            };
+        }
         public static bool IsInsideWorld(Vector3 worldPos)
         {
             return GetLevel(worldPos) != null;

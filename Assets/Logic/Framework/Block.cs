@@ -50,6 +50,10 @@ namespace Assets.Logic.Framework
                 case BlockType.Switch:
                     return true;
                 case BlockType.Pipe:
+                    if (World.GetNeighboringVoxels(transform.position)
+                            .Count(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe) > 1) return false;
+                    if (activator == null) return false;
+                    activator.Movement.Transport(GetPipePath());
                     return true;
                 default:
                     return false;
@@ -77,6 +81,18 @@ namespace Assets.Logic.Framework
             }
         }
 
+
+        public Stack<Voxel> GetPipePath(Stack<Voxel> currentPath = null)
+        {
+            if (currentPath == null)
+                currentPath = new Stack<Voxel>();
+            currentPath.Push(World.GetVoxel(transform.position));
+
+            var nextPath = World.GetNeighboringVoxels(transform.position)
+                .FirstOrDefault(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe && !currentPath.Contains(v));
+
+            return nextPath == null ? currentPath : nextPath.GetBlock().GetPipePath(currentPath);
+        }
     }
 
     public enum BlockType
