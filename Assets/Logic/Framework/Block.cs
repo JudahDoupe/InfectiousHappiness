@@ -29,10 +29,12 @@ namespace Assets.Logic.Framework
         }
         void Update()
         {
-            if (Type == BlockType.Goal)
+            if (_topVoxel == null)
+                _topVoxel = World.GetVoxel(transform.position - World.GravityVector.normalized);
+            if (Type == BlockType.Switch)
             {
-                if(_topVoxel == null)
-                    _topVoxel = World.GetVoxel(transform.position - World.GravityVector.normalized);
+                if (_topVoxel == null)
+                    IsActivated = false;
             }
             if (Type == BlockType.Pipe)
             {
@@ -83,12 +85,17 @@ namespace Assets.Logic.Framework
                     Room.CompleteRoom();
                     return true;
                 case BlockType.Switch:
+                    if (activator == null) return false;
+                    IsActivated = true;
+                    var path = new Stack<Voxel>();
+                    path.Push(World.GetVoxel(activator.transform.position));
+                    activator.Movement.Transport(GetPipePath(BlockType.Switch, path));
                     return true;
                 case BlockType.Pipe:
                     if (World.GetNeighboringVoxels(transform.position)
                             .Count(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe) > 1) return false;
                     if (activator == null) return false;
-                    activator.Movement.Transport(GetPipePath());
+                    activator.Movement.Transport(GetPipePath(BlockType.Pipe));
                     return true;
                 default:
                     return false;
@@ -109,21 +116,24 @@ namespace Assets.Logic.Framework
                         stander.Bounce();
                     return false;
                 case BlockType.Switch:
-                    Activate();
+                    if (stander == null) return false;
+                    World.GravityVector  = new Vector3(World.GravityVector.x, -World.GravityVector.y, World.GravityVector.z);
+                    stander.transform.Rotate(stander.transform.forward,180);
+                    Activate(stander.GetComponent<Character>());
                     return true;
                 default:
                     return true;
             }
         }
 
-        public Stack<Voxel> GetPipePath(Stack<Voxel> currentPath = null)
+        public Stack<Voxel> GetPipePath(BlockType type ,Stack<Voxel> currentPath = null)
         {
             if (currentPath == null)
                 currentPath = new Stack<Voxel>();
             currentPath.Push(World.GetVoxel(transform.position));
 
             var nextPath = World.GetNeighboringVoxels(transform.position)
-                .FirstOrDefault(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe && !currentPath.Contains(v));
+                .FirstOrDefault(v => v.HasBlock() && v.GetBlock().Type == type && !currentPath.Contains(v));
 
             if (nextPath == null)
             {
@@ -133,7 +143,7 @@ namespace Assets.Logic.Framework
                 currentPath.Push(end);
                 return currentPath;
             }
-            return nextPath.GetBlock().GetPipePath(currentPath);
+            return nextPath.GetBlock().GetPipePath(type, currentPath);
         }
     }
 

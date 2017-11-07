@@ -85,7 +85,13 @@ public class DevLevel : LevelBuilder {
         CurrentRoom = Rooms[4];
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
-        CurrentRoom.FillVoxel(new Vector3(3, 1, 3), GoalBlock);
+        PlaceFloor(new Vector3(0, 0, 5), new Vector3(6, 2, 5));
+        CurrentRoom.FillVoxel(new Vector3(3, 1, 5), SwitchBlock);
+
+        CurrentRoom.FillVoxel(new Vector3(3, 0, 3), SwitchBlock);
+
+        PlaceFloor(new Vector3(2, -1, 0), new Vector3(4, -1, 2));
+        CurrentRoom.FillVoxel(new Vector3(3, -1, 1), GoalBlock);
 
         CurrentRoom.FinishBuilding();
     }
