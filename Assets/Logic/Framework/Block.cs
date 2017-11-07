@@ -52,13 +52,14 @@ namespace Assets.Logic.Framework
                     else
                         transform.localScale = new Vector3(1, 1, 1);
 
-                    gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+                    if(gameObject.GetComponentInChildren<MeshRenderer>().material != ActivatedMaterial)
+                        gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
 
                 }
                 else
                 {
                     transform.localScale = new Vector3(1,1,1);
-                    if(_originalMaterial != null)
+                    if(_originalMaterial != null && gameObject.GetComponentInChildren<MeshRenderer>().material != _originalMaterial)
                         gameObject.GetComponentInChildren<MeshRenderer>().material = _originalMaterial;
                 }
             }
@@ -124,7 +125,15 @@ namespace Assets.Logic.Framework
             var nextPath = World.GetNeighboringVoxels(transform.position)
                 .FirstOrDefault(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe && !currentPath.Contains(v));
 
-            return nextPath == null ? currentPath : nextPath.GetBlock().GetPipePath(currentPath);
+            if (nextPath == null)
+            {
+                currentPath.Pop();
+                var end = World.GetVoxel(transform.position + (transform.position - currentPath.Pop().Position));
+                currentPath.Push(World.GetVoxel(transform.position));
+                currentPath.Push(end);
+                return currentPath;
+            }
+            return nextPath.GetBlock().GetPipePath(currentPath);
         }
     }
 
