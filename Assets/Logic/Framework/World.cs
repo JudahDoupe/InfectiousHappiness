@@ -80,6 +80,18 @@ namespace Assets.Logic
             var level = GetLevel(worldPos);
             return level == null ? null : level.GetVoxel(worldPos - level.WorldPostition);
         }
+        public static List<Voxel> GetNeighboringVoxels(Vector3 worldPos)
+        {
+            return new List<Voxel>
+            {
+                GetVoxel(worldPos + Vector3.forward),
+                GetVoxel(worldPos + Vector3.back),
+                GetVoxel(worldPos + Vector3.up),
+                GetVoxel(worldPos + Vector3.down),
+                GetVoxel(worldPos + Vector3.left),
+                GetVoxel(worldPos + Vector3.right),
+            };
+        }
         public static bool IsInsideWorld(Vector3 worldPos)
         {
             return GetLevel(worldPos) != null;
@@ -93,7 +105,7 @@ namespace Assets.Logic
             var speed = 5;
             foreach (var block in blocks)
             {
-                block.Activate();
+                block.Stand();
                 if (i == 0)
                     yield return new WaitForFixedUpdate();
                 i = (i + 1) % speed;
@@ -248,6 +260,8 @@ namespace Assets.Logic
 
         public GameObject Fill(GameObject obj)
         {
+            if (obj == _obj) return obj;
+
             Destroy();
             obj.transform.position = Position;
             _block = obj.GetComponent<Block>();

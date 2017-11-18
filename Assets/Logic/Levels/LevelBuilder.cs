@@ -16,6 +16,8 @@ public class LevelBuilder : MonoBehaviour
     public GameObject MovableBlock;
     public GameObject GoalBlock;
     public GameObject BounceBlock;
+    public GameObject PipeBlock;
+    public GameObject SwitchBlock;
 
     public Vector3 SpawnPosition;
     public Vector3 WorldPosition;
@@ -41,7 +43,7 @@ public class LevelBuilder : MonoBehaviour
         }
     }
 
-    public Vector3 PlacePath(Vector3 start, Vector3 end)
+    public Vector3 PlaceHallway(Vector3 start, Vector3 end)
     {
         if (CurrentRoom == null) return start;
 
@@ -68,6 +70,19 @@ public class LevelBuilder : MonoBehaviour
                 }
             }
         }
+        return end;
+    }
+    public Vector3 PlacePipe(Vector3 start, Vector3 end)
+    {
+        if (CurrentRoom == null) return start;
+
+        var direction = (end - start).normalized;
+        var distance = Vector3.Distance(start, end);
+        for (var t = 0f; t <= distance; t += 0.25f)
+        {
+            CurrentRoom.FillVoxel(start + (direction * t), PipeBlock);
+        }
+
         return end;
     }
 }

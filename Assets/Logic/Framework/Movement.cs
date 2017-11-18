@@ -64,6 +64,13 @@ public class Movement : MonoBehaviour
 
         return true;
     }
+    public bool Transport(Stack<Voxel> path)
+    {
+        BeginMovement();
+        StartCoroutine(ExecuteTransport(new Stack<Voxel>(path)));
+        return true;
+    }
+
     public void Push(Character pusher)
     {
         if (IsStunned) return;
@@ -75,11 +82,13 @@ public class Movement : MonoBehaviour
     {
         if (IsStunned) return false;
 
+        if (!JumpToVoxel(World.GetVoxel(lifter.transform.position + lifter.transform.up))) return false;
+
         lifter.Movement.IsStunned = true;
         lifter.Load = this;
         SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
         Parent(lifter.Movement);
-        JumpToVoxel(World.GetVoxel(lifter.transform.position + lifter.transform.up));
+
         return true;
     }
     public bool Drop(Character dropper)
@@ -95,6 +104,7 @@ public class Movement : MonoBehaviour
         MoveToVoxel(World.GetVoxel(transform.position));
         return false;
     }
+
     public bool Fall()
     {
         if(World.GetVoxel(transform.position + World.GravityVector.normalized) == null)
@@ -118,10 +128,8 @@ public class Movement : MonoBehaviour
     }
     public void Reset()
     {
-        var start = World.GetVoxel(transform.position);
-
-        var direction = (SpawnVoxel.Position - start.Position).normalized;
-        var distance = Vector3.Distance(start.Position, SpawnVoxel.Position);
+        var direction = (SpawnVoxel.Position - transform.position).normalized;
+        var distance = Vector3.Distance(transform.position, SpawnVoxel.Position);
 
         StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
@@ -172,7 +180,6 @@ public class Movement : MonoBehaviour
     private IEnumerator ExecuteJump(Vector3 direction, float distance, float height)
     {
         var start = World.GetVoxel(transform.position);
-
         for (var t = 0f; t <= height; t += (Speed / 60f))
         {
             transform.position = start.Position - World.GravityVector.normalized * t;
@@ -196,7 +203,7 @@ public class Movement : MonoBehaviour
         while ((potentialFloor == null || potentialFloor.IsEmpty()) && World.IsInsideWorld(transform.position))
         {
             velocity = velocity + World.GravityVector;
-            transform.Translate(velocity);
+            transform.Translate(velocity,Space.World);
             potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
             yield return new WaitForFixedUpdate();
         }
@@ -205,6 +212,25 @@ public class Movement : MonoBehaviour
             Reset();
         else
             EndMovement();
+    }
+    private IEnumerator ExecuteTransport(Stack<Voxel> path)
+    {
+        while (path.Count > 0)
+        {
+            var start = transform.position;
+            var newVox = path.Pop();
+            var direction = (newVox.Position - start).normalized;
+            var distance = Vector3.Distance(start, newVox.Position);
+
+            for (var t = 0f; t <= distance; t += (Speed / 60f))
+            {
+                transform.position = start + direction * t;
+                yield return new WaitForFixedUpdate();
+            }
+        }
+
+
+        EndMovement();
     }
 
     private void Parent(Movement parent)
