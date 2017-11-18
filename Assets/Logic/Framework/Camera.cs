@@ -20,7 +20,7 @@ public class Camera : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position,newPos, Speed/4);
 
         Vector3 direction = (Character.transform.position + Character.transform.up * Height / 2) - transform.position;
-        Quaternion toRotation = Quaternion.LookRotation(direction);
+        Quaternion toRotation = Quaternion.LookRotation(direction, Character.transform.up);
         transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, Speed);
     }
 }

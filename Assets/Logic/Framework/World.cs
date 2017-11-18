@@ -105,7 +105,7 @@ namespace Assets.Logic
             var speed = 5;
             foreach (var block in blocks)
             {
-                block.Activate();
+                block.Stand();
                 if (i == 0)
                     yield return new WaitForFixedUpdate();
                 i = (i + 1) % speed;
@@ -260,6 +260,8 @@ namespace Assets.Logic
 
         public GameObject Fill(GameObject obj)
         {
+            if (obj == _obj) return obj;
+
             Destroy();
             obj.transform.position = Position;
             _block = obj.GetComponent<Block>();

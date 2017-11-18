@@ -74,10 +74,10 @@ public class Character : MonoBehaviour
                 f.GetComponent<Movement>().Push(this);
                 break;
             case BlockType.Switch:
-                f.Activate(this);
+                f.Interact(this);
                 break;
             case BlockType.Pipe:
-                f.Activate(this);
+                f.Interact(this);
                 break;
             default:
                 break;
@@ -102,7 +102,7 @@ public class Character : MonoBehaviour
                 f.GetComponent<Movement>().Lift(this);
                 break;
             case BlockType.Switch:
-                f.Activate(this);
+                f.Interact(this);
                 break;
             default:
                 break;

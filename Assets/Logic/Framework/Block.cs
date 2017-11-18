@@ -14,13 +14,12 @@ namespace Assets.Logic.Framework
         public bool IsActivated;
         public Room Room;
 
-        private Voxel _topVoxel;
         private Material _originalMaterial;
 
         void Start()
         {
             var movement = gameObject.GetComponent<Movement>();
-            if (Type == BlockType.Movable && movement == null)
+            if ((Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe) && movement == null)
                 gameObject.AddComponent<Movement>();
 
             var mesh = gameObject.GetComponentInChildren<MeshRenderer>();
@@ -29,74 +28,18 @@ namespace Assets.Logic.Framework
         }
         void Update()
         {
-            if (_topVoxel == null)
-                _topVoxel = World.GetVoxel(transform.position - World.GravityVector.normalized);
-            if (Type == BlockType.Switch)
-            {
-                if (_topVoxel == null)
-                    IsActivated = false;
-            }
             if (Type == BlockType.Pipe)
-            {
-                var neighbors = World.GetNeighboringVoxels(transform.position)
-                    .Where(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe).ToList();
-
-                if (neighbors.Count() > 1)
-                {
-                    var direction = (neighbors[0].Position - neighbors[1].Position).normalized;
-
-                    if (Mathf.Abs(direction.x) > 0.999)
-                        transform.localScale = new Vector3(1.5f, 0.75f, 0.75f);
-                    else if (Mathf.Abs(direction.y) > 0.999)
-                        transform.localScale = new Vector3(0.75f, 1.5f, 0.75f);
-                    else if (Mathf.Abs(direction.z) > 0.999)
-                        transform.localScale = new Vector3(0.75f, 0.75f, 1.5f);
-                    else
-                        transform.localScale = new Vector3(1, 1, 1);
-
-                    if(gameObject.GetComponentInChildren<MeshRenderer>().material != ActivatedMaterial)
-                        gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-
-                }
-                else
-                {
-                    transform.localScale = new Vector3(1,1,1);
-                    if(_originalMaterial != null && gameObject.GetComponentInChildren<MeshRenderer>().material != _originalMaterial)
-                        gameObject.GetComponentInChildren<MeshRenderer>().material = _originalMaterial;
-                }
-            }
+                UpdatePipe();
         }
 
-        public bool Activate(Character activator = null)
+        public bool Interact(Character activator = null)
         {
-            if (IsActivated) return false;
-
             switch (Type)
             {
-                case BlockType.Floor:
-                    IsActivated = true;
-                    Score.Value++;
-                    gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-                    return true;
-                case BlockType.Goal:
-                    IsActivated = true;
-                    Score.Value += 10;
-                    gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-                    Room.CompleteRoom();
-                    return true;
                 case BlockType.Switch:
-                    if (activator == null) return false;
-                    IsActivated = true;
-                    var path = new Stack<Voxel>();
-                    path.Push(World.GetVoxel(activator.transform.position));
-                    activator.Movement.Transport(GetPipePath(BlockType.Switch, path));
-                    return true;
+                    return SwitchInteract(activator == null ? null : activator.Movement);
                 case BlockType.Pipe:
-                    if (World.GetNeighboringVoxels(transform.position)
-                            .Count(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe) > 1) return false;
-                    if (activator == null) return false;
-                    activator.Movement.Transport(GetPipePath(BlockType.Pipe));
-                    return true;
+                    return PipeInteract(activator == null ? null : activator.Movement);
                 default:
                     return false;
             }
@@ -106,27 +49,86 @@ namespace Assets.Logic.Framework
             switch (Type)
             {
                 case BlockType.Floor:
-                    Activate();
+                    FloorStand(stander);
                     return true;
                 case BlockType.Goal:
-                    Activate();
+                    GoalStand(stander);
                     return true;
-                case BlockType.Bouncy:
-                    if(stander)
-                        stander.Bounce();
+                case BlockType.Bounce:
+                    BounceStand(stander);
                     return false;
                 case BlockType.Switch:
-                    if (stander == null) return false;
-                    World.GravityVector  = new Vector3(World.GravityVector.x, -World.GravityVector.y, World.GravityVector.z);
-                    stander.transform.Rotate(stander.transform.forward,180);
-                    Activate(stander.GetComponent<Character>());
+                    SwitchStand(stander);
                     return true;
                 default:
                     return true;
             }
         }
 
-        public Stack<Voxel> GetPipePath(BlockType type ,Stack<Voxel> currentPath = null)
+        public void FloorStand(Movement stander)
+        {
+            if (IsActivated || (stander != null && stander.gameObject.GetComponent<Character>() == null)) return;
+
+            IsActivated = true;
+            Score.Value++;
+            gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+        }
+        public void GoalStand(Movement stander)
+        {
+            if (IsActivated) return;
+
+            IsActivated = true;
+            Score.Value += 10;
+            gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+            Room.CompleteRoom();
+        }
+        public void BounceStand(Movement stander)
+        {
+            if (stander != null) stander.Bounce();
+        }
+        public void SwitchStand(Movement stander)
+        {
+            if (IsActivated || stander == null)
+            {
+                IsActivated = false;
+                return;
+            }
+
+            World.GravityVector = Vector3.Scale(World.GravityVector, new Vector3(1,-1,1));
+            stander.transform.Rotate(stander.transform.forward, 180);
+
+            var path = new Stack<Voxel>();
+            path.Push(World.GetVoxel(stander.transform.position));
+            path.Push(World.GetVoxel(transform.position));
+            path.Push(World.GetVoxel(transform.position + (transform.position - stander.transform.position)));
+
+            if (stander.Transport(path)) IsActivated = true;
+        }
+        public bool SwitchInteract(Movement stander)
+        {
+            if (IsActivated || stander == null) return true;
+
+            stander.transform.Rotate(stander.transform.up, 180);
+
+            var path = new Stack<Voxel>();
+            path.Push(World.GetVoxel(stander.transform.position));
+            path.Push(World.GetVoxel(transform.position));
+            path.Push(World.GetVoxel(transform.position + (transform.position - stander.transform.position)));
+
+            return stander.Transport(path);
+        }
+        public bool PipeInteract(Movement stander)
+        {
+            if (IsActivated || stander == null) return true;
+
+            // if we are not activating an end o a pipe
+            if (World.GetNeighboringVoxels(transform.position)
+                .Count(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe) > 1) return false;
+
+            return stander.Transport(GetPipePath(BlockType.Pipe));
+        }
+
+        private Stack<Voxel> GetPipePath(BlockType type ,Stack<Voxel> currentPath = null)
         {
             if (currentPath == null)
                 currentPath = new Stack<Voxel>();
@@ -145,6 +147,35 @@ namespace Assets.Logic.Framework
             }
             return nextPath.GetBlock().GetPipePath(type, currentPath);
         }
+        private void UpdatePipe()
+        {
+            var neighbors = World.GetNeighboringVoxels(transform.position)
+                .Where(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe).ToList();
+
+            if (neighbors.Count() > 1)
+            {
+                var direction = (neighbors[0].Position - neighbors[1].Position).normalized;
+
+                if (Mathf.Abs(direction.x) > 0.999)
+                    transform.localScale = new Vector3(1.5f, 0.75f, 0.75f);
+                else if (Mathf.Abs(direction.y) > 0.999)
+                    transform.localScale = new Vector3(0.75f, 1.5f, 0.75f);
+                else if (Mathf.Abs(direction.z) > 0.999)
+                    transform.localScale = new Vector3(0.75f, 0.75f, 1.5f);
+                else
+                    transform.localScale = new Vector3(1, 1, 1);
+
+                if (gameObject.GetComponentInChildren<MeshRenderer>().material != ActivatedMaterial)
+                    gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+
+            }
+            else
+            {
+                transform.localScale = new Vector3(1, 1, 1);
+                if (_originalMaterial != null && gameObject.GetComponentInChildren<MeshRenderer>().material != _originalMaterial)
+                    gameObject.GetComponentInChildren<MeshRenderer>().material = _originalMaterial;
+            }
+        }
     }
 
     public enum BlockType
@@ -153,7 +184,7 @@ namespace Assets.Logic.Framework
         Floor,
         Goal,
         Movable,
-        Bouncy,
+        Bounce,
         Pipe,
         Switch,
     }

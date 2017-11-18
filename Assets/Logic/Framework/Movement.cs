@@ -180,7 +180,6 @@ public class Movement : MonoBehaviour
     private IEnumerator ExecuteJump(Vector3 direction, float distance, float height)
     {
         var start = World.GetVoxel(transform.position);
-
         for (var t = 0f; t <= height; t += (Speed / 60f))
         {
             transform.position = start.Position - World.GravityVector.normalized * t;
@@ -204,7 +203,7 @@ public class Movement : MonoBehaviour
         while ((potentialFloor == null || potentialFloor.IsEmpty()) && World.IsInsideWorld(transform.position))
         {
             velocity = velocity + World.GravityVector;
-            transform.Translate(velocity);
+            transform.Translate(velocity,Space.World);
             potentialFloor = World.GetVoxel(transform.position + World.GravityVector.normalized);
             yield return new WaitForFixedUpdate();
         }
