@@ -13,17 +13,19 @@ public class Character : MonoBehaviour
     public Movement Load;
     public Movement Movement;
 
+    private int _roomNum = 0;
+
     void Start()
     {
-        Movement = gameObject.GetComponent<Movement>();
-        if (Movement == null)
-            gameObject.AddComponent<Movement>();
-        Movement.SpawnVoxel = World.SpawnVoxel;
+
+        Movement = gameObject.GetComponent<Movement>() ?? gameObject.AddComponent<Movement>();
+        Movement.SpawnVoxel = VoxelWorld.SpawnVoxel;
         Movement.Fall();
     }
 
     void Update()
     {
+        Movement.enabled = true;
         if (Input.GetButtonDown("Up"))
             Forward();
         else if (Input.GetButtonDown("Down"))
@@ -32,8 +34,6 @@ public class Character : MonoBehaviour
             Left();
         else if (Input.GetButtonDown("Right"))
             Right();
-        else if (Input.GetButtonDown("Jump"))
-            Jump();
         else if (Input.GetButtonDown("Primary"))
             Primary();
         else if (Input.GetButtonDown("Secondary"))
@@ -48,11 +48,11 @@ public class Character : MonoBehaviour
         else if (GetForwardGap() == null && GetForwardGapFloor() == null)
             Jump();
         else
-            Movement.MoveToVoxel(World.GetVoxel(transform.position + transform.forward));
+            Movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward));
     }
     public void Back()
     {
-        Movement.MoveToVoxel(World.GetVoxel(transform.position - transform.forward));
+        Movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position - transform.forward));
     }
     public void Right()
     {
@@ -112,11 +112,11 @@ public class Character : MonoBehaviour
     // Movement
     public void Jump()
     {
-        Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward * 2));
+        Movement.JumpToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward * 2));
     }
     public void Climb()
     {
-        Movement.JumpToVoxel(World.GetVoxel(transform.position + transform.forward - World.GravityVector.normalized));
+        Movement.JumpToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward - VoxelWorld.GravityVector.normalized));
     }
     public void Die()
     {
@@ -128,33 +128,33 @@ public class Character : MonoBehaviour
     // Queries
     public Block GetFloorBlock()
     {
-        var vox = World.GetVoxel(transform.position - transform.up);
-        if (vox != null && vox.HasBlock())
-            return vox.GetBlock();
+        var vox = VoxelWorld.GetVoxel(transform.position - transform.up);
+        if (vox != null && vox.Block)
+            return vox.Block;
 
         return null;
     }
     public Block GetForwardBlock()
     {
-        var vox = World.GetVoxel(transform.position + transform.forward);
-        if (vox != null && vox.HasBlock())
-            return vox.GetBlock();
+        var vox = VoxelWorld.GetVoxel(transform.position + transform.forward);
+        if (vox != null && vox.Block)
+            return vox.Block;
 
         return null;
     }
     public Block GetForwardGap()
     {
-        var vox = World.GetVoxel(transform.position + transform.forward - transform.up);
-        if (vox != null && vox.HasBlock())
-            return vox.GetBlock();
+        var vox = VoxelWorld.GetVoxel(transform.position + transform.forward - transform.up);
+        if (vox != null && vox.Block)
+            return vox.Block;
 
         return null;
     }
     public Block GetForwardGapFloor()
     {
-        var vox = World.GetVoxel(transform.position + transform.forward - transform.up * 2);
-        if (vox != null && vox.HasBlock())
-            return vox.GetBlock();
+        var vox = VoxelWorld.GetVoxel(transform.position + transform.forward - transform.up * 2);
+        if (vox != null && vox.Block)
+            return vox.Block;
 
         return null;
     }

@@ -1,72 +1,57 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Logic;
+using Assets.Logic.Framework;
 using UnityEngine;
 
 public class LevelBuilder : MonoBehaviour
 {
-    [System.Serializable]
-    public struct RoomData
+    [Serializable]
+    public struct LevelBuilderRoomData
     {
         public Vector3 LevelPos;
         public AudioClip Track;
     }
 
-    public GameObject FloorBlock;
-    public GameObject MovableBlock;
-    public GameObject GoalBlock;
-    public GameObject BounceBlock;
-    public GameObject PipeBlock;
-    public GameObject SwitchBlock;
-
     public Vector3 SpawnPosition;
     public Vector3 WorldPosition;
-    public List<RoomData> RoomInfo = new List<RoomData>();
+    public List<LevelBuilderRoomData> RoomInfo = new List<LevelBuilderRoomData>();
 
-    private Level _level;
-    public List<Room> Rooms = new List<Room>();
-    public Room CurrentRoom;
+    public Level Level;
+    public int CurrentRoom;
 
     public void Setup()
     {
-        _level = World.AddLevel(WorldPosition);
-        _level.SpawnVoxel = _level.GetVoxel(SpawnPosition);
-
+        Level = VoxelWorld.AddLevel(new Level(WorldPosition, SpawnPosition));
+        var i = 0;
         foreach (var data in RoomInfo)
         {
-            var room = _level.AddRoom(data.LevelPos);
-            Rooms.Add(room);
-            if (data.Track != null)
-            {
-                World.AddTrack(data.Track, room);
-            }
+            Level.GetRoom(i).BuildRoom(data.Track);
+            i++;
         }
     }
 
     public Vector3 PlaceHallway(Vector3 start, Vector3 end)
     {
-        if (CurrentRoom == null) return start;
-
         var direction = (end - start).normalized;
         var distance = Vector3.Distance(start, end);
         for (var t = 0f; t <= distance; t += 0.25f)
         {
-            CurrentRoom.FillVoxel(start + (direction * t), FloorBlock);
+            PlaceBlock(start + (direction * t), VoxelWorld.Instance.FloorBlock);
         }
 
         return end;
     }
     public Vector3 PlaceFloor(Vector3 start, Vector3 end)
     {
-        if (CurrentRoom == null) return start;
-
         for (var x = start.x; x <= end.x; x++)
         {
             for (var y = start.y; y <= end.y; y++)
             {
                 for (var z = start.z; z <= end.z; z++)
                 {
-                    CurrentRoom.FillVoxel(new Vector3(x, y, z), FloorBlock);
+                    PlaceBlock(new Vector3(x, y, z),VoxelWorld.Instance.FloorBlock);
                 }
             }
         }
@@ -74,15 +59,25 @@ public class LevelBuilder : MonoBehaviour
     }
     public Vector3 PlacePipe(Vector3 start, Vector3 end)
     {
-        if (CurrentRoom == null) return start;
+        start += RoomInfo[CurrentRoom].LevelPos;
+        end += RoomInfo[CurrentRoom].LevelPos;
 
         var direction = (end - start).normalized;
         var distance = Vector3.Distance(start, end);
         for (var t = 0f; t <= distance; t += 0.25f)
         {
-            CurrentRoom.FillVoxel(start + (direction * t), PipeBlock);
+            PlaceBlock(start + (direction * t), VoxelWorld.Instance.PipeBlock);
         }
 
         return end;
+    }
+    public Vector3 PlaceBlock(Vector3 pos, GameObject prefab)
+    {
+        pos += RoomInfo[CurrentRoom].LevelPos;
+        var vox = Level.GetVoxel(pos);
+        if (vox == null) return pos;
+        var obj = Instantiate(prefab, vox.Position, Quaternion.identity);
+        vox.Fill(obj, CurrentRoom);
+        return vox.Position;
     }
 }

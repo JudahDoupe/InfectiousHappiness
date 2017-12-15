@@ -12,7 +12,6 @@ namespace Assets.Logic.Framework
         public BlockType Type = BlockType.Static;
         public Material ActivatedMaterial;
         public bool IsActivated;
-        public Room Room;
 
         private Material _originalMaterial;
 
@@ -80,7 +79,7 @@ namespace Assets.Logic.Framework
             IsActivated = true;
             Score.Value += 10;
             gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-            Room.CompleteRoom();
+            VoxelWorld.GetVoxel(transform.position).Room.Complete();
         }
         public void BounceStand(Movement stander)
         {
@@ -94,13 +93,13 @@ namespace Assets.Logic.Framework
                 return;
             }
 
-            World.GravityVector = Vector3.Scale(World.GravityVector, new Vector3(1,-1,1));
+            VoxelWorld.GravityVector = Vector3.Scale(VoxelWorld.GravityVector, new Vector3(1,-1,1));
             stander.transform.Rotate(stander.transform.forward, 180);
 
             var path = new Stack<Voxel>();
-            path.Push(World.GetVoxel(stander.transform.position));
-            path.Push(World.GetVoxel(transform.position));
-            path.Push(World.GetVoxel(transform.position + (transform.position - stander.transform.position)));
+            path.Push(VoxelWorld.GetVoxel(stander.transform.position));
+            path.Push(VoxelWorld.GetVoxel(transform.position));
+            path.Push(VoxelWorld.GetVoxel(transform.position + (transform.position - stander.transform.position)));
 
             if (stander.Transport(path)) IsActivated = true;
         }
@@ -111,9 +110,9 @@ namespace Assets.Logic.Framework
             stander.transform.Rotate(stander.transform.up, 180);
 
             var path = new Stack<Voxel>();
-            path.Push(World.GetVoxel(stander.transform.position));
-            path.Push(World.GetVoxel(transform.position));
-            path.Push(World.GetVoxel(transform.position + (transform.position - stander.transform.position)));
+            path.Push(VoxelWorld.GetVoxel(stander.transform.position));
+            path.Push(VoxelWorld.GetVoxel(transform.position));
+            path.Push(VoxelWorld.GetVoxel(transform.position + (transform.position - stander.transform.position)));
 
             return stander.Transport(path);
         }
@@ -122,8 +121,8 @@ namespace Assets.Logic.Framework
             if (IsActivated || stander == null) return true;
 
             // if we are not activating an end o a pipe
-            if (World.GetNeighboringVoxels(transform.position)
-                .Count(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe) > 1) return false;
+            if (VoxelWorld.GetNeighboringVoxels(transform.position)
+                .Count(v => v.Block && v.Block.Type == BlockType.Pipe) > 1) return false;
 
             return stander.Transport(GetPipePath(BlockType.Pipe));
         }
@@ -132,25 +131,25 @@ namespace Assets.Logic.Framework
         {
             if (currentPath == null)
                 currentPath = new Stack<Voxel>();
-            currentPath.Push(World.GetVoxel(transform.position));
+            currentPath.Push(VoxelWorld.GetVoxel(transform.position));
 
-            var nextPath = World.GetNeighboringVoxels(transform.position)
-                .FirstOrDefault(v => v.HasBlock() && v.GetBlock().Type == type && !currentPath.Contains(v));
+            var nextPath = VoxelWorld.GetNeighboringVoxels(transform.position)
+                .FirstOrDefault(v => v.Block && v.Block.Type == type && !currentPath.Contains(v));
 
             if (nextPath == null)
             {
                 currentPath.Pop();
-                var end = World.GetVoxel(transform.position + (transform.position - currentPath.Pop().Position));
-                currentPath.Push(World.GetVoxel(transform.position));
+                var end = VoxelWorld.GetVoxel(transform.position + (transform.position - currentPath.Pop().Position));
+                currentPath.Push(VoxelWorld.GetVoxel(transform.position));
                 currentPath.Push(end);
                 return currentPath;
             }
-            return nextPath.GetBlock().GetPipePath(type, currentPath);
+            return nextPath.Block.GetPipePath(type, currentPath);
         }
         private void UpdatePipe()
         {
-            var neighbors = World.GetNeighboringVoxels(transform.position)
-                .Where(v => v.HasBlock() && v.GetBlock().Type == BlockType.Pipe).ToList();
+            var neighbors = VoxelWorld.GetNeighboringVoxels(transform.position)
+                .Where(v => v.Block && v.Block.Type == BlockType.Pipe).ToList();
 
             if (neighbors.Count() > 1)
             {

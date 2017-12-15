@@ -85,7 +85,7 @@
     <Compile Include="Assets\Logic\Framework\Camera.cs" />
     <Compile Include="Assets\Logic\Framework\Character.cs" />
     <Compile Include="Assets\Logic\Framework\Movement.cs" />
-    <Compile Include="Assets\Logic\Framework\World.cs" />
+    <Compile Include="Assets\Logic\Framework\VoxelWorld.cs" />
     <Compile Include="Assets\Logic\Levels\DevLevel.cs" />
     <Compile Include="Assets\Logic\Levels\LevelBuilder.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
