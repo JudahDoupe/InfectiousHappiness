@@ -59,9 +59,6 @@ public class LevelBuilder : MonoBehaviour
     }
     public Vector3 PlacePipe(Vector3 start, Vector3 end)
     {
-        start += RoomInfo[CurrentRoom].LevelPos;
-        end += RoomInfo[CurrentRoom].LevelPos;
-
         var direction = (end - start).normalized;
         var distance = Vector3.Distance(start, end);
         for (var t = 0f; t <= distance; t += 0.25f)

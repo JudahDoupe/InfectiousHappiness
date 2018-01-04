@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NUnit.Framework.Constraints;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -19,7 +20,7 @@ namespace Assets.Logic.Framework
             AudioSource baseTrack = null;
             if (ActiveLevel == null) return;
 
-            for (int i = 0; i < 16; i++)
+            for (var i = 0; i < 16; i++)
             {
                 if (baseTrack == null) baseTrack = ActiveLevel.GetRoom(i).Track;
 
@@ -118,6 +119,7 @@ namespace Assets.Logic.Framework
         private readonly Room[] _rooms = new Room[16];
         private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
+        /*
         public Level(string filePath)
         {
             filePath = Application.dataPath + filePath;
@@ -138,6 +140,7 @@ namespace Assets.Logic.Framework
             SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPos));
 
         }
+        */
         public Level(Vector3 worldPos, Vector3? spawnPos = null)
         {
             if(spawnPos == null) spawnPos = new Vector3(24, 1, 24);
@@ -186,6 +189,7 @@ namespace Assets.Logic.Framework
             return levelPos + WorldPostition;
         }
 
+        //TODO: Fix everything about this
         public void ExportLevel(string filePath)
         {
             filePath = Application.dataPath + filePath;
@@ -254,7 +258,7 @@ namespace Assets.Logic.Framework
 
         public void AddVoxel(Voxel vox)
         {
-            if (vox.Block)
+            if (vox.Block != null)
             {
                 switch (vox.Block.Type)
                 {
@@ -308,6 +312,7 @@ namespace Assets.Logic.Framework
         {
             Level = level;
             Position = position;
+            Room = null;
         }
         public VoxelData ToData()
         {
@@ -366,32 +371,43 @@ namespace Assets.Logic.Framework
         }
         public GameObject Fill(GameObject obj, int? roomNum = null)
         {
-            if(roomNum != null) Room = Level.GetRoom(roomNum.Value);
 
             if (obj == Object) return obj;
 
-            DestroyContents();
+            DestroyObject();
 
             obj.transform.position = Position;
             Object = obj;
 
+            if(roomNum != null)ChangeRoom(roomNum);
+
             return obj;
         }
-        public GameObject Empty()
+        public GameObject TransferObject()
         {
+            ChangeRoom(null);
             var obj = Object;
             Object = null;
             return obj;
         }
-        public void DestroyContents()
+        public void DestroyObject()
         {
-            if(Room != null)
-                Room.RemoveVoxel(this);
-            if(Object != null)
-                UnityEngine.Object.Destroy(Object);
+            ChangeRoom(null);
+            if (Object != null) UnityEngine.Object.Destroy(Object);
             Object = null;
         }
 
+        private void ChangeRoom(int? roomNum)
+        {
+            if (Room != null) Room.RemoveVoxel(this);
+            if (roomNum == null)
+            {
+                Room = null;
+                return;
+            }
+            Room = Level.GetRoom(roomNum.Value);
+            if (Room != null) Room.AddVoxel(this);
+        }
     }
 
     [Serializable]

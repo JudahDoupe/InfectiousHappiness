@@ -48,10 +48,10 @@ namespace Assets.Logic.Framework
             switch (Type)
             {
                 case BlockType.Floor:
-                    FloorStand(stander);
+                    FloorActivate(stander);
                     return true;
                 case BlockType.Goal:
-                    GoalStand(stander);
+                    GoalActivate(stander);
                     return true;
                 case BlockType.Bounce:
                     BounceStand(stander);
@@ -64,7 +64,7 @@ namespace Assets.Logic.Framework
             }
         }
 
-        public void FloorStand(Movement stander)
+        public void FloorActivate(Movement stander)
         {
             if (IsActivated || (stander != null && stander.gameObject.GetComponent<Character>() == null)) return;
 
@@ -72,7 +72,7 @@ namespace Assets.Logic.Framework
             Score.Value++;
             gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
         }
-        public void GoalStand(Movement stander)
+        public void GoalActivate(Movement stander)
         {
             if (IsActivated) return;
 

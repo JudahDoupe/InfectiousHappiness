@@ -82,14 +82,7 @@ public class Movement : MonoBehaviour
     {
         if (IsStunned) return false;
 
-        if (!JumpToVoxel(VoxelWorld.GetVoxel(lifter.transform.position + lifter.transform.up))) return false;
-
-        lifter.Movement.IsStunned = true;
-        lifter.Load = this;
-        SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
-        Parent(lifter.Movement);
-
-        return true;
+        return JumpToVoxel(VoxelWorld.GetVoxel(lifter.transform.position + lifter.transform.up));
     }
     public bool Drop(Character dropper)
     {
@@ -200,7 +193,7 @@ public class Movement : MonoBehaviour
         var velocity = Vector3.zero;
         var potentialFloor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
 
-        while (potentialFloor.Block == null && VoxelWorld.IsInsideWorld(transform.position))
+        while (VoxelWorld.IsInsideWorld(transform.position + VoxelWorld.GravityVector.normalized) && potentialFloor.Block == null)
         {
             velocity = velocity + VoxelWorld.GravityVector;
             transform.Translate(velocity,Space.World);
@@ -248,7 +241,7 @@ public class Movement : MonoBehaviour
     private void BeginMovement()
     {
         IsStunned = true;
-        _lastVoxel.Empty();
+        _lastVoxel.TransferObject();
         _lastVoxel = VoxelWorld.GetVoxel(transform.position);
     }
     private void EndMovement(Voxel vox = null)
@@ -256,14 +249,17 @@ public class Movement : MonoBehaviour
         if (vox == null) vox = VoxelWorld.GetVoxel(transform.position);
         var floor = VoxelWorld.GetVoxel(vox.Position + VoxelWorld.GravityVector.normalized);
 
-        if (floor != null && floor.Character != null && _parent == null)
+        if (floor != null && floor.Character != null && _parent == null) // We landed on a character
         {
+            floor.Character.Load = this;
+            Parent(floor.Character.Movement);
+            SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
             IsStunned = false;
-            Lift(floor.Character);
+
             return;
         }
 
-        if (floor == null || floor.Block == null)
+        if (floor == null || floor.Block == null) // There's nothing below us
         {
             if(!Fall())
                 Reset();
