@@ -13,18 +13,32 @@ namespace Assets.Logic.Framework
 {
     public class VoxelWorld : MonoBehaviour
     {
-        void Awake(){ if (Instance == null) Instance = this;}
+        [Serializable]
+        public struct LevelConstructionData
+        {
+            public string Path;
+            public LevelBuilder Builder;
+        }
 
+        void Awake()
+        {
+            if (Instance == null) Instance = this;
+
+            foreach (var data in LevelData)
+            {
+                Levels.Add(data.Builder != null ? data.Builder.Build() : new Level(data.Path));
+            }
+        }
         void Update()
         {
             AudioSource baseTrack = null;
-            if (ActiveLevel == null) return;
 
             for (var i = 0; i < 16; i++)
             {
                 if (baseTrack == null) baseTrack = ActiveLevel.GetRoom(i).Track;
 
-                ActiveLevel.GetRoom(i).Track.timeSamples = baseTrack.timeSamples;
+                var track = ActiveLevel.GetRoom(i).Track;
+                if(track != null) track.timeSamples = baseTrack.timeSamples;
             }
         }
 
@@ -37,6 +51,7 @@ namespace Assets.Logic.Framework
         public GameObject SwitchBlock;
 
         // Properties
+        public Character MainCharacter;
         public static VoxelWorld Instance;
         public static Voxel SpawnVoxel
         {
@@ -46,20 +61,38 @@ namespace Assets.Logic.Framework
         public bool PlayMusic = true;
 
         // Levels
-        public static Level ActiveLevel;
+        public List<LevelConstructionData> LevelData = new List<LevelConstructionData>();
         private static readonly List<Level> Levels = new List<Level>();
+        public static Level ActiveLevel
+        {
+            get { return GetLevel(Instance.MainCharacter.transform.position); }
+        }
         public static Level GetLevel(Vector3 worldPos)
         {
             return Levels.FirstOrDefault(level => level.IsInsideLevel(worldPos));
         }
-        public static Level AddLevel(Level level)
+        public static Level GetLevel(int levelNum)
         {
-            Levels.Add(level);
-            return level;
+            return Levels.ElementAt(levelNum);
         }
-        public static bool RemoveLevel(Level level)
+        public static void LoadLevel(Level level)
         {
-            return Levels.Remove(level);
+            var levelNum = Levels.IndexOf(level);
+
+            if(level.IsLoaded)
+                UnLoadLevel(level);
+
+            var data = Instance.LevelData.ElementAt(levelNum);
+            Levels.Insert(levelNum, new Level(data.Path));
+            level.IsLoaded = true;
+        }
+        public static void UnLoadLevel(Level level)
+        {
+            var levelNum = Levels.IndexOf(level);
+            var data = Instance.LevelData.ElementAt(levelNum);
+            level.ExportLevel(data.Path);
+            level.DestroyLevel();
+            level.IsLoaded = false;
         }
 
         // Queries
@@ -115,17 +148,20 @@ namespace Assets.Logic.Framework
         public const int Size = 48;
         public readonly Vector3 WorldPostition;
         public readonly Voxel SpawnVoxel;
+        public bool IsLoaded = true;
 
         private readonly Room[] _rooms = new Room[16];
         private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
-        /*
         public Level(string filePath)
         {
             filePath = Application.dataPath + filePath;
 
             string jsonData = File.ReadAllText(filePath);
             var data = JsonUtility.FromJson<LevelData>(jsonData);
+
+            WorldPostition = data.Pos;
+            SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPos));
 
             foreach (var roomData in data.Rooms)
             {
@@ -135,19 +171,68 @@ namespace Assets.Logic.Framework
             {
                 GetVoxel(WorldToLevel(voxelData.Pos)).Fill(voxelData);
             }
-
-            WorldPostition = data.Pos;
-            SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPos));
-
         }
-        */
         public Level(Vector3 worldPos, Vector3? spawnPos = null)
         {
             if(spawnPos == null) spawnPos = new Vector3(24, 1, 24);
             WorldPostition = worldPos;
             SpawnVoxel = GetVoxel(spawnPos.Value);
         }
-        
+        public void DestroyLevel()
+        {
+            for (var x = 0; x < Size; x++)
+            {
+                for (var y = 0; y < Size; y++)
+                {
+                    for (var z = 0; z < Size; z++)
+                    {
+                        if (_voxels[x, y, z] != null && _voxels[x, y, z].Character == null)
+                        {
+                            _voxels[x, y, z].DestroyObject();
+                        }
+                    }
+                }
+            }
+            foreach (var room in _rooms)
+            {
+                room.DestroyRoom();
+            }
+
+        }
+        public void ExportLevel(string filePath)
+        {
+            filePath = Application.dataPath + filePath;
+
+            var voxels = new List<VoxelData>();
+            for (var x = 0; x < Size; x++)
+            {
+                for (var y = 0; y < Size; y++)
+                {
+                    for (var z = 0; z < Size; z++)
+                    {
+                        if (_voxels[x,y,z] != null)
+                        {
+                            voxels.Add(_voxels[x,y,z].ToData());
+                        }
+                    }
+                }
+            }
+
+            var data = new LevelData
+            {
+                Pos = WorldPostition,
+                SpawnPos = SpawnVoxel.Position,
+
+                Rooms = _rooms.Where(x => x != null).Select(x => x.ToData()).ToArray(),
+                Voxels = voxels.ToArray(),
+            };
+
+            var json = JsonUtility.ToJson(data);
+            File.WriteAllText(filePath, json);
+
+            Debug.Log("Exporting Level");
+        }
+
         public Room GetRoom(Vector3 levelPos)
         {
             return GetVoxel(levelPos).Room;
@@ -189,38 +274,6 @@ namespace Assets.Logic.Framework
             return levelPos + WorldPostition;
         }
 
-        //TODO: Fix everything about this
-        public void ExportLevel(string filePath)
-        {
-            filePath = Application.dataPath + filePath;
-
-            var voxels = new List<VoxelData>();
-            for (var x = 0; x < Size; x++)
-            {
-                for (var y = 0; y < Size; y++)
-                {
-                    for (var z = 0; z < Size; z++)
-                    {
-                        if (_voxels[x,y,z] != null)
-                        {
-                            voxels.Add(_voxels[x,y,z].ToData());
-                        }
-                    }
-                }
-            }
-
-            var data = new LevelData
-            {
-                Pos = WorldPostition,
-                SpawnPos = SpawnVoxel.Position,
-
-                Rooms = _rooms.Where(x => x != null).Select(x => x.ToData()).ToArray(),
-                Voxels = voxels.ToArray(),
-            };
-
-            var json = JsonUtility.ToJson(data);
-            File.WriteAllText(filePath, json);
-        }
     }
 
     public class Room
@@ -242,6 +295,12 @@ namespace Assets.Logic.Framework
                 RoomNum = RoomNumber,
                 TrackPath = AssetDatabase.GetAssetPath(Track)
             };
+        }
+        public void DestroyRoom()
+        {
+            Floor = new List<Block>();
+            Goals = new List<Block>();
+            Object.Destroy(Track);
         }
 
         public void BuildRoom(RoomData data)
@@ -357,17 +416,12 @@ namespace Assets.Logic.Framework
 
         public GameObject Fill(VoxelData data)
         {
-            Room = Level.GetRoom(data.RoomNum);
-            if(Room != null)Room.AddVoxel(this);
-
             if (data.PrefabPath == null) return null;
-
             var prefab = AssetDatabase.LoadAssetAtPath(data.PrefabPath, typeof(GameObject)) as GameObject;
-
             if(prefab == null) return null;
 
             var obj = UnityEngine.Object.Instantiate(prefab, Position, Quaternion.identity);
-            return Fill(obj);
+            return Fill(obj, data.RoomNum);
         }
         public GameObject Fill(GameObject obj, int? roomNum = null)
         {

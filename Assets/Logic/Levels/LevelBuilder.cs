@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Assets.Logic;
 using Assets.Logic.Framework;
+using UnityEditor;
 using UnityEngine;
 
 public class LevelBuilder : MonoBehaviour
@@ -21,9 +22,14 @@ public class LevelBuilder : MonoBehaviour
     public Level Level;
     public int CurrentRoom;
 
+    public virtual Level Build()
+    {
+        return new Level(Vector3.zero);
+    }
+
     public void Setup()
     {
-        Level = VoxelWorld.AddLevel(new Level(WorldPosition, SpawnPosition));
+        Level = new Level(WorldPosition, SpawnPosition);
         var i = 0;
         foreach (var data in RoomInfo)
         {

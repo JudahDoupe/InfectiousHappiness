@@ -6,11 +6,8 @@ using UnityEngine;
 
 public class DevLevel : LevelBuilder
 {
-    void Awake()
+    public override Level Build()
     {
-        /*
-        VoxelWorld.AddLevel(new Level("/LevelData/Playground.json"));
-        */
         Setup();
 
         BuildStartingRoom();
@@ -18,6 +15,8 @@ public class DevLevel : LevelBuilder
         BuildMovementBlockRoom();
         BuildPipeBlockRoom();
         BuildSwitchBlockRoom();
+
+        return Level;
     }
 
     void BuildStartingRoom()

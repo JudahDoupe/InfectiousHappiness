@@ -38,6 +38,12 @@ public class Character : MonoBehaviour
             Primary();
         else if (Input.GetButtonDown("Secondary"))
             Secondary();
+        else if (Input.GetKeyDown(KeyCode.L))
+            VoxelWorld.LoadLevel(VoxelWorld.ActiveLevel);
+        else if (Input.GetKeyDown(KeyCode.U))
+            VoxelWorld.UnLoadLevel(VoxelWorld.ActiveLevel);
+        else if (Input.GetKeyDown(KeyCode.Escape))
+            Time.timeScale = Time.timeScale <= 0.001 ? 1 : 0;
     }
 
     // Input Commands
