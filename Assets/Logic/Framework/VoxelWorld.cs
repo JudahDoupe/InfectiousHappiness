@@ -26,7 +26,17 @@ namespace Assets.Logic.Framework
 
             foreach (var data in LevelData)
             {
-                Levels.Add(data.Builder != null ? data.Builder.Build() : new Level(data.Path));
+                if (data.Builder == null)
+                {
+                    var level = new Level(data.Path);
+                    Levels.Add(level);
+                    level.BuildLevel();
+                }
+                else
+                {
+                    var level = data.Builder.Build();
+                    Levels.Add(level);
+                }
             }
         }
         void Update()
@@ -82,15 +92,12 @@ namespace Assets.Logic.Framework
             if(level.IsLoaded)
                 UnLoadLevel(level);
 
-            var data = Instance.LevelData.ElementAt(levelNum);
-            Levels.Insert(levelNum, new Level(data.Path));
+            level.BuildLevel();
             level.IsLoaded = true;
         }
         public static void UnLoadLevel(Level level)
         {
-            var levelNum = Levels.IndexOf(level);
-            var data = Instance.LevelData.ElementAt(levelNum);
-            level.ExportLevel(data.Path);
+            level.SaveLevel();
             level.DestroyLevel();
             level.IsLoaded = false;
         }
@@ -99,7 +106,9 @@ namespace Assets.Logic.Framework
         public static Voxel GetVoxel(Vector3 worldPos)
         {
             var level = GetLevel(worldPos);
-            return level == null ? null : level.GetVoxel(level.WorldToLevel(worldPos));
+            if (level != null) return level.GetVoxel(level.WorldToLevel(worldPos));
+            Debug.Log("Unable to get voxel because level does not exist at this location: " + worldPos);
+            return null;
         }
         public static List<Voxel> GetNeighboringVoxels(Vector3 worldPos)
         {
@@ -153,30 +162,39 @@ namespace Assets.Logic.Framework
         private readonly Room[] _rooms = new Room[16];
         private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
+        private LevelData _storedData;
+        private readonly string _filePath;
+
         public Level(string filePath)
         {
-            filePath = Application.dataPath + filePath;
+            _filePath = Application.dataPath + filePath;
 
-            string jsonData = File.ReadAllText(filePath);
-            var data = JsonUtility.FromJson<LevelData>(jsonData);
+            string jsonData = File.ReadAllText(_filePath);
+            _storedData = JsonUtility.FromJson<LevelData>(jsonData);
 
-            WorldPostition = data.Pos;
-            SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPos));
+            WorldPostition = _storedData.Pos;
+            SpawnVoxel = GetVoxel(WorldToLevel(_storedData.SpawnPos));
+        }
+        public Level(string filePath, Vector3 worldPos, Vector3? spawnPos = null)
+        {
+            _filePath = Application.dataPath + filePath;
 
-            foreach (var roomData in data.Rooms)
+            string jsonData = File.ReadAllText(_filePath);
+            _storedData = JsonUtility.FromJson<LevelData>(jsonData);
+            if (spawnPos == null) spawnPos = new Vector3(24, 1, 24);
+            WorldPostition = worldPos;
+            SpawnVoxel = GetVoxel(spawnPos.Value);
+        }
+        public void BuildLevel()
+        {
+            foreach (var roomData in _storedData.Rooms)
             {
                 GetRoom(roomData.RoomNum).BuildRoom(roomData);
             }
-            foreach (var voxelData in data.Voxels)
+            foreach (var voxelData in _storedData.Voxels)
             {
                 GetVoxel(WorldToLevel(voxelData.Pos)).Fill(voxelData);
             }
-        }
-        public Level(Vector3 worldPos, Vector3? spawnPos = null)
-        {
-            if(spawnPos == null) spawnPos = new Vector3(24, 1, 24);
-            WorldPostition = worldPos;
-            SpawnVoxel = GetVoxel(spawnPos.Value);
         }
         public void DestroyLevel()
         {
@@ -199,9 +217,8 @@ namespace Assets.Logic.Framework
             }
 
         }
-        public void ExportLevel(string filePath)
+        public void SaveLevel()
         {
-            filePath = Application.dataPath + filePath;
 
             var voxels = new List<VoxelData>();
             for (var x = 0; x < Size; x++)
@@ -218,7 +235,7 @@ namespace Assets.Logic.Framework
                 }
             }
 
-            var data = new LevelData
+            _storedData = new LevelData
             {
                 Pos = WorldPostition,
                 SpawnPos = SpawnVoxel.Position,
@@ -227,10 +244,10 @@ namespace Assets.Logic.Framework
                 Voxels = voxels.ToArray(),
             };
 
-            var json = JsonUtility.ToJson(data);
-            File.WriteAllText(filePath, json);
+            var json = JsonUtility.ToJson(_storedData);
+            File.WriteAllText(_filePath, json);
 
-            Debug.Log("Exporting Level");
+            Debug.Log("Saving Level");
         }
 
         public Room GetRoom(Vector3 levelPos)
@@ -251,7 +268,10 @@ namespace Assets.Logic.Framework
                 Mathf.RoundToInt(levelPos.z)
             };
 
-            if (!pos.All(x => x >= 0 && x < Size)) return null;
+            if (!pos.All(x => x >= 0 && x < Size))
+            {
+                return null;
+            }
 
             return _voxels[pos[0], pos[1], pos[2]] ??
                    (_voxels[pos[0], pos[1], pos[2]] = new Voxel(this, new Vector3(pos[0], pos[1], pos[2]) + WorldPostition));
@@ -359,8 +379,14 @@ namespace Assets.Logic.Framework
 
     public class Voxel
     {
+        private int _RoomNum = -1;
+
         public Vector3 Position { get; private set; }
-        public Room Room { get; private set; }
+        public Room Room
+        {
+            get { return Level.GetRoom(_RoomNum); }
+        }
+
         public Level Level;
 
         public GameObject Object { get; private set; }
@@ -371,11 +397,11 @@ namespace Assets.Logic.Framework
         {
             Level = level;
             Position = position;
-            Room = null;
         }
         public VoxelData ToData()
         {
             var path = "";
+            var isActive = false;
             if (Block)
             {
                 switch (Block.Type)
@@ -401,14 +427,17 @@ namespace Assets.Logic.Framework
                     default:
                         path = "";
                         break;
-                }   
+                }
+
+                isActive = Block.IsActivated;
             }
 
             var data = new VoxelData
             {
                 Pos = Position,
                 RoomNum = Room == null ? -1 : Room.RoomNumber,
-                PrefabPath = path
+                PrefabPath = path,
+                IsActive = isActive
             };
 
             return data;
@@ -421,45 +450,59 @@ namespace Assets.Logic.Framework
             if(prefab == null) return null;
 
             var obj = UnityEngine.Object.Instantiate(prefab, Position, Quaternion.identity);
-            return Fill(obj, data.RoomNum);
+            Fill(obj, data.RoomNum);
+
+            if (Block != null && data.IsActive)
+            {
+                switch (Block.Type)
+                {
+                    case BlockType.Floor:
+                        Block.FloorActivate(null);
+                        break;
+                    case BlockType.Goal:
+                        Block.GoalActivate(null);
+                        break;
+                    default:
+                        Block.IsActivated = true;
+                        break;
+                }
+            }
+
+            return Object;
         }
-        public GameObject Fill(GameObject obj, int? roomNum = null)
+        public GameObject Fill(GameObject obj, int roomNum = -1)
         {
 
             if (obj == Object) return obj;
+            if (roomNum < 0) roomNum = _RoomNum;
 
             DestroyObject();
 
             obj.transform.position = Position;
             Object = obj;
 
-            if(roomNum != null)ChangeRoom(roomNum);
+            ChangeRoom(roomNum);
 
             return obj;
         }
         public GameObject TransferObject()
         {
-            ChangeRoom(null);
+            ChangeRoom(-1);
             var obj = Object;
             Object = null;
             return obj;
         }
         public void DestroyObject()
         {
-            ChangeRoom(null);
+            ChangeRoom(-1);
             if (Object != null) UnityEngine.Object.Destroy(Object);
             Object = null;
         }
 
-        private void ChangeRoom(int? roomNum)
+        private void ChangeRoom(int roomNum)
         {
             if (Room != null) Room.RemoveVoxel(this);
-            if (roomNum == null)
-            {
-                Room = null;
-                return;
-            }
-            Room = Level.GetRoom(roomNum.Value);
+            _RoomNum = roomNum;
             if (Room != null) Room.AddVoxel(this);
         }
     }
@@ -485,6 +528,7 @@ namespace Assets.Logic.Framework
         public Vector3 Pos;
         public int RoomNum;
         public string PrefabPath;
+        public bool IsActive;
     }
 
 }

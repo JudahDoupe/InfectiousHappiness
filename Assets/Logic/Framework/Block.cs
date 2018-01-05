@@ -79,7 +79,8 @@ namespace Assets.Logic.Framework
             IsActivated = true;
             Score.Value += 10;
             gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-            VoxelWorld.GetVoxel(transform.position).Room.Complete();
+            var vox = VoxelWorld.GetVoxel(transform.position);
+            if(vox.Room != null)vox.Room.Complete();
         }
         public void BounceStand(Movement stander)
         {

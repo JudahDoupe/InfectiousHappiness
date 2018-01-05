@@ -17,19 +17,20 @@ public class LevelBuilder : MonoBehaviour
 
     public Vector3 SpawnPosition;
     public Vector3 WorldPosition;
+    public string FilePath = "/LevelData/new_level.json";
     public List<LevelBuilderRoomData> RoomInfo = new List<LevelBuilderRoomData>();
 
     public Level Level;
-    public int CurrentRoom;
+    protected int CurrentRoom;
 
     public virtual Level Build()
     {
-        return new Level(Vector3.zero);
+        return new Level(FilePath, Vector3.zero);
     }
 
     public void Setup()
     {
-        Level = new Level(WorldPosition, SpawnPosition);
+        Level = new Level(FilePath, WorldPosition, SpawnPosition);
         var i = 0;
         foreach (var data in RoomInfo)
         {

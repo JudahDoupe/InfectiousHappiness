@@ -13,8 +13,6 @@ public class Character : MonoBehaviour
     public Movement Load;
     public Movement Movement;
 
-    private int _roomNum = 0;
-
     void Start()
     {
 
