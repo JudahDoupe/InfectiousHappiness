@@ -15,7 +15,7 @@ public class LevelBuilder : MonoBehaviour
         public AudioClip Track;
     }
 
-    public Vector3 SpawnPosition;
+    public Vector3 SpawnPosition = new Vector3(Level.Size/2,0, Level.Size / 2);
     public Vector3 WorldPosition;
     public string FilePath = "/LevelData/new_level.json";
     public List<LevelBuilderRoomData> RoomInfo = new List<LevelBuilderRoomData>();

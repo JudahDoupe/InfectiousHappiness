@@ -65,7 +65,7 @@ namespace Assets.Logic.Framework
         public static VoxelWorld Instance;
         public static Voxel SpawnVoxel
         {
-            get { return ActiveLevel == null ? new Voxel(null, Vector3.zero) : ActiveLevel.SpawnVoxel; }
+            get { return ActiveLevel == null ? null : ActiveLevel.SpawnVoxel; }
         }
         public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
         public bool PlayMusic = true;
@@ -75,7 +75,7 @@ namespace Assets.Logic.Framework
         private static readonly List<Level> Levels = new List<Level>();
         public static Level ActiveLevel
         {
-            get { return GetLevel(Instance.MainCharacter.transform.position); }
+            get{return GetLevel(Instance.MainCharacter.transform.position) ?? Levels.FirstOrDefault();}
         }
         public static Level GetLevel(Vector3 worldPos)
         {
@@ -107,7 +107,7 @@ namespace Assets.Logic.Framework
         {
             var level = GetLevel(worldPos);
             if (level != null) return level.GetVoxel(level.WorldToLevel(worldPos));
-            Debug.Log("Unable to get voxel because level does not exist at this location: " + worldPos);
+            //Unable to get voxel because level does not exist at this location
             return null;
         }
         public static List<Voxel> GetNeighboringVoxels(Vector3 worldPos)
@@ -178,9 +178,11 @@ namespace Assets.Logic.Framework
         public Level(string filePath, Vector3 worldPos, Vector3? spawnPos = null)
         {
             _filePath = Application.dataPath + filePath;
-
-            string jsonData = File.ReadAllText(_filePath);
-            _storedData = JsonUtility.FromJson<LevelData>(jsonData);
+            if (File.Exists(_filePath))
+            {
+                string jsonData = File.ReadAllText(_filePath);
+                _storedData = JsonUtility.FromJson<LevelData>(jsonData);
+            }
             if (spawnPos == null) spawnPos = new Vector3(24, 1, 24);
             WorldPostition = worldPos;
             SpawnVoxel = GetVoxel(spawnPos.Value);
@@ -274,7 +276,7 @@ namespace Assets.Logic.Framework
             }
 
             return _voxels[pos[0], pos[1], pos[2]] ??
-                   (_voxels[pos[0], pos[1], pos[2]] = new Voxel(this, new Vector3(pos[0], pos[1], pos[2]) + WorldPostition));
+                   (_voxels[pos[0], pos[1], pos[2]] = new Voxel(this, LevelToWorld(new Vector3(pos[0], pos[1], pos[2]))));
         }
 
         public bool IsInsideLevel(Vector3 worldPos)

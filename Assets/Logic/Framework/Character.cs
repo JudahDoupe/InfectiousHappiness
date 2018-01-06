@@ -9,39 +9,99 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+    public enum CharacterType
+    {
+        Player,
+        Builder,
+    }
 
+    public CharacterType Type;
     public Movement Load;
     public Movement Movement;
+
+    private Voxel _cursorPosition;
+    private Renderer _cursor;
 
     void Start()
     {
 
         Movement = gameObject.GetComponent<Movement>() ?? gameObject.AddComponent<Movement>();
         Movement.SpawnVoxel = VoxelWorld.SpawnVoxel;
-        Movement.Fall();
+        transform.position = Movement.SpawnVoxel.Position;
+
+        if(Type == CharacterType.Player)
+            Movement.Fall();
+
+        var cursorObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        _cursor = cursorObj.GetComponent<Renderer>();
+        _cursor.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+        _cursor.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        _cursor.material.SetInt("_ZWrite", 0);
+        _cursor.material.DisableKeyword("_ALPHATEST_ON");
+        _cursor.material.DisableKeyword("_ALPHABLEND_ON");
+        _cursor.material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+        _cursor.material.renderQueue = 3000;
+        _cursor.material.color = new Color(1, 1, 1, 0.25f);
     }
 
     void Update()
     {
-        Movement.enabled = true;
-        if (Input.GetButtonDown("Up"))
-            Forward();
-        else if (Input.GetButtonDown("Down"))
-            Back();
-        else if (Input.GetButtonDown("Left"))
-            Left();
-        else if (Input.GetButtonDown("Right"))
-            Right();
-        else if (Input.GetButtonDown("Primary"))
-            Primary();
-        else if (Input.GetButtonDown("Secondary"))
-            Secondary();
-        else if (Input.GetKeyDown(KeyCode.L))
-            VoxelWorld.LoadLevel(VoxelWorld.ActiveLevel);
-        else if (Input.GetKeyDown(KeyCode.U))
-            VoxelWorld.UnLoadLevel(VoxelWorld.ActiveLevel);
-        else if (Input.GetKeyDown(KeyCode.Escape))
-            Time.timeScale = Time.timeScale <= 0.001 ? 1 : 0;
+        if (Type == CharacterType.Player)
+        {
+            _cursorPosition = null;
+
+            if (Input.GetButtonDown("Up"))
+                Forward();
+            else if (Input.GetButtonDown("Down"))
+                Back();
+            else if (Input.GetButtonDown("Left"))
+                Left();
+            else if (Input.GetButtonDown("Right"))
+                Right();
+            else if (Input.GetButtonDown("Primary"))
+                Primary();
+            else if (Input.GetButtonDown("Secondary"))
+                Secondary();
+            else if (Input.GetKeyDown(KeyCode.Escape))
+                Time.timeScale = Time.timeScale <= 0.001 ? 1 : 0;
+        }
+        else if (Type == CharacterType.Builder)
+        {
+            _cursorPosition = VoxelWorld.GetVoxel(transform.position + transform.forward);
+
+            if (_cursorPosition != null)
+            {
+                _cursor.transform.position = _cursorPosition.Position;
+                _cursor.enabled = true;
+            }
+
+            if (Input.GetButtonDown("Up"))
+                transform.position += transform.forward;
+            else if (Input.GetButtonDown("Down"))
+                transform.position -= transform.forward;
+            else if (Input.GetButtonDown("Left"))
+                Left();
+            else if (Input.GetButtonDown("Right"))
+                Right();
+            else if (Input.GetKeyDown(KeyCode.Space))
+                transform.position += transform.up;
+            else if (Input.GetKeyDown(KeyCode.LeftShift))
+                transform.position -= transform.up;
+            else if (Input.GetKeyDown(KeyCode.S))
+                transform.Rotate(new Vector3(0,0,180));
+            else if (Input.GetButtonDown("Primary"))
+                PlaceBlock();
+            else if (Input.GetButtonDown("Secondary"))
+                RemoveBlock();
+            else if (Input.GetKeyDown(KeyCode.L))
+                VoxelWorld.LoadLevel(VoxelWorld.ActiveLevel);
+            else if (Input.GetKeyDown(KeyCode.U))
+                VoxelWorld.UnLoadLevel(VoxelWorld.ActiveLevel);
+        }
+
+        if (_cursorPosition == null)
+            _cursor.enabled = false;
+
     }
 
     // Input Commands
@@ -127,6 +187,16 @@ public class Character : MonoBehaviour
         if (Load != null)
             Load.Drop(this);
         SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Death);
+    }
+
+    //Building
+    public void PlaceBlock()
+    {
+        return;
+    }
+    public void RemoveBlock()
+    {
+        return;
     }
 
     // Queries

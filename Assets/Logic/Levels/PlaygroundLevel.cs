@@ -4,7 +4,7 @@ using Assets.Logic;
 using Assets.Logic.Framework;
 using UnityEngine;
 
-public class DevLevel : LevelBuilder
+public class PlaygroundLevel : LevelBuilder
 {
     public override Level Build()
     {

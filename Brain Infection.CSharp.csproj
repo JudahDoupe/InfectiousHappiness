@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.6.3p2</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -86,8 +84,9 @@
     <Compile Include="Assets\Logic\Framework\Character.cs" />
     <Compile Include="Assets\Logic\Framework\Movement.cs" />
     <Compile Include="Assets\Logic\Framework\VoxelWorld.cs" />
-    <Compile Include="Assets\Logic\Levels\DevLevel.cs" />
+    <Compile Include="Assets\Logic\Levels\CreativeLevel.cs" />
     <Compile Include="Assets\Logic\Levels\LevelBuilder.cs" />
+    <Compile Include="Assets\Logic\Levels\PlaygroundLevel.cs" />
     <Compile Include="Assets\Logic\UI\Score.cs" />
   </ItemGroup>
   <ItemGroup>
