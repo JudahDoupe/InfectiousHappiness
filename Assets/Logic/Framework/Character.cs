@@ -19,6 +19,9 @@ public class Character : MonoBehaviour
     public Movement Load;
     public Movement Movement;
 
+    public int BuildingRoom;
+    public GameObject BuildingObject;
+
     private Voxel _cursorPosition;
     private Renderer _cursor;
 
@@ -192,11 +195,16 @@ public class Character : MonoBehaviour
     //Building
     public void PlaceBlock()
     {
-        return;
+        var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
+        if (vox == null) return;
+        var obj = Instantiate(BuildingObject, vox.Position, Quaternion.identity);
+        vox.Fill(obj, BuildingRoom);
     }
     public void RemoveBlock()
     {
-        return;
+        var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
+        if (vox != null)
+            vox.DestroyObject();
     }
 
     // Queries
