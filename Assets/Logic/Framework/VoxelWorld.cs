@@ -23,6 +23,8 @@ namespace Assets.Logic.Framework
         void Awake()
         {
             if (Instance == null) Instance = this;
+            if (MainCharacter == null)
+                MainCharacter = FindObjectOfType<Character>();
 
             foreach (var data in LevelData)
             {
@@ -370,7 +372,7 @@ namespace Assets.Logic.Framework
 
         public bool IsComplete
         {
-            get{return Goals.Count > 0 || Goals.All(g => g.IsActivated);}
+            get{return Goals.Count > 0 && Goals.All(g => g.IsActivated);}
         }
         public void Complete()
         {
