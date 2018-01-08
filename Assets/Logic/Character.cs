@@ -2,10 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Assets.Logic;
-using Assets.Logic.Framework;
 using UnityEngine;
-
 
 public class Character : MonoBehaviour
 {

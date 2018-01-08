@@ -1,12 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Schema;
-using Assets.Logic;
-using Assets.Logic.Framework;
 using UnityEngine;
 
-// ReSharper disable once CheckNamespace
 public class Movement : MonoBehaviour
 {
     public Voxel SpawnVoxel;

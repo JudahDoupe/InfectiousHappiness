@@ -78,16 +78,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Logic\Audio\SoundFX.cs" />
-    <Compile Include="Assets\Logic\Framework\Block.cs" />
-    <Compile Include="Assets\Logic\Framework\Camera.cs" />
-    <Compile Include="Assets\Logic\Framework\Character.cs" />
-    <Compile Include="Assets\Logic\Framework\Movement.cs" />
-    <Compile Include="Assets\Logic\Framework\VoxelWorld.cs" />
-    <Compile Include="Assets\Logic\Levels\CreativeLevel.cs" />
-    <Compile Include="Assets\Logic\Levels\LevelBuilder.cs" />
-    <Compile Include="Assets\Logic\Levels\PlaygroundLevel.cs" />
-    <Compile Include="Assets\Logic\UI\Score.cs" />
+    <Compile Include="Assets\LevelData\CreativeLevel.cs" />
+    <Compile Include="Assets\LevelData\PlaygroundLevel.cs" />
+    <Compile Include="Assets\Logic\Block.cs" />
+    <Compile Include="Assets\Logic\Camera.cs" />
+    <Compile Include="Assets\Logic\Character.cs" />
+    <Compile Include="Assets\Logic\LevelBuilder.cs" />
+    <Compile Include="Assets\Logic\Movement.cs" />
+    <Compile Include="Assets\Logic\SoundFX.cs" />
+    <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Gradient Skybox.shader" />
