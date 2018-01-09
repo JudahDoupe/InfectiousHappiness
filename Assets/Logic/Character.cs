@@ -67,12 +67,13 @@ public class Character : MonoBehaviour
         }
         else if (Type == CharacterType.Builder)
         {
-            _cursorPosition = VoxelWorld.GetVoxel(transform.position + transform.forward);
+            _cursorPosition = VoxelWorld.GetVoxel(transform.position);
 
             if (_cursorPosition != null)
             {
                 _cursor.transform.position = _cursorPosition.Position;
                 _cursor.enabled = true;
+                gameObject.GetComponent<Renderer>().enabled = false;
             }
 
             if (Input.GetButtonDown("Up"))
@@ -100,7 +101,10 @@ public class Character : MonoBehaviour
         }
 
         if (_cursorPosition == null)
+        {
             _cursor.enabled = false;
+            gameObject.GetComponent<Renderer>().enabled = true;
+        }
 
     }
 
