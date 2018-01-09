@@ -64,7 +64,12 @@ public class VoxelWorld : MonoBehaviour
         get { return ActiveLevel == null ? null : ActiveLevel.SpawnVoxel; }
     }
     public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
+
+    [Space(10)]
+    //Options
     public bool PlayMusic = true;
+    public bool SaveProgress;
+    [Space(10)]
 
     // Levels
     public List<LevelLookupData> LevelData = new List<LevelLookupData>();
@@ -425,7 +430,7 @@ public class Voxel
                     break;
             }
 
-            isActive = Block.IsActivated;
+            isActive = Block.IsActivated && VoxelWorld.Instance.SaveProgress;
         }
 
         var data = new VoxelData

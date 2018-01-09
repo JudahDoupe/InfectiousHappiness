@@ -19,3 +19,4 @@ public class CreativeTemplate : LevelTemplate
         PlaceFloor(new Vector3(-5, 0, -5), new Vector3(5, 0, 5));
     }
 }
+
