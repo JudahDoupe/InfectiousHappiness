@@ -11,10 +11,11 @@ using Random = UnityEngine.Random;
 public class VoxelWorld : MonoBehaviour
 {
     [Serializable]
-    public struct LevelConstructionData
+    public struct LevelLookupData
     {
-        public string Path;
-        public LevelBuilder Builder;
+        public string Name;
+        public bool ResetToTemplate;
+        public LevelTemplate LevelTemplate;
     }
 
     void Awake()
@@ -25,17 +26,13 @@ public class VoxelWorld : MonoBehaviour
 
         foreach (var data in LevelData)
         {
-            if (data.Builder == null)
-            {
-                var level = new Level(data.Path);
-                Levels.Add(level);
-                level.BuildLevel();
-            }
+            var level = new Level(data.Name);
+            Levels.Add(level);
+
+            if (data.ResetToTemplate && data.LevelTemplate != null)
+                data.LevelTemplate.Build(level);
             else
-            {
-                var level = data.Builder.Build();
-                Levels.Add(level);
-            }
+                level.BuildLevelFromFile();
         }
     }
     void Update()
@@ -60,7 +57,7 @@ public class VoxelWorld : MonoBehaviour
     public GameObject SwitchBlock;
 
     // Properties
-    public Character MainCharacter;
+    private Character MainCharacter;
     public static VoxelWorld Instance;
     public static Voxel SpawnVoxel
     {
@@ -70,7 +67,7 @@ public class VoxelWorld : MonoBehaviour
     public bool PlayMusic = true;
 
     // Levels
-    public List<LevelConstructionData> LevelData = new List<LevelConstructionData>();
+    public List<LevelLookupData> LevelData = new List<LevelLookupData>();
     private static readonly List<Level> Levels = new List<Level>();
     public static Level ActiveLevel
     {
@@ -83,22 +80,6 @@ public class VoxelWorld : MonoBehaviour
     public static Level GetLevel(int levelNum)
     {
         return Levels.ElementAt(levelNum);
-    }
-    public static void LoadLevel(Level level)
-    {
-        var levelNum = Levels.IndexOf(level);
-
-        if(level.IsLoaded)
-            UnLoadLevel(level);
-
-        level.BuildLevel();
-        level.IsLoaded = true;
-    }
-    public static void UnLoadLevel(Level level)
-    {
-        level.SaveLevel();
-        level.DestroyLevel();
-        level.IsLoaded = false;
     }
 
     // Queries
@@ -139,6 +120,7 @@ public class VoxelWorld : MonoBehaviour
                 yield return new WaitForFixedUpdate();
             i = (i + 1) % speed;
         }
+        ActiveLevel.SaveLevel();
     }
     public IEnumerator AdjustTrackVolume(Room room)
     {
@@ -154,8 +136,8 @@ public class VoxelWorld : MonoBehaviour
 public class Level
 {
     public const int Size = 48;
-    public readonly Vector3 WorldPostition;
-    public readonly Voxel SpawnVoxel;
+    public Vector3 WorldPostition;
+    public Voxel SpawnVoxel;
     public bool IsLoaded = true;
 
     private readonly Room[] _rooms = new Room[16];
@@ -164,29 +146,39 @@ public class Level
     private LevelData _storedData;
     private readonly string _filePath;
 
-    public Level(string filePath)
+    public Level(string name)
     {
-        _filePath = Application.dataPath + filePath;
-
-        string jsonData = File.ReadAllText(_filePath);
-        _storedData = JsonUtility.FromJson<LevelData>(jsonData);
-
-        WorldPostition = _storedData.Pos;
-        SpawnVoxel = GetVoxel(WorldToLevel(_storedData.SpawnPos));
-    }
-    public Level(string filePath, Vector3 worldPos, Vector3? spawnPos = null)
-    {
-        _filePath = Application.dataPath + filePath;
+        _filePath = Application.dataPath + "/LevelData/" + name + ".json";
         if (File.Exists(_filePath))
         {
             string jsonData = File.ReadAllText(_filePath);
             _storedData = JsonUtility.FromJson<LevelData>(jsonData);
         }
+        else
+        {
+            SaveLevel();
+        }
+
+        WorldPostition = _storedData.Pos;
+        SpawnVoxel = GetVoxel(WorldToLevel(_storedData.SpawnPos));
+    }
+    public Level(string name, Vector3 worldPos, Vector3? spawnPos = null)
+    {
+        _filePath = Application.dataPath + "/LevelData/" + name + ".json";
+        if (File.Exists(_filePath))
+        {
+            string jsonData = File.ReadAllText(_filePath);
+            _storedData = JsonUtility.FromJson<LevelData>(jsonData);
+        }
+        else
+        {
+            SaveLevel();
+        }
         if (spawnPos == null) spawnPos = new Vector3(24, 1, 24);
         WorldPostition = worldPos;
         SpawnVoxel = GetVoxel(spawnPos.Value);
     }
-    public void BuildLevel()
+    public void BuildLevelFromFile()
     {
         foreach (var roomData in _storedData.Rooms)
         {
@@ -196,6 +188,7 @@ public class Level
         {
             GetVoxel(WorldToLevel(voxelData.Pos)).Fill(voxelData);
         }
+        IsLoaded = true;
     }
     public void DestroyLevel()
     {
@@ -216,7 +209,7 @@ public class Level
         {
             room.DestroyRoom();
         }
-
+        IsLoaded = false;
     }
     public void SaveLevel()
     {
@@ -239,7 +232,7 @@ public class Level
         _storedData = new LevelData
         {
             Pos = WorldPostition,
-            SpawnPos = SpawnVoxel.Position,
+            SpawnPos = SpawnVoxel == null ? Vector3.zero : SpawnVoxel.Position,
 
             Rooms = _rooms.Where(x => x != null).Select(x => x.ToData()).ToArray(),
             Voxels = voxels.ToArray(),
@@ -373,8 +366,10 @@ public class Room
     }
     public void Complete()
     {
-        if(IsComplete)
+        if (IsComplete)
+        {
             VoxelWorld.Instance.StartCoroutine("RandomlyActivateBlocks", Floor);
+        }
     }
 }
 

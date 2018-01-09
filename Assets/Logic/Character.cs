@@ -13,11 +13,13 @@ public class Character : MonoBehaviour
     }
 
     public CharacterType Type;
+    [HideInInspector]
     public Movement Load;
+    [HideInInspector]
     public Movement Movement;
 
     public int BuildingRoom;
-    public GameObject BuildingObject;
+    public GameObject BuildingMaterial;
 
     private Voxel _cursorPosition;
     private Renderer _cursor;
@@ -42,6 +44,9 @@ public class Character : MonoBehaviour
         _cursor.material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
         _cursor.material.renderQueue = 3000;
         _cursor.material.color = new Color(1, 1, 1, 0.25f);
+
+        if (BuildingMaterial == null)
+            BuildingMaterial = VoxelWorld.Instance.FloorBlock;
     }
 
     void Update()
@@ -88,16 +93,14 @@ public class Character : MonoBehaviour
                 transform.position += transform.up;
             else if (Input.GetKeyDown(KeyCode.LeftShift))
                 transform.position -= transform.up;
-            else if (Input.GetKeyDown(KeyCode.S))
-                transform.Rotate(new Vector3(0,0,180));
             else if (Input.GetButtonDown("Primary"))
                 PlaceBlock();
             else if (Input.GetButtonDown("Secondary"))
                 RemoveBlock();
-            else if (Input.GetKeyDown(KeyCode.L))
-                VoxelWorld.LoadLevel(VoxelWorld.ActiveLevel);
-            else if (Input.GetKeyDown(KeyCode.U))
-                VoxelWorld.UnLoadLevel(VoxelWorld.ActiveLevel);
+            else if (Input.GetKeyDown(KeyCode.C))
+                transform.Rotate(new Vector3(0,0,180));
+            else if (Input.GetKeyDown(KeyCode.S))
+                VoxelWorld.ActiveLevel.SaveLevel();
         }
 
         if (_cursorPosition == null)
@@ -198,7 +201,7 @@ public class Character : MonoBehaviour
     {
         var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
         if (vox == null) return;
-        var obj = Instantiate(BuildingObject, vox.Position, Quaternion.identity);
+        var obj = Instantiate(BuildingMaterial, vox.Position, Quaternion.identity);
         vox.Fill(obj, BuildingRoom);
     }
     public void RemoveBlock()

@@ -2,35 +2,34 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelBuilder : MonoBehaviour
+public class LevelTemplate : MonoBehaviour
 {
     [Serializable]
-    public struct LevelBuilderRoomData
+    public struct RoomTemplateData
     {
-        public Vector3 LevelPos;
-        public AudioClip Track;
+        public string Name;
+        public Vector3 PositionInLevel;
+        public AudioClip AudioTrack;
     }
 
     public Vector3 SpawnPosition = new Vector3(Level.Size/2,0, Level.Size / 2);
-    public Vector3 WorldPosition;
-    public string FilePath = "/LevelData/new_level.json";
-    public List<LevelBuilderRoomData> RoomInfo = new List<LevelBuilderRoomData>();
+    public Vector3 PositionInWorld;
+    public List<RoomTemplateData> RoomTemplates = new List<RoomTemplateData>();
 
     public Level Level;
-    protected int CurrentRoom;
+    protected int CurrentRoomTemplate;
 
-    public virtual Level Build()
-    {
-        return new Level(FilePath, Vector3.zero);
-    }
+    public virtual void Build(Level level){}
 
-    public void Setup()
+    public void Setup(Level level)
     {
-        Level = new Level(FilePath, WorldPosition, SpawnPosition);
+        Level = level;
+        Level.SpawnVoxel = Level.GetVoxel(SpawnPosition);
+        Level.WorldPostition = PositionInWorld;
         var i = 0;
-        foreach (var data in RoomInfo)
+        foreach (var data in RoomTemplates)
         {
-            Level.GetRoom(i).BuildRoom(data.Track);
+            Level.GetRoom(i).BuildRoom(data.AudioTrack);
             i++;
         }
     }
@@ -73,11 +72,11 @@ public class LevelBuilder : MonoBehaviour
     }
     public Vector3 PlaceBlock(Vector3 pos, GameObject prefab)
     {
-        pos += RoomInfo[CurrentRoom].LevelPos;
+        pos += RoomTemplates[CurrentRoomTemplate].PositionInLevel;
         var vox = Level.GetVoxel(pos);
         if (vox == null) return pos;
         var obj = Instantiate(prefab, vox.Position, Quaternion.identity);
-        vox.Fill(obj, CurrentRoom);
+        vox.Fill(obj, CurrentRoomTemplate);
         return vox.Position;
     }
 }

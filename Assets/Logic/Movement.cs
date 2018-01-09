@@ -6,6 +6,7 @@ public class Movement : MonoBehaviour
 {
     public Voxel SpawnVoxel;
     public float Speed = 10;
+    [HideInInspector]
     public bool IsStunned;
 
     private bool _isFalling;

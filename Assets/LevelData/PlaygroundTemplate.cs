@@ -2,24 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlaygroundLevel : LevelBuilder
+public class PlaygroundTemplate : LevelTemplate
 {
-    public override Level Build()
+    public override void Build(Level level)
     {
-        Setup();
+        Setup(level);
 
         BuildStartingRoom();
         BuildMobilityRoom();
         BuildMovementBlockRoom();
         BuildPipeBlockRoom();
         BuildSwitchBlockRoom();
-
-        return Level;
     }
 
     void BuildStartingRoom()
     {
-        CurrentRoom = 0;
+        CurrentRoomTemplate = 0;
 
         PlaceFloor(new Vector3(1, 0, 1), new Vector3(3, 0, 3));
         PlaceBlock(new Vector3(2, 0, 0), VoxelWorld.Instance.FloorBlock);
@@ -30,7 +28,7 @@ public class PlaygroundLevel : LevelBuilder
 
     void BuildMobilityRoom()
     {
-        CurrentRoom = 1;
+        CurrentRoomTemplate = 1;
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(2, 0, 10));
         PlaceHallway(new Vector3(1, 0, 2), new Vector3(1, 1, 2));
@@ -44,7 +42,7 @@ public class PlaygroundLevel : LevelBuilder
 
     void BuildMovementBlockRoom()
     {
-        CurrentRoom = 2;
+        CurrentRoomTemplate = 2;
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(10, 0, 4));
         PlaceBlock(new Vector3(8, 1, 2), VoxelWorld.Instance.MovableBlock);
@@ -57,7 +55,7 @@ public class PlaygroundLevel : LevelBuilder
 
     void BuildPipeBlockRoom()
     {
-        CurrentRoom = 3;
+        CurrentRoomTemplate = 3;
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         PlacePipe(new Vector3(1, 1, 2), new Vector3(1, 1, 5));
@@ -75,7 +73,7 @@ public class PlaygroundLevel : LevelBuilder
 
     void BuildSwitchBlockRoom()
     {
-        CurrentRoom = 4;
+        CurrentRoomTemplate = 4;
 
         PlaceFloor(new Vector3(0, 0, 0), new Vector3(6, 0, 6));
         PlaceFloor(new Vector3(0, 0, 5), new Vector3(6, 2, 5));
