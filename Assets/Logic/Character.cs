@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -23,6 +24,11 @@ public class Character : MonoBehaviour
 
     private Voxel _cursorPosition;
     private Renderer _cursor;
+
+    private float doubleTapSpeed = 0.2f;
+    private float minSwipeDistance = 25f;
+    private Vector2 touchOrigin = Vector2.zero;
+    private bool tapping;
 
     void Start()
     {
@@ -53,6 +59,8 @@ public class Character : MonoBehaviour
     {
         if (Type == CharacterType.Player)
         {
+            #if UNITY_STANDALONE || UNITY_WEBPLAYER
+
             _cursorPosition = null;
 
             if (Input.GetButtonDown("Up"))
@@ -69,6 +77,47 @@ public class Character : MonoBehaviour
                 Secondary();
             else if (Input.GetKeyDown(KeyCode.Escape))
                 Time.timeScale = Time.timeScale <= 0.001 ? 1 : 0;
+
+            #elif UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
+            
+            if (Input.touchCount > 0)
+            {
+                Touch firstTouch = Input.touches[0];
+
+                if (firstTouch.phase == TouchPhase.Began)
+                {
+                    touchOrigin = firstTouch.position;
+                }
+                else if (firstTouch.phase == TouchPhase.Ended)
+                {
+                    Vector2 touchDelta = firstTouch.position - touchOrigin;
+                    if (touchDelta.magnitude >= minSwipeDistance) //swipe
+                    {
+                        if (Mathf.Abs(touchDelta.y) > Mathf.Abs(touchDelta.x))
+                            if (touchDelta.y >= 0)
+                                Forward();
+                            else
+                                Back();
+                        else if (touchDelta.x >= 0)
+                            Right();
+                        else
+                            Left();
+
+                    }
+                    else //tap
+                    {
+                        if (tapping)
+                        {
+                            Secondary();
+                            tapping = false;
+                        }
+                        else
+                            StartCoroutine(SingleTap());
+                    }
+                }
+            }
+            #endif
+
         }
         else if (Type == CharacterType.Builder)
         {
@@ -112,6 +161,14 @@ public class Character : MonoBehaviour
     }
 
     // Input Commands
+    public IEnumerator SingleTap()
+    {
+        tapping = true;
+        yield return new WaitForSeconds(doubleTapSpeed);
+        if(tapping)
+            Primary();
+        tapping = false;
+    }
     public void Forward()
     {
         if (GetForwardBlock() != null)
@@ -181,15 +238,15 @@ public class Character : MonoBehaviour
     }
 
     // Movement
-    public void Jump()
+    private void Jump()
     {
         Movement.JumpToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward * 2));
     }
-    public void Climb()
+    private void Climb()
     {
         Movement.JumpToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward - VoxelWorld.GravityVector.normalized));
     }
-    public void Die()
+    private void Die()
     {
         if (Load != null)
             Load.Drop(this);
@@ -197,14 +254,14 @@ public class Character : MonoBehaviour
     }
 
     //Building
-    public void PlaceBlock()
+    private void PlaceBlock()
     {
         var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
         if (vox == null) return;
         var obj = Instantiate(BuildingMaterial, vox.Position, Quaternion.identity);
         vox.Fill(obj, BuildingRoom);
     }
-    public void RemoveBlock()
+    private void RemoveBlock()
     {
         var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
         if (vox != null)
@@ -212,7 +269,7 @@ public class Character : MonoBehaviour
     }
 
     // Queries
-    public Block GetFloorBlock()
+    private Block GetFloorBlock()
     {
         var vox = VoxelWorld.GetVoxel(transform.position - transform.up);
         if (vox != null && vox.Block)
@@ -220,7 +277,7 @@ public class Character : MonoBehaviour
 
         return null;
     }
-    public Block GetForwardBlock()
+    private Block GetForwardBlock()
     {
         var vox = VoxelWorld.GetVoxel(transform.position + transform.forward);
         if (vox != null && vox.Block)
@@ -228,7 +285,7 @@ public class Character : MonoBehaviour
 
         return null;
     }
-    public Block GetForwardGap()
+    private Block GetForwardGap()
     {
         var vox = VoxelWorld.GetVoxel(transform.position + transform.forward - transform.up);
         if (vox != null && vox.Block)
@@ -236,7 +293,7 @@ public class Character : MonoBehaviour
 
         return null;
     }
-    public Block GetForwardGapFloor()
+    private Block GetForwardGapFloor()
     {
         var vox = VoxelWorld.GetVoxel(transform.position + transform.forward - transform.up * 2);
         if (vox != null && vox.Block)
