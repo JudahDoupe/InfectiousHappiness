@@ -186,7 +186,7 @@ public class Movement : MonoBehaviour
     }
     private IEnumerator ExecuteFall()
     {
-        var velocity = Vector3.zero;
+        var velocity = new Vector3(0,0,0);
         var potentialFloor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
 
         while (VoxelWorld.IsInsideWorld(transform.position + VoxelWorld.GravityVector.normalized) && potentialFloor.Block == null)

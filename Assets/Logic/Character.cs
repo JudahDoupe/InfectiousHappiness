@@ -27,7 +27,7 @@ public class Character : MonoBehaviour
 
     private float doubleTapSpeed = 0.2f;
     private float minSwipeDistance = 25f;
-    private Vector2 touchOrigin = Vector2.zero;
+    private Vector2 touchOrigin;
     private bool tapping;
 
     void Start()

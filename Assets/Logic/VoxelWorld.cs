@@ -236,7 +236,7 @@ public class Level
         _storedData = new LevelData
         {
             Pos = WorldPostition,
-            SpawnPos = SpawnVoxel == null ? Vector3.zero : SpawnVoxel.Position,
+            SpawnPos = SpawnVoxel == null ? new Vector3(0,0,0) : SpawnVoxel.Position,
 
             Rooms = _rooms.Where(x => x != null).Select(x => x.ToData()).ToArray(),
             Voxels = voxels.ToArray(),
