@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
@@ -153,7 +152,7 @@ public class Level
 
     public Level(string name)
     {
-        _filePath = Application.dataPath + "/LevelData/" + name + ".json";
+        _filePath = Application.persistentDataPath + "/LevelData/" + name + ".json";
         if (File.Exists(_filePath))
         {
             string jsonData = File.ReadAllText(_filePath);
@@ -169,7 +168,7 @@ public class Level
     }
     public Level(string name, Vector3 worldPos, Vector3? spawnPos = null)
     {
-        _filePath = Application.dataPath + "/LevelData/" + name + ".json";
+        _filePath = Application.persistentDataPath + "/LevelData/" + name + ".json";
         if (File.Exists(_filePath))
         {
             string jsonData = File.ReadAllText(_filePath);
@@ -244,6 +243,8 @@ public class Level
         };
 
         var json = JsonUtility.ToJson(_storedData);
+        if (!Directory.Exists(Application.persistentDataPath + "/LevelData"))
+            Directory.CreateDirectory(Application.persistentDataPath + "/LevelData");
         File.WriteAllText(_filePath, json);
 
         Debug.Log("Saving Level");
@@ -312,7 +313,7 @@ public class Room
         return new RoomData
         {
             RoomNum = RoomNumber,
-            TrackPath = AssetDatabase.GetAssetPath(Track)
+            TrackPath = Track == null ? "" : Track.name
         };
     }
     public void DestroyRoom()
@@ -401,32 +402,32 @@ public class Voxel
     }
     public VoxelData ToData()
     {
-        var path = "";
+        var name = "";
         var isActive = false;
         if (Block)
         {
             switch (Block.Type)
             {
                 case BlockType.Floor:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.FloorBlock);
+                    name = VoxelWorld.Instance.FloorBlock.name;
                     break;
                 case BlockType.Goal:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.GoalBlock);
+                    name = VoxelWorld.Instance.GoalBlock.name;
                     break;
                 case BlockType.Movable:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.MovableBlock);
+                    name = VoxelWorld.Instance.MovableBlock.name;
                     break;
                 case BlockType.Bounce:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.BounceBlock);
+                    name = VoxelWorld.Instance.BounceBlock.name;
                     break;
                 case BlockType.Pipe:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.PipeBlock);
+                    name = VoxelWorld.Instance.PipeBlock.name;
                     break;
                 case BlockType.Switch:
-                    path = AssetDatabase.GetAssetPath(VoxelWorld.Instance.SwitchBlock);
+                    name = VoxelWorld.Instance.SwitchBlock.name;
                     break;
                 default:
-                    path = "";
+                    name = "";
                     break;
             }
 
@@ -437,7 +438,7 @@ public class Voxel
         {
             Pos = Position,
             RoomNum = Room == null ? -1 : Room.RoomNumber,
-            PrefabPath = path,
+            Name = name,
             IsActive = isActive
         };
 
@@ -446,9 +447,9 @@ public class Voxel
 
     public GameObject Fill(VoxelData data)
     {
-        if (data.PrefabPath == null) return null;
-        var prefab = AssetDatabase.LoadAssetAtPath(data.PrefabPath, typeof(GameObject)) as GameObject;
-        if(prefab == null) return null;
+        if (data.Name == null) return null;
+        var prefab = Resources.Load<GameObject>(data.Name);
+        if (prefab == null) return null;
 
         var obj = UnityEngine.Object.Instantiate(prefab, Position, Quaternion.identity);
         Fill(obj, data.RoomNum);
@@ -528,6 +529,6 @@ public struct VoxelData
 {
     public Vector3 Pos;
     public int RoomNum;
-    public string PrefabPath;
+    public string Name;
     public bool IsActive;
 }
