@@ -59,7 +59,7 @@ public class Character : MonoBehaviour
     {
         if (Type == CharacterType.Player)
         {
-            #if UNITY_STANDALONE || UNITY_WEBPLAYER
+            #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
 
             _cursorPosition = null;
 
