@@ -9,7 +9,7 @@ public class LevelTemplate : MonoBehaviour
     {
         public string Name;
         public Vector3 PositionInLevel;
-        public AudioClip AudioTrack;
+        public string AudioTrackName;
     }
 
     public Vector3 SpawnPosition = new Vector3(Level.Size/2,0, Level.Size / 2);
@@ -29,7 +29,7 @@ public class LevelTemplate : MonoBehaviour
         var i = 0;
         foreach (var data in RoomTemplates)
         {
-            Level.GetRoom(i).BuildRoom(data.AudioTrack);
+            Level.GetRoom(i).Load(new RoomData {Name = data.Name,RoomNum = i,TrackName = data.AudioTrackName});
             i++;
         }
     }

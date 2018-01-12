@@ -11,6 +11,7 @@ public class CreativeTemplate : LevelTemplate
 
         BuildStartingPlatform();
 
+        Level.IsLoaded = true;
     }
 
     void BuildStartingPlatform()

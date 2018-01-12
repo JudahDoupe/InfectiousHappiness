@@ -13,6 +13,8 @@ public class PlaygroundTemplate : LevelTemplate
         BuildMovementBlockRoom();
         BuildPipeBlockRoom();
         BuildSwitchBlockRoom();
+
+        Level.IsLoaded = true;
     }
 
     void BuildStartingRoom()

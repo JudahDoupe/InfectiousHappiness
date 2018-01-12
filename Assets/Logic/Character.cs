@@ -149,7 +149,7 @@ public class Character : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.C))
                 transform.Rotate(new Vector3(0,0,180));
             else if (Input.GetKeyDown(KeyCode.S))
-                VoxelWorld.ActiveLevel.SaveLevel();
+                VoxelWorld.ActiveLevel.Save();
         }
 
         if (_cursorPosition == null)

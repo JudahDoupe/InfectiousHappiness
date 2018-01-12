@@ -8,6 +8,7 @@ public class Block : MonoBehaviour
     public BlockType Type = BlockType.Static;
     public Material ActivatedMaterial;
     public bool IsActivated;
+    public Renderer Renderer;
 
     private Material _originalMaterial;
 
@@ -17,9 +18,7 @@ public class Block : MonoBehaviour
         if ((Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe) && movement == null)
             gameObject.AddComponent<Movement>();
 
-        var mesh = gameObject.GetComponentInChildren<MeshRenderer>();
-        if (mesh)
-            _originalMaterial = mesh.material;
+        _originalMaterial = Renderer.material;
     }
     void Update()
     {
@@ -44,10 +43,10 @@ public class Block : MonoBehaviour
         switch (Type)
         {
             case BlockType.Floor:
-                FloorActivate(stander);
+                FloorActivate();
                 return true;
             case BlockType.Goal:
-                GoalActivate(stander);
+                GoalActivate();
                 return true;
             case BlockType.Bounce:
                 BounceStand(stander);
@@ -60,21 +59,21 @@ public class Block : MonoBehaviour
         }
     }
 
-    public void FloorActivate(Movement stander)
-    {
-        if (IsActivated || (stander != null && stander.gameObject.GetComponent<Character>() == null)) return;
-
-        IsActivated = true;
-        gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-    }
-    public void GoalActivate(Movement stander)
+    public void FloorActivate()
     {
         if (IsActivated) return;
 
         IsActivated = true;
-        gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
-        var vox = VoxelWorld.GetVoxel(transform.position);
-        if(vox.Room != null)vox.Room.Complete();
+        Renderer.material = ActivatedMaterial;
+    }
+    public void GoalActivate()
+    {
+        if (IsActivated) return;
+
+        IsActivated = true;
+        Renderer.material = ActivatedMaterial;
+        var _voxel = VoxelWorld.GetVoxel(transform.position);
+        if (_voxel.Room != null) _voxel.Room.Complete();
     }
     public void BounceStand(Movement stander)
     {
@@ -82,7 +81,7 @@ public class Block : MonoBehaviour
     }
     public void SwitchStand(Movement stander)
     {
-        if (IsActivated || stander == null)
+        if (IsActivated || stander == null || stander.gameObject.GetComponent<Character>() == null)
         {
             IsActivated = false;
             return;
