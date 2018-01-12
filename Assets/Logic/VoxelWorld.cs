@@ -56,7 +56,7 @@ public class VoxelWorld : MonoBehaviour
     public GameObject SwitchBlock;
 
     // Properties
-    private Character MainCharacter;
+    public Character MainCharacter;
     public static VoxelWorld Instance;
     public static Voxel SpawnVoxel
     {
@@ -139,6 +139,7 @@ public class VoxelWorld : MonoBehaviour
 
 public class Level
 {
+    public string Name;
     public const int Size = 48;
     public Vector3 WorldPostition;
     public Voxel SpawnVoxel;
@@ -152,6 +153,7 @@ public class Level
 
     public Level(string name)
     {
+        Name = name;
         _filePath = Application.persistentDataPath + "/LevelData/" + name + ".json";
         if (File.Exists(_filePath))
         {
@@ -168,6 +170,7 @@ public class Level
     }
     public Level(string name, Vector3 worldPos, Vector3? spawnPos = null)
     {
+        Name = name;
         _filePath = Application.persistentDataPath + "/LevelData/" + name + ".json";
         if (File.Exists(_filePath))
         {

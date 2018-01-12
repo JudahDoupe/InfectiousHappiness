@@ -86,6 +86,8 @@
     <Compile Include="Assets\Logic\LevelTemplate.cs" />
     <Compile Include="Assets\Logic\Movement.cs" />
     <Compile Include="Assets\Logic\SoundFX.cs" />
+    <Compile Include="Assets\Logic\Tutorial.cs" />
+    <Compile Include="Assets\Logic\UIController.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>
