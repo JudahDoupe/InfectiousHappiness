@@ -31,14 +31,15 @@ public class PlaygroundTemplate : LevelTemplate
     {
         CurrentRoomTemplate = 1;
 
-        PlaceFloor(new Vector3(0, 0, 0), new Vector3(2, 0, 10));
+        PlaceFloor(new Vector3(-1, 0, 0), new Vector3(3, 0, 15));
         PlaceHallway(new Vector3(1, 0, 2), new Vector3(1, 1, 2));
         PlaceHallway(new Vector3(1, 0, 3), new Vector3(1, 2, 3));
         PlaceHallway(new Vector3(1, 0, 5), new Vector3(1, 2, 5));
         PlaceHallway(new Vector3(1, 0, 6), new Vector3(1, 3, 6));
         PlaceBlock(new Vector3(1, 0, 8), BlockType.Bounce);
-        PlaceHallway(new Vector3(1, 0, 10), new Vector3(1, 3, 10));
-        PlaceBlock(new Vector3(1, 3, 10), BlockType.Goal);
+        PlaceBlock(new Vector3(1, 3, 10), BlockType.Falling);
+        PlaceHallway(new Vector3(1, 0, 12), new Vector3(1, 3, 12));
+        PlaceBlock(new Vector3(1, 3, 12), BlockType.Goal);
     }
 
     void BuildMovementBlockRoom()

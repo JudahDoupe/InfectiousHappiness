@@ -88,7 +88,8 @@ public class Block : MonoBehaviour
         {
             if (!_movement.IsFalling && Vector3.Distance(VoxelWorld.Instance.MainCharacter.transform.position, transform.position) > 1)
             {
-                _movement.Fall();
+                _movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position));
+                Deactivate();
             }
         }
     }

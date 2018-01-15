@@ -134,7 +134,7 @@ public class VoxelWorld : MonoBehaviour
                 yield return new WaitForFixedUpdate();
             i = (i + 1) % speed;
         }
-        ActiveLevel.Save();
+        if(SaveProgress)ActiveLevel.Save();
     }
     public IEnumerator AdjustTrackVolume(Room room)
     {
@@ -419,10 +419,10 @@ public class Voxel
             name = Block.Type.ToString();
             isActive = Block.IsActivated && VoxelWorld.Instance.SaveProgress;
         }
-
+        var movement = Object == null ? null : Object.GetComponent<Movement>();
         var data = new VoxelData
         {
-            WorldPosition = Position,
+            WorldPosition = movement != null ? movement.SpawnVoxel.Position : Position,
             RoomNum = Room == null ? -1 : Room.RoomNumber,
             ObjectName = name,
             IsActive = isActive,

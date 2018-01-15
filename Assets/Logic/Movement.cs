@@ -97,7 +97,8 @@ public class Movement : MonoBehaviour
 
     public bool Fall()
     {
-        if(VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized) == null)
+        var downVox = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
+        if (downVox == null || downVox.Block != null)
             return false;
 
         IsFalling = true;
