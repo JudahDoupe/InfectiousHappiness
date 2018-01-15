@@ -17,7 +17,7 @@ public class CreativeTemplate : LevelTemplate
     void BuildStartingPlatform()
     {
         CurrentRoomTemplate = 0;
-        PlaceFloor(new Vector3(-5, 0, -5), new Vector3(5, 0, 5));
+        PlaceFloor(new Vector3(-5, -1, -5) + SpawnPosition, new Vector3(5, -1, 5) + SpawnPosition);
     }
 }
 

@@ -359,6 +359,7 @@ public class Room
     {
         get
         {
+            Debug.Log(Goals.Count);
             if (Goals.Count <= 0) return false;
             for (int i = 0; i < Goals.Count; i++)
             {
@@ -406,6 +407,8 @@ public class Voxel
             if (data.IsActive)
                 Block.Activate();
         }
+
+        if (data.RoomNum >= 0) ChangeRoom(data.RoomNum);
     }
     public VoxelData ToData()
     {
