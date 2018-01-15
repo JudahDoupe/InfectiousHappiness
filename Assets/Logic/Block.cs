@@ -17,7 +17,7 @@ public class Block : MonoBehaviour
             _materials = MaterialManager.GetBlockMaterials(_type);
             Renderer.material = IsActivated ? _materials.ActiveMaterial : _materials.InactiveMaterial;
 
-            if (Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe)
+            if (Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe || Type == BlockType.Falling)
             {
                 if (_movement == null)
                     _movement = gameObject.AddComponent<Movement>();
@@ -57,6 +57,9 @@ public class Block : MonoBehaviour
             case "Switch":
                 Type = BlockType.Switch;
                 break;
+            case "Falling":
+                Type = BlockType.Falling;
+                break;
             default:
                 Type = BlockType.Static;
                 break;
@@ -81,6 +84,13 @@ public class Block : MonoBehaviour
     {
         if (Type == BlockType.Pipe)
             UpdatePipe();
+        if (Type == BlockType.Falling && IsActivated)
+        {
+            if (!_movement.IsFalling && Vector3.Distance(VoxelWorld.Instance.MainCharacter.transform.position, transform.position) > 1)
+            {
+                _movement.Fall();
+            }
+        }
     }
 
     public bool PrimaryInteract(Character activator = null)
@@ -107,12 +117,6 @@ public class Block : MonoBehaviour
     {
         switch (Type)
         {
-            case BlockType.Floor:
-                Activate();
-                return true;
-            case BlockType.Goal:
-                Activate();
-                return true;
             case BlockType.Bounce:
                 StandBounce(stander);
                 return false;
@@ -120,6 +124,7 @@ public class Block : MonoBehaviour
                 StandSwitch(stander);
                 return true;
             default:
+                Activate();
                 return true;
         }
     }
@@ -251,4 +256,5 @@ public enum BlockType
     Bounce,
     Pipe,
     Switch,
+    Falling,
 }

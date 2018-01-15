@@ -8,8 +8,9 @@ public class Movement : MonoBehaviour
     public float Speed = 10;
     [HideInInspector]
     public bool IsStunned;
+    [HideInInspector]
+    public bool IsFalling;
 
-    private bool _isFalling;
     private Voxel _lastVoxel;
     private Movement _parent;
 
@@ -99,7 +100,7 @@ public class Movement : MonoBehaviour
         if(VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized) == null)
             return false;
 
-        _isFalling = true;
+        IsFalling = true;
         StartCoroutine(ExecuteFall());
 
         return true;
@@ -264,11 +265,11 @@ public class Movement : MonoBehaviour
 
         /* Clear to stop moving */
 
-        if (_isFalling && transform.GetComponent<Block>())
+        if (IsFalling && transform.GetComponent<Block>())
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Drop);
 
         IsStunned = false;
-        _isFalling = false;
+        IsFalling = false;
 
         if (_parent != null)
         {
