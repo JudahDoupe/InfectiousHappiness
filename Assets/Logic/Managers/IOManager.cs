@@ -2,9 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
-public class IOController : MonoBehaviour {
+public class IOManager : MonoBehaviour {
 
     private static bool debug = true;
     private static string levelDirPath;
@@ -36,7 +37,8 @@ public class IOController : MonoBehaviour {
         }
 
         string jsonData = File.ReadAllText(filePath);
-        return JsonUtility.FromJson<LevelData>(jsonData);
+        var levelData = JsonUtility.FromJson<LevelData>(jsonData);
+        return levelData;
     }
     public static AudioClip LoadTrack(string name)
     {
@@ -45,6 +47,12 @@ public class IOController : MonoBehaviour {
     }
     public static GameObject LoadObject(string name)
     {
+        foreach (BlockType type in Enum.GetValues(typeof(BlockType)))
+        {
+            if(type.ToString() == name)
+                return Resources.Load<GameObject>("Block");
+        }
+
         return Resources.Load<GameObject>(name);
     }
 }

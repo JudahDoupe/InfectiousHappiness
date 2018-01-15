@@ -54,14 +54,6 @@ public class VoxelWorld : MonoBehaviour
         }
     }
 
-    // Blocks
-    public GameObject FloorBlock;
-    public GameObject MovableBlock;
-    public GameObject GoalBlock;
-    public GameObject BounceBlock;
-    public GameObject PipeBlock;
-    public GameObject SwitchBlock;
-
     // Properties
     public Character MainCharacter;
     public static VoxelWorld Instance;
@@ -206,12 +198,12 @@ public class Level
             Voxels = voxels.ToArray(),
         };
 
-        IOController.SaveLevel(saveData,Name);
+        IOManager.SaveLevel(saveData,Name);
     }
     public void Load()
     {
         if(IsLoaded) return;
-        var savedData = IOController.LoadLevel(Name);
+        var savedData = IOManager.LoadLevel(Name);
         if (savedData.Name != Name)
             return;
 
@@ -315,7 +307,7 @@ public class Room
         if (Track != null || data.TrackName == "") return;
 
         Track = VoxelWorld.Instance.gameObject.AddComponent<AudioSource>();
-        Track.clip = IOController.LoadTrack(data.TrackName);
+        Track.clip = IOManager.LoadTrack(data.TrackName);
         Track.volume = 0;
     }
     public RoomData ToData()
@@ -401,27 +393,18 @@ public class Voxel
     {
         Position = data.WorldPosition;
 
-        var prefab = IOController.LoadObject(data.ObjectName);
+        var prefab = IOManager.LoadObject(data.ObjectName);
         GameObject obj = null;
         if (prefab != null)
             obj = UnityEngine.Object.Instantiate(prefab, Position, Quaternion.identity);
 
         Fill(obj, data.RoomNum);
-        
-        if (Block != null && data.IsActive)
+
+        if (Block != null)
         {
-            switch (Block.Type)
-            {
-                case BlockType.Floor:
-                    Block.FloorActivate();
-                    break;
-                case BlockType.Goal:
-                    Block.GoalActivate();
-                    break;
-                default:
-                    Block.IsActivated = true;
-                    break;
-            }
+            Block.SetType(data.ObjectName);
+            if (data.IsActive)
+                Block.Activate();
         }
     }
     public VoxelData ToData()
@@ -430,31 +413,7 @@ public class Voxel
         var isActive = false;
         if (Block != null)
         {
-            switch (Block.Type)
-            {
-                case BlockType.Floor:
-                    name = VoxelWorld.Instance.FloorBlock.name;
-                    break;
-                case BlockType.Goal:
-                    name = VoxelWorld.Instance.GoalBlock.name;
-                    break;
-                case BlockType.Movable:
-                    name = VoxelWorld.Instance.MovableBlock.name;
-                    break;
-                case BlockType.Bounce:
-                    name = VoxelWorld.Instance.BounceBlock.name;
-                    break;
-                case BlockType.Pipe:
-                    name = VoxelWorld.Instance.PipeBlock.name;
-                    break;
-                case BlockType.Switch:
-                    name = VoxelWorld.Instance.SwitchBlock.name;
-                    break;
-                default:
-                    name = "";
-                    break;
-            }
-
+            name = Block.Type.ToString();
             isActive = Block.IsActivated && VoxelWorld.Instance.SaveProgress;
         }
 
@@ -463,7 +422,7 @@ public class Voxel
             WorldPosition = Position,
             RoomNum = Room == null ? -1 : Room.RoomNumber,
             ObjectName = name,
-            IsActive = isActive
+            IsActive = isActive,
         };
 
         return data;

@@ -1,24 +1,81 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SocialPlatforms.Impl;
 
 public class Block : MonoBehaviour
 {
-    public BlockType Type = BlockType.Static;
-    public Material ActivatedMaterial;
-    public bool IsActivated;
-    public Renderer Renderer;
+    private BlockType _type;
+    public BlockType Type
+    {
+        get { return _type; }
+        set
+        {
+            _type = value;
 
-    private Material _originalMaterial;
+            _materials = MaterialManager.GetBlockMaterials(_type);
+            Renderer.material = IsActivated ? _materials.ActiveMaterial : _materials.InactiveMaterial;
+
+            if (Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe)
+            {
+                if (_movement == null)
+                    _movement = gameObject.AddComponent<Movement>();
+            }
+            else
+            {
+                if (_movement != null)
+                {
+                    Destroy(_movement);
+                    _movement = null;
+                }
+            }
+        }
+    }
+    public void SetType(string typeName)
+    {
+        switch (typeName)
+        {
+            case "Static":
+                Type = BlockType.Static;
+                break;
+            case "Floor":
+                Type = BlockType.Floor;
+                break;
+            case "Goal":
+                Type = BlockType.Goal;
+                break;
+            case "Movable":
+                Type = BlockType.Movable;
+                break;
+            case "Bounce":
+                Type = BlockType.Bounce;
+                break;
+            case "Pipe":
+                Type = BlockType.Pipe;
+                break;
+            case "Switch":
+                Type = BlockType.Switch;
+                break;
+            default:
+                Type = BlockType.Static;
+                break;
+        }
+    }
+    public bool IsActivated;
+
+    private Movement _movement;
+    private Renderer _renderer;
+    public Renderer Renderer
+    {
+        get { return _renderer ?? (_renderer = gameObject.GetComponentInChildren<Renderer>()); }
+    }
+    private BlockMaterialSet _materials;
 
     void Start()
     {
-        var movement = gameObject.GetComponent<Movement>();
-        if ((Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe) && movement == null)
-            gameObject.AddComponent<Movement>();
-
-        _originalMaterial = Renderer.material;
+        _movement = gameObject.GetComponent<Movement>();
+        Type = _type;
     }
     void Update()
     {
@@ -26,14 +83,22 @@ public class Block : MonoBehaviour
             UpdatePipe();
     }
 
-    public bool Interact(Character activator = null)
+    public bool PrimaryInteract(Character activator = null)
     {
         switch (Type)
         {
             case BlockType.Switch:
-                return SwitchInteract(activator == null ? null : activator.Movement);
+                return InteractSwitch(activator == null ? null : activator.Movement);
             case BlockType.Pipe:
-                return PipeInteract(activator == null ? null : activator.Movement);
+                return InteractPipe(activator == null ? null : activator.Movement);
+            default:
+                return false;
+        }
+    }
+    public bool SecondaryInteract(Character activator = null)
+    {
+        switch (Type)
+        {
             default:
                 return false;
         }
@@ -43,43 +108,48 @@ public class Block : MonoBehaviour
         switch (Type)
         {
             case BlockType.Floor:
-                FloorActivate();
+                Activate();
                 return true;
             case BlockType.Goal:
-                GoalActivate();
+                Activate();
                 return true;
             case BlockType.Bounce:
-                BounceStand(stander);
+                StandBounce(stander);
                 return false;
             case BlockType.Switch:
-                SwitchStand(stander);
+                StandSwitch(stander);
                 return true;
             default:
                 return true;
         }
     }
 
-    public void FloorActivate()
+    public void Activate()
     {
         if (IsActivated) return;
 
         IsActivated = true;
-        Renderer.material = ActivatedMaterial;
-    }
-    public void GoalActivate()
-    {
-        if (IsActivated) return;
+        Renderer.material = _materials.ActiveMaterial;
 
-        IsActivated = true;
-        Renderer.material = ActivatedMaterial;
-        var _voxel = VoxelWorld.GetVoxel(transform.position);
-        if (_voxel.Room != null) _voxel.Room.Complete();
+        if (_type == BlockType.Goal)
+        {
+            var voxel = VoxelWorld.GetVoxel(transform.position);
+            if (voxel.Room != null) voxel.Room.Complete();
+        }
     }
-    public void BounceStand(Movement stander)
+    public void Deactivate()
+    {
+        if (!IsActivated) return;
+
+        IsActivated = false;
+        Renderer.material = _materials.InactiveMaterial;
+    }
+
+    private void StandBounce(Movement stander)
     {
         if (stander != null) stander.Bounce();
     }
-    public void SwitchStand(Movement stander)
+    private void StandSwitch(Movement stander)
     {
         if (IsActivated || stander == null || stander.gameObject.GetComponent<Character>() == null)
         {
@@ -97,7 +167,8 @@ public class Block : MonoBehaviour
 
         if (stander.Transport(path)) IsActivated = true;
     }
-    public bool SwitchInteract(Movement stander)
+
+    private bool InteractSwitch(Movement stander)
     {
         if (IsActivated || stander == null) return true;
 
@@ -110,11 +181,11 @@ public class Block : MonoBehaviour
 
         return stander.Transport(path);
     }
-    public bool PipeInteract(Movement stander)
+    private bool InteractPipe(Movement stander)
     {
         if (IsActivated || stander == null) return true;
 
-        // if we are not activating an end o a pipe
+        // if we are not activating an end of a pipe
         if (VoxelWorld.GetNeighboringVoxels(transform.position)
                 .Count(v => v.Block && v.Block.Type == BlockType.Pipe) > 1) return false;
 
@@ -158,15 +229,15 @@ public class Block : MonoBehaviour
             else
                 transform.localScale = new Vector3(1, 1, 1);
 
-            if (gameObject.GetComponentInChildren<MeshRenderer>().material != ActivatedMaterial)
-                gameObject.GetComponentInChildren<MeshRenderer>().material = ActivatedMaterial;
+            if (gameObject.GetComponentInChildren<MeshRenderer>().material != _materials.ActiveMaterial)
+                gameObject.GetComponentInChildren<MeshRenderer>().material = _materials.ActiveMaterial;
 
         }
         else
         {
             transform.localScale = new Vector3(1, 1, 1);
-            if (_originalMaterial != null && gameObject.GetComponentInChildren<MeshRenderer>().material != _originalMaterial)
-                gameObject.GetComponentInChildren<MeshRenderer>().material = _originalMaterial;
+            if (_materials.InactiveMaterial != null && gameObject.GetComponentInChildren<MeshRenderer>().material != _materials.InactiveMaterial)
+                gameObject.GetComponentInChildren<MeshRenderer>().material = _materials.InactiveMaterial;
         }
     }
 }

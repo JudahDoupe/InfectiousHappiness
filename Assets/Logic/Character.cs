@@ -20,7 +20,7 @@ public class Character : MonoBehaviour
     public Movement Movement;
 
     public int BuildingRoom;
-    public GameObject BuildingMaterial;
+    public BlockType BuildingMaterial = BlockType.Floor;
 
     private Voxel _cursorPosition;
     private Renderer _cursor;
@@ -50,9 +50,6 @@ public class Character : MonoBehaviour
         _cursor.material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
         _cursor.material.renderQueue = 3000;
         _cursor.material.color = new Color(1, 1, 1, 0.25f);
-
-        if (BuildingMaterial == null)
-            BuildingMaterial = VoxelWorld.Instance.FloorBlock;
     }
 
     void Update()
@@ -202,10 +199,10 @@ public class Character : MonoBehaviour
                 f.GetComponent<Movement>().Push(this);
                 break;
             case BlockType.Switch:
-                f.Interact(this);
+                f.PrimaryInteract(this);
                 break;
             case BlockType.Pipe:
-                f.Interact(this);
+                f.PrimaryInteract(this);
                 break;
             default:
                 break;
@@ -230,7 +227,7 @@ public class Character : MonoBehaviour
                 f.GetComponent<Movement>().Lift(this);
                 break;
             case BlockType.Switch:
-                f.Interact(this);
+                f.PrimaryInteract(this);
                 break;
             default:
                 break;
@@ -258,7 +255,8 @@ public class Character : MonoBehaviour
     {
         var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
         if (vox == null) return;
-        var obj = Instantiate(BuildingMaterial, vox.Position, Quaternion.identity);
+        var obj = Instantiate(IOManager.LoadObject("Block"), vox.Position, Quaternion.identity);
+        obj.GetComponent<Block>().Type = BuildingMaterial;
         vox.Fill(obj, BuildingRoom);
     }
     private void RemoveBlock()

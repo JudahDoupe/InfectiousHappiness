@@ -40,7 +40,7 @@ public class LevelTemplate : MonoBehaviour
         var distance = Vector3.Distance(start, end);
         for (var t = 0f; t <= distance; t += 0.25f)
         {
-            PlaceBlock(start + (direction * t), VoxelWorld.Instance.FloorBlock);
+            PlaceBlock(start + (direction * t), BlockType.Floor);
         }
 
         return end;
@@ -53,7 +53,7 @@ public class LevelTemplate : MonoBehaviour
             {
                 for (var z = start.z; z <= end.z; z++)
                 {
-                    PlaceBlock(new Vector3(x, y, z),VoxelWorld.Instance.FloorBlock);
+                    PlaceBlock(new Vector3(x, y, z), BlockType.Floor);
                 }
             }
         }
@@ -65,17 +65,18 @@ public class LevelTemplate : MonoBehaviour
         var distance = Vector3.Distance(start, end);
         for (var t = 0f; t <= distance; t += 0.25f)
         {
-            PlaceBlock(start + (direction * t), VoxelWorld.Instance.PipeBlock);
+            PlaceBlock(start + (direction * t), BlockType.Pipe);
         }
 
         return end;
     }
-    public Vector3 PlaceBlock(Vector3 pos, GameObject prefab)
+    public Vector3 PlaceBlock(Vector3 pos, BlockType type)
     {
         pos += RoomTemplates[CurrentRoomTemplate].PositionInLevel;
         var vox = Level.GetVoxel(pos);
         if (vox == null) return pos;
-        var obj = Instantiate(prefab, vox.Position, Quaternion.identity);
+        var obj = Instantiate(IOManager.LoadObject("Block"), vox.Position, Quaternion.identity);
+        obj.GetComponent<Block>().Type = type;
         vox.Fill(obj, CurrentRoomTemplate);
         return vox.Position;
     }

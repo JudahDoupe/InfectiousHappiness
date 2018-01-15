@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Tutorial : MonoBehaviour
 {
-    public UIController ScreenText;
+    public UIManager ScreenText;
     public TutorialState[] States;
 
     public void Update()

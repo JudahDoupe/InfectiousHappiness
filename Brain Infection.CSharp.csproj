@@ -85,12 +85,13 @@
     <Compile Include="Assets\Logic\Block.cs" />
     <Compile Include="Assets\Logic\Camera.cs" />
     <Compile Include="Assets\Logic\Character.cs" />
-    <Compile Include="Assets\Logic\IOController.cs" />
     <Compile Include="Assets\Logic\LevelTemplate.cs" />
+    <Compile Include="Assets\Logic\Managers\IOManager.cs" />
+    <Compile Include="Assets\Logic\Managers\MaterialManager.cs" />
+    <Compile Include="Assets\Logic\Managers\UIManager.cs" />
     <Compile Include="Assets\Logic\Movement.cs" />
     <Compile Include="Assets\Logic\SoundFX.cs" />
     <Compile Include="Assets\Logic\Tutorial.cs" />
-    <Compile Include="Assets\Logic\UIController.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -100,5 +101,6 @@
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Horizontal Skybox.shader" />
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\RGBM Cubed Skybox.shader" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>
