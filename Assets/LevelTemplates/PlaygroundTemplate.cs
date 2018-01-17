@@ -21,10 +21,19 @@ public class PlaygroundTemplate : LevelTemplate
     {
         CurrentRoomTemplate = 0;
         PlaceFloor(new Vector3(1, 0, 1), new Vector3(3, 0, 3));
+        PlaceBlock(new Vector3(2, 0, 2), BlockType.Goal);
+
         PlaceBlock(new Vector3(2, 0, 0), BlockType.Floor);
+        PlaceUpgrade(new Vector3(2, 1, 0), UpgradeType.Switch);
+
         PlaceBlock(new Vector3(2, 0, 4), BlockType.Floor);
+        PlaceUpgrade(new Vector3(2, 1, 4), UpgradeType.Jump);
+
         PlaceBlock(new Vector3(0, 0, 2), BlockType.Floor);
+        PlaceUpgrade(new Vector3(0, 1, 2), UpgradeType.Push);
+
         PlaceBlock(new Vector3(4, 0, 2), BlockType.Floor);
+        PlaceUpgrade(new Vector3(4, 1, 2), UpgradeType.Pipe);
     }
 
     void BuildMobilityRoom()
@@ -53,6 +62,7 @@ public class PlaygroundTemplate : LevelTemplate
         PlaceBlock(new Vector3(3, 0, 2), BlockType.Bounce);
         PlaceBlock(new Vector3(2, 1, 2), BlockType.Floor);
         PlaceBlock(new Vector3(2, 2, 2), BlockType.Goal);
+        PlaceUpgrade(new Vector3(10, 1, 4), UpgradeType.Lift);
     }
 
     void BuildPipeBlockRoom()

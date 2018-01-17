@@ -22,6 +22,12 @@ public class Character : MonoBehaviour
     public int BuildingRoom;
     public BlockType BuildingMaterial = BlockType.Floor;
 
+    public bool CanJump;
+    public bool CanPush;
+    public bool CanLift;
+    public bool CanPipe;
+    public bool CanSwitch;
+
     private Voxel _cursorPosition;
     private Renderer _cursor;
 
@@ -35,10 +41,9 @@ public class Character : MonoBehaviour
 
         Movement = gameObject.GetComponent<Movement>() ?? gameObject.AddComponent<Movement>();
         Movement.SpawnVoxel = VoxelWorld.SpawnVoxel;
-        transform.position = Movement.SpawnVoxel.Position;
-
         if(Type == CharacterType.Player)
-            Movement.Fall();
+            Movement.MoveToVoxel(Movement.SpawnVoxel);
+        transform.position = Movement.SpawnVoxel.WorldPosition;
 
         var cursorObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _cursor = cursorObj.GetComponent<Renderer>();
@@ -122,7 +127,7 @@ public class Character : MonoBehaviour
 
             if (_cursorPosition != null)
             {
-                _cursor.transform.position = _cursorPosition.Position;
+                _cursor.transform.position = _cursorPosition.WorldPosition;
                 _cursor.enabled = true;
                 gameObject.GetComponent<Renderer>().enabled = false;
             }
@@ -146,7 +151,7 @@ public class Character : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.C))
                 transform.Rotate(new Vector3(0,0,180));
             else if (Input.GetKeyDown(KeyCode.S))
-                VoxelWorld.ActiveLevel.Save();
+                VoxelWorld.ActiveLevel.SaveAll();
         }
 
         if (_cursorPosition == null)
@@ -170,7 +175,7 @@ public class Character : MonoBehaviour
     {
         if (GetForwardBlock() != null)
             Climb();
-        else if (GetForwardGap() == null && GetForwardGapFloor() == null)
+        else if (GetForwardGap() == null && GetForwardGapFloor() == null && CanJump)
             Jump();
         else
             Movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position + transform.forward));
@@ -196,13 +201,13 @@ public class Character : MonoBehaviour
         switch (f.Type)
         {
             case BlockType.Movable:
-                f.GetComponent<Movement>().Push(this);
+                if(CanPush) f.GetComponent<Movement>().Push(this);
                 break;
             case BlockType.Switch:
-                f.PrimaryInteract(this);
+                if (CanSwitch) f.PrimaryInteract(this);
                 break;
             case BlockType.Pipe:
-                f.PrimaryInteract(this);
+                if (CanPipe) f.PrimaryInteract(this);
                 break;
             default:
                 break;
@@ -224,10 +229,34 @@ public class Character : MonoBehaviour
         switch (f.Type)
         {
             case BlockType.Movable:
-                f.GetComponent<Movement>().Lift(this);
+                if (CanLift) f.GetComponent<Movement>().Lift(this);
                 break;
             case BlockType.Switch:
-                f.PrimaryInteract(this);
+                if (CanSwitch) f.PrimaryInteract(this);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void Upgrade(UpgradeType type)
+    {
+        switch (type)
+        {
+            case UpgradeType.Jump:
+                CanJump = true;
+                break;
+            case UpgradeType.Push:
+                CanPush = true;
+                break;
+            case UpgradeType.Lift:
+                CanLift = true;
+                break;
+            case UpgradeType.Pipe:
+                CanPipe = true;
+                break;
+            case UpgradeType.Switch:
+                CanSwitch = true;
                 break;
             default:
                 break;
@@ -255,7 +284,7 @@ public class Character : MonoBehaviour
     {
         var vox = VoxelWorld.GetVoxel(_cursor.transform.position);
         if (vox == null) return;
-        var obj = Instantiate(IOManager.LoadObject("Block"), vox.Position, Quaternion.identity);
+        var obj = Instantiate(IOManager.LoadObject("Block"), vox.WorldPosition, Quaternion.identity);
         obj.GetComponent<Block>().Type = BuildingMaterial;
         vox.Fill(obj, BuildingRoom);
     }

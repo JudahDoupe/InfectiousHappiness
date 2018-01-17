@@ -27,8 +27,8 @@ public class Movement : MonoBehaviour
 
         var start = VoxelWorld.GetVoxel(transform.position);
 
-        var direction = (vox.Position - start.Position).normalized;
-        var distance = Vector3.Distance(start.Position, vox.Position);
+        var direction = (vox.WorldPosition - start.WorldPosition).normalized;
+        var distance = Vector3.Distance(start.WorldPosition, vox.WorldPosition);
 
         if (!MovePathClear(direction, distance)) return false;
 
@@ -44,14 +44,14 @@ public class Movement : MonoBehaviour
 
         var start = VoxelWorld.GetVoxel(transform.position);
 
-        var startHeight = Vector3.Scale(start.Position, -VoxelWorld.GravityVector.normalized).magnitude;
-        var endHeight = Vector3.Scale(vox.Position, -VoxelWorld.GravityVector.normalized).magnitude;
+        var startHeight = Vector3.Scale(start.WorldPosition, -VoxelWorld.GravityVector.normalized).magnitude;
+        var endHeight = Vector3.Scale(vox.WorldPosition, -VoxelWorld.GravityVector.normalized).magnitude;
         var height = endHeight - startHeight < 0 ? 0 : endHeight - startHeight;
 
-        var parabolaStart = VoxelWorld.GetVoxel(start.Position - VoxelWorld.GravityVector.normalized * height);
+        var parabolaStart = VoxelWorld.GetVoxel(start.WorldPosition - VoxelWorld.GravityVector.normalized * height);
 
-        var direction = (vox.Position - parabolaStart.Position).normalized;
-        var distance = Vector3.Distance(parabolaStart.Position, vox.Position);
+        var direction = (vox.WorldPosition - parabolaStart.WorldPosition).normalized;
+        var distance = Vector3.Distance(parabolaStart.WorldPosition, vox.WorldPosition);
 
         if (!JumpPathClear(direction, distance, height))
             return false;
@@ -111,16 +111,16 @@ public class Movement : MonoBehaviour
         var floor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
 
         SoundFX.Instance.PlayClip(SoundFX.Instance.Bounce);
-        var v = _lastVoxel.Position - floor.Position;
-        var target = VoxelWorld.GetVoxel(floor.Position - v + 2 * Vector3.Dot(v, -VoxelWorld.GravityVector.normalized) * -VoxelWorld.GravityVector.normalized);
+        var v = _lastVoxel.WorldPosition - floor.WorldPosition;
+        var target = VoxelWorld.GetVoxel(floor.WorldPosition - v + 2 * Vector3.Dot(v, -VoxelWorld.GravityVector.normalized) * -VoxelWorld.GravityVector.normalized);
 
         if(!JumpToVoxel(target))
             JumpToVoxel(_lastVoxel);
     }
     public void Reset()
     {
-        var direction = (SpawnVoxel.Position - transform.position).normalized;
-        var distance = Vector3.Distance(transform.position, SpawnVoxel.Position);
+        var direction = (SpawnVoxel.WorldPosition - transform.position).normalized;
+        var distance = Vector3.Distance(transform.position, SpawnVoxel.WorldPosition);
 
         StartCoroutine(ExecuteMove(direction, distance));
         gameObject.SendMessage("Die", SendMessageOptions.DontRequireReceiver);
@@ -132,7 +132,7 @@ public class Movement : MonoBehaviour
         var start = VoxelWorld.GetVoxel(transform.position);
         for (var i = 1; i <= distance; i++)
         {
-            if (VoxelWorld.GetVoxel(start.Position + direction * i).Block)
+            if (VoxelWorld.GetVoxel(start.WorldPosition + direction * i).Block)
                 return false;
         }
         return true;
@@ -154,7 +154,7 @@ public class Movement : MonoBehaviour
         var start = VoxelWorld.GetVoxel(transform.position);
         for (var i = 0; i <= height; i++)
         {
-            var voxInPath = VoxelWorld.GetVoxel(start.Position - VoxelWorld.GravityVector.normalized * i);
+            var voxInPath = VoxelWorld.GetVoxel(start.WorldPosition - VoxelWorld.GravityVector.normalized * i);
             if (voxInPath != start && voxInPath.Block)
                 return false;
         }
@@ -162,7 +162,7 @@ public class Movement : MonoBehaviour
         for (var x = 0f; x <= distance; x += 0.5f)
         {
             var y = -(x * x) + distance * x;
-            var voxInPath = VoxelWorld.GetVoxel(start.Position + (-VoxelWorld.GravityVector.normalized * (y + height)) + direction * x);
+            var voxInPath = VoxelWorld.GetVoxel(start.WorldPosition + (-VoxelWorld.GravityVector.normalized * (y + height)) + direction * x);
             if (voxInPath != start && voxInPath.Block)
                 return false;
         }
@@ -173,14 +173,14 @@ public class Movement : MonoBehaviour
         var start = VoxelWorld.GetVoxel(transform.position);
         for (var t = 0f; t <= height; t += (Speed / 60f))
         {
-            transform.position = start.Position - VoxelWorld.GravityVector.normalized * t;
+            transform.position = start.WorldPosition - VoxelWorld.GravityVector.normalized * t;
             yield return new WaitForFixedUpdate();
         }
 
         for (var x = 0f; x <= distance; x += (Speed / 1.8f / 60f))
         {
             var y = -(x * x) + distance * x;
-            transform.position = start.Position + (-VoxelWorld.GravityVector.normalized * (y + height)) + direction * x;
+            transform.position = start.WorldPosition + (-VoxelWorld.GravityVector.normalized * (y + height)) + direction * x;
             yield return new WaitForFixedUpdate();
         }
 
@@ -210,8 +210,8 @@ public class Movement : MonoBehaviour
         {
             var start = transform.position;
             var newVox = path.Pop();
-            var direction = (newVox.Position - start).normalized;
-            var distance = Vector3.Distance(start, newVox.Position);
+            var direction = (newVox.WorldPosition - start).normalized;
+            var distance = Vector3.Distance(start, newVox.WorldPosition);
 
             for (var t = 0f; t <= distance; t += (Speed / 60f))
             {
@@ -245,7 +245,7 @@ public class Movement : MonoBehaviour
     private void EndMovement(Voxel vox = null)
     {
         if (vox == null) vox = VoxelWorld.GetVoxel(transform.position);
-        var floor = VoxelWorld.GetVoxel(vox.Position + VoxelWorld.GravityVector.normalized);
+        var floor = VoxelWorld.GetVoxel(vox.WorldPosition + VoxelWorld.GravityVector.normalized);
 
         if (floor != null && floor.Character != null && _parent == null) // We landed on a character
         {
@@ -283,6 +283,12 @@ public class Movement : MonoBehaviour
         /* Clear to land */
 
         _lastVoxel = vox;
+        if (_lastVoxel.Object != null)
+        {
+            var upgrade = _lastVoxel.Object.GetComponent<Upgrade>();
+            if (upgrade != null)
+                VoxelWorld.Instance.MainCharacter.Upgrade(upgrade.Type);
+        }
         _lastVoxel.Fill(gameObject);
     }
 

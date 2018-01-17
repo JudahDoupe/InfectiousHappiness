@@ -19,15 +19,15 @@ public class Block : MonoBehaviour
 
             if (Type == BlockType.Movable || Type == BlockType.Bounce || Type == BlockType.Pipe || Type == BlockType.Falling)
             {
-                if (_movement == null)
-                    _movement = gameObject.AddComponent<Movement>();
+                if (Movement == null)
+                    Movement = gameObject.AddComponent<Movement>();
             }
             else
             {
-                if (_movement != null)
+                if (Movement != null)
                 {
-                    Destroy(_movement);
-                    _movement = null;
+                    Destroy(Movement);
+                    Movement = null;
                 }
             }
         }
@@ -67,17 +67,17 @@ public class Block : MonoBehaviour
     }
     public bool IsActivated;
 
-    private Movement _movement;
-    private Renderer _renderer;
+    public Movement Movement;
     public Renderer Renderer
     {
         get { return _renderer ?? (_renderer = gameObject.GetComponentInChildren<Renderer>()); }
     }
+    private Renderer _renderer;
     private BlockMaterialSet _materials;
 
     void Start()
     {
-        _movement = gameObject.GetComponent<Movement>();
+        Movement = gameObject.GetComponent<Movement>();
         Type = _type;
     }
     void Update()
@@ -86,9 +86,9 @@ public class Block : MonoBehaviour
             UpdatePipe();
         if (Type == BlockType.Falling && IsActivated)
         {
-            if (!_movement.IsFalling && Vector3.Distance(VoxelWorld.Instance.MainCharacter.transform.position, transform.position) > 1)
+            if (!Movement.IsFalling && Vector3.Distance(VoxelWorld.Instance.MainCharacter.transform.position, transform.position) > 1)
             {
-                _movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position));
+                Movement.MoveToVoxel(VoxelWorld.GetVoxel(transform.position));
                 Deactivate();
             }
         }
@@ -124,6 +124,15 @@ public class Block : MonoBehaviour
             case BlockType.Switch:
                 StandSwitch(stander);
                 return true;
+            case BlockType.Goal:
+                if (IsActivated)
+                {
+                    var nextRoom = VoxelWorld.ActiveLevel.GetRoom(VoxelWorld.GetVoxel(transform.position).Room.RoomNumber + 1);
+                    if(nextRoom != null) nextRoom.Reload();
+                }
+                else
+                    Activate();
+                return true;
             default:
                 Activate();
                 return true;
@@ -140,7 +149,7 @@ public class Block : MonoBehaviour
         if (_type == BlockType.Goal)
         {
             var voxel = VoxelWorld.GetVoxel(transform.position);
-            if (voxel.Room != null) voxel.Room.Complete();
+            if (voxel.Room != null) voxel.Room.CompleteRoom();
         }
     }
     public void Deactivate()
@@ -210,7 +219,7 @@ public class Block : MonoBehaviour
         if (nextPath == null)
         {
             currentPath.Pop();
-            var end = VoxelWorld.GetVoxel(transform.position + (transform.position - currentPath.Pop().Position));
+            var end = VoxelWorld.GetVoxel(transform.position + (transform.position - currentPath.Pop().WorldPosition));
             currentPath.Push(VoxelWorld.GetVoxel(transform.position));
             currentPath.Push(end);
             return currentPath;
@@ -224,7 +233,7 @@ public class Block : MonoBehaviour
 
         if (neighbors.Count() > 1)
         {
-            var direction = (neighbors[0].Position - neighbors[1].Position).normalized;
+            var direction = (neighbors[0].WorldPosition - neighbors[1].WorldPosition).normalized;
 
             if (Mathf.Abs(direction.x) > 0.999)
                 transform.localScale = new Vector3(1.5f, 0.75f, 0.75f);

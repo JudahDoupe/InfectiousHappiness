@@ -22,35 +22,23 @@ public class VoxelWorld : MonoBehaviour
         if (Instance == null) Instance = this;
         if (MainCharacter == null)
             MainCharacter = FindObjectOfType<Character>();
+        
+        //Setup Active Level 
+        ActiveLevel = new Level(LevelData.Name);
+        if (!LevelData.ResetToTemplate)
+            ActiveLevel.Load();
 
-        for (var i = 0; i < LevelData.Count; i++)
-        {
-            var data = LevelData[i];
-            var level = new Level(data.Name);
-            Levels.Add(level);
+        if (!ActiveLevel.IsLoaded && LevelData.LevelTemplate != null)
+            LevelData.LevelTemplate.Build(ActiveLevel);
 
-            var activeLevel = ActiveLevel;
-            if (activeLevel != null && activeLevel.Name == data.Name)
-            {
-                if(!data.ResetToTemplate)
-                    activeLevel.Load();
-                
-                if (!activeLevel.IsLoaded && data.LevelTemplate != null)
-                    data.LevelTemplate.Build(level);
-            }
-
-        }
-    }
-    void Update()
-    {
+        //Sync Audio
         AudioSource baseTrack = null;
-
-        for (var i = 0; i < 16; i++)
+        for (var i = 0; i < 8; i++)
         {
             if (baseTrack == null) baseTrack = ActiveLevel.GetRoom(i).Track;
 
             var track = ActiveLevel.GetRoom(i).Track;
-            if(track != null) track.timeSamples = baseTrack.timeSamples;
+            if (track != null) track.timeSamples = baseTrack.timeSamples;
         }
     }
 
@@ -70,37 +58,13 @@ public class VoxelWorld : MonoBehaviour
     [Space(10)]
 
     // Levels
-    public List<LevelLookupData> LevelData = new List<LevelLookupData>();
-    private static readonly List<Level> Levels = new List<Level>();
-    public static Level ActiveLevel
-    {
-        get{return GetLevel(Instance.MainCharacter.transform.position) ?? Levels.FirstOrDefault();}
-    }
-    public static Level GetLevel(Vector3 worldPos)
-    {
-        for (var i = 0; i < Levels.Count; i++)
-        {
-            var level = Levels[i];
-            if (level.IsInsideLevel(worldPos))
-                return level;
-        }
-        return null;
-    }
-    public static Level GetLevel(string name)
-    {
-        for (var i = 0; i < Levels.Count; i++)
-        {
-            if (Levels[i].Name == name)
-                return Levels[i];
-        }
-        return null;
-    }
+    public LevelLookupData LevelData;
+    public static Level ActiveLevel;
 
     // Queries
     public static Voxel GetVoxel(Vector3 worldPos)
     {
-        var level = GetLevel(worldPos);
-        if (level != null) return level.GetVoxel(level.WorldToLevel(worldPos));
+        if (ActiveLevel != null) return ActiveLevel.GetVoxel(ActiveLevel.WorldToLevel(worldPos));
         Debug.Log("Unable to get voxel because level does not exist at location: "+ worldPos);
         return null;
     }
@@ -118,38 +82,13 @@ public class VoxelWorld : MonoBehaviour
     }
     public static bool IsInsideWorld(Vector3 worldPos)
     {
-        return GetLevel(worldPos) != null;
-    }
-
-    // Coroutines
-    public IEnumerator RandomlyActivateBlocks(List<Block> blocks)
-    {
-        blocks = blocks.OrderBy(x => Random.Range(0, 100)).ToList();
-        var i = 0;
-        const int speed = 5;
-        foreach (var block in blocks)
-        {
-            block.Stand();
-            if (i == 0)
-                yield return new WaitForFixedUpdate();
-            i = (i + 1) % speed;
-        }
-        if(SaveProgress)ActiveLevel.Save();
-    }
-    public IEnumerator AdjustTrackVolume(Room room)
-    {
-        while (!room.IsComplete)
-        {
-            room.Track.volume = room.Floor.Count(x => x.IsActivated) / (room.Floor.Count + 0f);
-            yield return new WaitForSeconds(1);
-        }
-        room.Track.volume = 1;
+        return ActiveLevel.IsInsideLevel(worldPos);
     }
 }
 
 public class Level
 {
-    public const int NumRooms = 16;
+    public const int NumRooms = 8;
     public const int Size = 48;
     public string Name;
     public Vector3 WorldPostition;
@@ -170,53 +109,48 @@ public class Level
         WorldPostition = worldPos;
         SpawnVoxel = GetVoxel(spawnPos.Value);
     }
+    public void SaveAll()
+    {
+        for (int i = 0; i < NumRooms; i++)
+        {
+            GetRoom(i).Save();
+        }
+    }
     public void Save()
     {
-
-        var voxels = new List<VoxelData>();
-        for (var x = 0; x < Size; x++)
-        {
-            for (var y = 0; y < Size; y++)
-            {
-                for (var z = 0; z < Size; z++)
-                {
-                    if (_voxels[x,y,z] != null)
-                    {
-                        voxels.Add(_voxels[x,y,z].ToData());
-                    }
-                }
-            }
-        }
-
-        var saveData = new LevelData
+        var saveData = new LevelData2
         {
             Name = Name,
             Pos = WorldPostition,
-            SpawnPos = SpawnVoxel == null ? new Vector3(0,0,0) : SpawnVoxel.Position,
+            SpawnPos = SpawnVoxel == null ? new Vector3(0, 0, 0) : SpawnVoxel.WorldPosition,
 
-            Rooms = _rooms.Where(x => x != null).Select(x => x.ToData()).ToArray(),
-            Voxels = voxels.ToArray(),
+            PlayerCanJump = VoxelWorld.Instance.MainCharacter.CanJump,
+            PlayerCanPush = VoxelWorld.Instance.MainCharacter.CanPush,
+            PlayerCanLift = VoxelWorld.Instance.MainCharacter.CanLift,
+            PlayerCanPipe = VoxelWorld.Instance.MainCharacter.CanPipe,
+            PlayerCanSwitch = VoxelWorld.Instance.MainCharacter.CanSwitch,
         };
-
-        IOManager.SaveLevel(saveData,Name);
+        IOManager.SaveLevel(saveData, Name);
     }
     public void Load()
     {
         if(IsLoaded) return;
         var savedData = IOManager.LoadLevel(Name);
-        if (savedData.Name != Name)
-            return;
+        if (savedData.Name == null) return;
 
         WorldPostition = savedData.Pos;
         SpawnVoxel = GetVoxel(WorldToLevel(savedData.SpawnPos));
 
-        foreach (var roomData in savedData.Rooms)
+        var player = VoxelWorld.Instance.MainCharacter;
+        player.CanJump = savedData.PlayerCanJump;
+        player.CanPush = savedData.PlayerCanPush;
+        player.CanLift = savedData.PlayerCanLift;
+        player.CanPipe = savedData.PlayerCanPipe;
+        player.CanSwitch = savedData.PlayerCanSwitch;
+
+        for (int i = 0; i < NumRooms; i++)
         {
-            GetRoom(roomData.RoomNum).Load(roomData);
-        }
-        foreach (var voxelData in savedData.Voxels)
-        {
-            GetVoxel(WorldToLevel(voxelData.WorldPosition)).Load(voxelData);
+            GetRoom(i).Reload();
         }
         IsLoaded = true;
     }
@@ -244,7 +178,7 @@ public class Level
 
     public Room GetRoom(int roomNum)
     {
-        if (roomNum < 0 || roomNum >= 16) return null;
+        if (roomNum < 0 || roomNum >= NumRooms) return null;
         return _rooms[roomNum] ?? (_rooms[roomNum] = new Room(this,roomNum));
     }
     public Room GetRoom(Vector3 levelPos)
@@ -291,87 +225,159 @@ public class Room
     public AudioSource Track;
     public int RoomNumber;
     public string Name;
+    public Vector3 RoomOffset = new Vector3(0,0,0);
 
-    public List<Block> Floor = new List<Block>();
-    public List<Block> Goals = new List<Block>();
+    public List<Voxel> Voxels = new List<Voxel>();
+    public List<Block> Blocks = new List<Block>();
+    public List<Upgrade> Upgrades = new List<Upgrade>();
 
     public Room(Level level, int roomNum)
     {
         Level = level;
         RoomNumber = roomNum;
     }
-    public void Load(RoomData data)
+    public void Load(RoomData2 data)
     {
+        Destroy();
+
         Name = data.Name;
+        RoomOffset = data.RoomOffset;
 
-        if (Track != null || data.TrackName == "") return;
-
-        Track = VoxelWorld.Instance.gameObject.AddComponent<AudioSource>();
-        Track.clip = IOManager.LoadTrack(data.TrackName);
-        Track.volume = 0;
-    }
-    public RoomData ToData()
-    {
-        return new RoomData
+        if (data.TrackName != "")
         {
+            if(Track) Object.Destroy(Track);
+            Track = VoxelWorld.Instance.gameObject.AddComponent<AudioSource>();
+            Track.clip = IOManager.LoadTrack(data.TrackName);
+            Track.volume = 0;
+        }
+        if (data.Voxels != null)
+        {
+            for (var i = 0; i < data.Voxels.Length; i++)
+            {
+                var voxData = data.Voxels[i];
+                var vox = Level.GetVoxel(voxData.LvlPos + RoomOffset);
+                vox.Load(voxData, RoomNumber);
+            }
+        }
+    }
+    public void Reload()
+    {
+        var data = IOManager.LoadRoom(Level.Name, RoomNumber);
+        Load(data);
+    }
+    public void Save()
+    {
+        List<VoxelData2> voxelsInRoom = new List<VoxelData2>();
+        for (var i = 0; i < Blocks.Count; i++)
+        {
+            var block = Blocks[i];
+            if (block == null) continue;
+
+            var worldPos = block.Movement == null ? block.transform.position : block.Movement.SpawnVoxel.WorldPosition;
+            voxelsInRoom.Add(new VoxelData2
+            {
+                Active = block.IsActivated && VoxelWorld.Instance.SaveProgress,
+                Object = "Block",
+                ObjectType = block.Type.ToString(),
+                LvlPos = Level.WorldToLevel(worldPos - RoomOffset),
+            });
+        }
+        for (var i = 0; i < Upgrades.Count; i++)
+        {
+            var upgrade = Upgrades[i];
+            if (upgrade != null)
+            {
+                voxelsInRoom.Add(new VoxelData2
+                {
+                    Active = false,
+                    Object = "Upgrade",
+                    ObjectType = upgrade.Type.ToString(),
+                    LvlPos = Level.WorldToLevel(upgrade.transform.position - RoomOffset),
+                });
+            }
+        }
+
+        IOManager.SaveRoom(new RoomData2
+        {
+            LevelName = Level.Name,
             Name = Name,
             RoomNum = RoomNumber,
-            TrackName = Track == null ? "" : Track.name
-        };
+            RoomOffset = RoomOffset,
+            TrackName = Track == null ? "" : Track.name,
+            Voxels = voxelsInRoom.ToArray(),
+        });
+
+        Level.Save();
+
     }
     public void Destroy()
     {
-        Floor = new List<Block>();
-        Goals = new List<Block>();
+        for (var i = 0; i < Voxels.Count; i++)
+        {
+            Voxels[i].DestroyObject();
+        }
+        Voxels = new List<Voxel>();
+
+        for (var i = 0; i < Blocks.Count; i++)
+        {
+            if (Blocks[i] != null)
+                Object.Destroy(Blocks[i].gameObject);
+        }
+        Blocks = new List<Block>();
+
+        for (var i = 0; i < Upgrades.Count; i++)
+        {
+            if (Upgrades[i] != null)
+                Object.Destroy(Upgrades[i].gameObject);
+        }
+        Upgrades = new List<Upgrade>();
+
+        Name = "";
         Object.Destroy(Track);
     }
 
     public void AddVoxel(Voxel vox)
     {
-        if (vox.Block == null) return;
+        Voxels.Add(vox);
 
-        switch (vox.Block.Type)
-        {
-            case BlockType.Floor:
-                Floor.Add(vox.Block);
-                break;
-            case BlockType.Goal:
-                Goals.Add(vox.Block);
-                break;
-        }
+        if (vox.Block)
+            Blocks.Add(vox.Block);
+        else if(vox.Upgrade)
+            Upgrades.Add(vox.Upgrade);
     }
     public void RemoveVoxel(Voxel vox)
     {
-        if (!vox.Block) return;
+        Voxels.Remove(vox);
 
-        switch (vox.Block.Type)
-        {
-            case BlockType.Floor:
-                Floor.Remove(vox.Block);
-                break;
-            case BlockType.Goal:
-                Goals.Remove(vox.Block);
-                break;
-        }
+        if (vox.Block)
+            Blocks.Remove(vox.Block);
+        if (vox.Upgrade)
+            Upgrades.Remove(vox.Upgrade);
     }
 
-    public bool IsComplete
+    public void CompleteRoom()
     {
-        get
+        if (Level.IsLoaded)
         {
-            Debug.Log(Goals.Count);
-            if (Goals.Count <= 0) return false;
-            for (int i = 0; i < Goals.Count; i++)
-            {
-                if (!Goals[i].IsActivated) return false;
-            }
-            return true;
+            VoxelWorld.Instance.StartCoroutine(ActivateAllFloorBlocks());
+            Level.SpawnVoxel = VoxelWorld.GetVoxel(VoxelWorld.Instance.MainCharacter.transform.position);
+            Level.Save();
         }
     }
-    public void Complete()
+    private IEnumerator ActivateAllFloorBlocks()
     {
-        if (!IsComplete || !Level.IsLoaded) return;
-        VoxelWorld.Instance.StartCoroutine("RandomlyActivateBlocks", Floor);
+        var blocks = Blocks.Where(b => b.Type == BlockType.Floor).OrderBy(x => Random.Range(0, 100)).ToArray();
+        var i = 0;
+        const int speed = 5;
+        for (var index = 0; index < blocks.Length; index++)
+        {
+            var block = blocks[index];
+            block.Stand();
+            if (i == 0)
+                yield return new WaitForFixedUpdate();
+            i = (i + 1) % speed;
+        }
+        Save();
     }
 }
 
@@ -379,25 +385,26 @@ public class Voxel
 {
     public Level Level;
     public Room Room;
-    public Vector3 Position;
+    public Vector3 WorldPosition;
 
     public GameObject Object;
     public Block Block;
+    public Upgrade Upgrade;
     public Character Character;
 
-    public Voxel(Level level, Vector3 position)
+    public Voxel(Level level, Vector3 worldPosition)
     {
         Level = level;
-        Position = position;
+        WorldPosition = worldPosition;
     }
     public void Load(VoxelData data)
     {
-        Position = data.WorldPosition;
+        WorldPosition = data.WorldPosition;
 
         var prefab = IOManager.LoadObject(data.ObjectName);
         GameObject obj = null;
         if (prefab != null)
-            obj = UnityEngine.Object.Instantiate(prefab, Position, Quaternion.identity);
+            obj = UnityEngine.Object.Instantiate(prefab, WorldPosition, Quaternion.identity);
 
         Fill(obj, data.RoomNum);
 
@@ -409,28 +416,33 @@ public class Voxel
         }
 
         if (data.RoomNum >= 0) ChangeRoom(data.RoomNum);
-    }
-    public VoxelData ToData()
+    } //Depriciated
+    public void Load(VoxelData2 data, int roomNum = -1)
     {
-        var name = "";
-        var isActive = false;
+        DestroyObject();
+
+        var prefab = IOManager.LoadObject(data.Object);
+        if (prefab != null)
+        {
+            Object = UnityEngine.Object.Instantiate(prefab, WorldPosition, Quaternion.identity);
+            Block = Object.GetComponent<Block>();
+            Upgrade = Object.GetComponent<Upgrade>();
+            Character = Object.GetComponent<Character>();
+        }
+
         if (Block != null)
         {
-            name = Block.Type.ToString();
-            isActive = Block.IsActivated && VoxelWorld.Instance.SaveProgress;
+            Block.SetType(data.ObjectType);
+            if (data.Active)
+                Block.Activate();
         }
-        var movement = Object == null ? null : Object.GetComponent<Movement>();
-        var data = new VoxelData
+        if (Upgrade != null)
         {
-            WorldPosition = movement != null ? movement.SpawnVoxel.Position : Position,
-            RoomNum = Room == null ? -1 : Room.RoomNumber,
-            ObjectName = name,
-            IsActive = isActive,
-        };
+            Upgrade.SetType(data.ObjectType);
+        }
 
-        return data;
+        if (roomNum >= 0) ChangeRoom(roomNum);
     }
-
     public void Fill(GameObject obj, int roomNum = -1)
     {
         DestroyObject();
@@ -438,8 +450,9 @@ public class Voxel
         if (obj != null)
         {
             Object = obj;
-            Object.transform.position = Position;
+            Object.transform.position = WorldPosition;
             Block = Object.GetComponent<Block>();
+            Upgrade = Object.GetComponent<Upgrade>();
             Character = Object.GetComponent<Character>();
         }
 
@@ -450,15 +463,20 @@ public class Voxel
         var obj = Object;
         Object = null;
         Block = null;
+        Upgrade = null;
         Character = null;
         return obj;
     }
     public void DestroyObject()
     {
         ChangeRoom(-1);
-        if (Object != null && Character == null) UnityEngine.Object.Destroy(Object);
+
+        if (Object != null && Character == null)
+            UnityEngine.Object.Destroy(Object);
+
         Object = null;
         Block = null;
+        Upgrade = null;
         Character = null;
     }
 

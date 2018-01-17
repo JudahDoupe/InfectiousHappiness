@@ -29,7 +29,7 @@ public class LevelTemplate : MonoBehaviour
         var i = 0;
         foreach (var data in RoomTemplates)
         {
-            Level.GetRoom(i).Load(new RoomData {Name = data.Name,RoomNum = i,TrackName = data.AudioTrackName});
+            Level.GetRoom(i).Load(new RoomData2 {Name = data.Name,RoomNum = i,TrackName = data.AudioTrackName, Voxels = new VoxelData2[0]});
             i++;
         }
     }
@@ -75,9 +75,19 @@ public class LevelTemplate : MonoBehaviour
         pos += RoomTemplates[CurrentRoomTemplate].PositionInLevel;
         var vox = Level.GetVoxel(pos);
         if (vox == null) return pos;
-        var obj = Instantiate(IOManager.LoadObject("Block"), vox.Position, Quaternion.identity);
+        var obj = Instantiate(IOManager.LoadObject("Block"), vox.WorldPosition, Quaternion.identity);
         obj.GetComponent<Block>().Type = type;
         vox.Fill(obj, CurrentRoomTemplate);
-        return vox.Position;
+        return vox.WorldPosition;
+    }
+    public Vector3 PlaceUpgrade(Vector3 pos, UpgradeType type)
+    {
+        pos += RoomTemplates[CurrentRoomTemplate].PositionInLevel;
+        var vox = Level.GetVoxel(pos);
+        if (vox == null) return pos;
+        var obj = Instantiate(IOManager.LoadObject("Upgrade"), vox.WorldPosition, Quaternion.identity);
+        obj.GetComponent<Upgrade>().Type = type;
+        vox.Fill(obj, CurrentRoomTemplate);
+        return vox.WorldPosition;
     }
 }
