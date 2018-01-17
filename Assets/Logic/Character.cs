@@ -39,11 +39,11 @@ public class Character : MonoBehaviour
     void Start()
     {
 
+        transform.position = VoxelWorld.SpawnVoxel.WorldPosition;
         Movement = gameObject.GetComponent<Movement>() ?? gameObject.AddComponent<Movement>();
         Movement.SpawnVoxel = VoxelWorld.SpawnVoxel;
-        if(Type == CharacterType.Player)
-            Movement.MoveToVoxel(Movement.SpawnVoxel);
-        transform.position = Movement.SpawnVoxel.WorldPosition;
+        if (Type == CharacterType.Player)
+            Movement.Fall();
 
         var cursorObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
         _cursor = cursorObj.GetComponent<Renderer>();

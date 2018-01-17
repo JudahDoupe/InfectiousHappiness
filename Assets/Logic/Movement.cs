@@ -98,8 +98,13 @@ public class Movement : MonoBehaviour
     public bool Fall()
     {
         var downVox = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
-        if (downVox == null || downVox.Block != null)
+        if (downVox == null)
             return false;
+        if (downVox.Block != null)
+        {
+            EndMovement();
+            return false;
+        }
 
         IsFalling = true;
         StartCoroutine(ExecuteFall());
