@@ -9,14 +9,6 @@ using Random = UnityEngine.Random;
 
 public class VoxelWorld : MonoBehaviour
 {
-    [Serializable]
-    public struct LevelLookupData
-    {
-        public string Name;
-        public bool ResetToTemplate;
-        public LevelTemplate LevelTemplate;
-    }
-
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -25,11 +17,9 @@ public class VoxelWorld : MonoBehaviour
         
         //Setup Active Level 
         ActiveLevel = new Level(LevelData.Name);
-        if (!LevelData.ResetToTemplate)
-            ActiveLevel.Load();
-
-        if (!ActiveLevel.IsLoaded && LevelData.LevelTemplate != null)
-            LevelData.LevelTemplate.Build(ActiveLevel);
+        ActiveLevel.Load();
+        ActiveLevel.WorldPostition = LevelData.Position;
+        ActiveLevel.SpawnVoxel = ActiveLevel.GetVoxel(LevelData.SpawnPosition);
 
         //Sync Audio
         AudioSource baseTrack = null;
@@ -57,8 +47,8 @@ public class VoxelWorld : MonoBehaviour
     public bool SaveProgress;
     [Space(10)]
 
-    // Levels
-    public LevelLookupData LevelData;
+    // Level
+    public LevelData LevelData;
     public static Level ActiveLevel;
 
     // Queries
@@ -80,22 +70,18 @@ public class VoxelWorld : MonoBehaviour
             GetVoxel(worldPos + Vector3.right),
         }.Where(x => x != null).ToList();
     }
-    public static bool IsInsideWorld(Vector3 worldPos)
-    {
-        return ActiveLevel.IsInsideLevel(worldPos);
-    }
 }
 
 public class Level
 {
-    public const int NumRooms = 8;
+    public const int NumPuzzles = 8;
     public const int Size = 48;
     public string Name;
     public Vector3 WorldPostition;
     public Voxel SpawnVoxel;
     public bool IsLoaded;
 
-    private readonly Room[] _rooms = new Room[NumRooms];
+    private readonly Puzzle[] _puzzles = new Puzzle[NumPuzzles];
     private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
 
     public Level(string name)
@@ -111,46 +97,46 @@ public class Level
     }
     public void SaveAll()
     {
-        for (int i = 0; i < NumRooms; i++)
+        Save();
+        for (int i = 0; i < NumPuzzles; i++)
         {
             GetRoom(i).Save();
         }
     }
     public void Save()
     {
-        var saveData = new LevelData2
+        var saveData = new LevelData
         {
             Name = Name,
-            Pos = WorldPostition,
-            SpawnPos = SpawnVoxel == null ? new Vector3(0, 0, 0) : SpawnVoxel.WorldPosition,
-
+            Position = WorldPostition,
+            SpawnPosition = SpawnVoxel == null ? new Vector3(0, 0, 0) : SpawnVoxel.WorldPosition,
             PlayerCanJump = VoxelWorld.Instance.MainCharacter.CanJump,
             PlayerCanPush = VoxelWorld.Instance.MainCharacter.CanPush,
             PlayerCanLift = VoxelWorld.Instance.MainCharacter.CanLift,
             PlayerCanPipe = VoxelWorld.Instance.MainCharacter.CanPipe,
             PlayerCanSwitch = VoxelWorld.Instance.MainCharacter.CanSwitch,
         };
-        IOManager.SaveLevel(saveData, Name);
+        IOManager.SaveLevel(saveData);
     }
     public void Load()
     {
         if(IsLoaded) return;
-        var savedData = IOManager.LoadLevel(Name);
-        if (savedData.Name == null) return;
+        var data = IOManager.LoadLevel(Name);
+        if (data.Name == null) return;
 
-        WorldPostition = savedData.Pos;
-        SpawnVoxel = GetVoxel(WorldToLevel(savedData.SpawnPos));
+        WorldPostition = data.Position;
+        SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
 
         var player = VoxelWorld.Instance.MainCharacter;
-        player.CanJump = savedData.PlayerCanJump;
-        player.CanPush = savedData.PlayerCanPush;
-        player.CanLift = savedData.PlayerCanLift;
-        player.CanPipe = savedData.PlayerCanPipe;
-        player.CanSwitch = savedData.PlayerCanSwitch;
+        player.CanJump = data.PlayerCanJump;
+        player.CanPush = data.PlayerCanPush;
+        player.CanLift = data.PlayerCanLift;
+        player.CanPipe = data.PlayerCanPipe;
+        player.CanSwitch = data.PlayerCanSwitch;
 
-        for (int i = 0; i < NumRooms; i++)
+        for (int i = 0; i < NumPuzzles; i++)
         {
-            GetRoom(i).Reload();
+            GetRoom(i).Reset();
         }
         IsLoaded = true;
     }
@@ -169,21 +155,21 @@ public class Level
                 }
             }
         }
-        foreach (var room in _rooms)
+        foreach (var room in _puzzles)
         {
             room.Destroy();
         }
         IsLoaded = false;
     }
 
-    public Room GetRoom(int roomNum)
+    public Puzzle GetRoom(int roomNum)
     {
-        if (roomNum < 0 || roomNum >= NumRooms) return null;
-        return _rooms[roomNum] ?? (_rooms[roomNum] = new Room(this,roomNum));
+        if (roomNum < 0 || roomNum >= NumPuzzles) return null;
+        return _puzzles[roomNum] ?? (_puzzles[roomNum] = new Puzzle(this,roomNum));
     }
-    public Room GetRoom(Vector3 levelPos)
+    public Puzzle GetRoom(Vector3 levelPos)
     {
-        return GetVoxel(levelPos).Room;
+        return GetVoxel(levelPos).Puzzle;
     }
     public Voxel GetVoxel(Vector3 levelPos)
     {
@@ -201,14 +187,6 @@ public class Level
                 (_voxels[pos[0], pos[1], pos[2]] = new Voxel(this, LevelToWorld(new Vector3(pos[0], pos[1], pos[2]))));
     }
 
-    public bool IsInsideLevel(Vector3 worldPos)
-    {
-        var localPos = WorldToLevel(worldPos);
-        return 0 <= localPos.x && localPos.x <= Size - 1
-                && 0 <= localPos.y && localPos.y <= Size - 1
-                && 0 <= localPos.z && localPos.z <= Size - 1;
-    }
-
     public Vector3 WorldToLevel(Vector3 worldPos)
     {
         return worldPos - WorldPostition;
@@ -219,29 +197,29 @@ public class Level
     }
 }
 
-public class Room
+public class Puzzle
 {
     public Level Level;
-    public AudioSource Track;
-    public int RoomNumber;
     public string Name;
-    public Vector3 RoomOffset = new Vector3(0,0,0);
+    public int Number;
+    public AudioSource Track;
+    public Vector3 PuzzleOffset = new Vector3(0,0,0);
 
     public List<Voxel> Voxels = new List<Voxel>();
     public List<Block> Blocks = new List<Block>();
     public List<Upgrade> Upgrades = new List<Upgrade>();
 
-    public Room(Level level, int roomNum)
+    public Puzzle(Level level, int puzzleNum)
     {
         Level = level;
-        RoomNumber = roomNum;
+        Number = puzzleNum;
     }
-    public void Load(RoomData2 data)
+    public void Load(PuzzleData data)
     {
         Destroy();
 
-        Name = data.Name;
-        RoomOffset = data.RoomOffset;
+        Name = data.PuzzleName;
+        PuzzleOffset = data.PuzzleOffset;
 
         if (data.TrackName != "")
         {
@@ -255,31 +233,31 @@ public class Room
             for (var i = 0; i < data.Voxels.Length; i++)
             {
                 var voxData = data.Voxels[i];
-                var vox = Level.GetVoxel(voxData.LvlPos + RoomOffset);
-                vox.Load(voxData, RoomNumber);
+                var vox = Level.GetVoxel(voxData.LvlPos + PuzzleOffset);
+                vox.Load(voxData, Number);
             }
         }
     }
-    public void Reload()
+    public void Reset()
     {
-        var data = IOManager.LoadRoom(Level.Name, RoomNumber);
+        var data = IOManager.LoadPuzzle(Level.Name, Number);
         Load(data);
     }
     public void Save()
     {
-        List<VoxelData2> voxelsInRoom = new List<VoxelData2>();
+        List<VoxelData> voxelsInRoom = new List<VoxelData>();
         for (var i = 0; i < Blocks.Count; i++)
         {
             var block = Blocks[i];
             if (block == null) continue;
 
             var worldPos = block.Movement == null ? block.transform.position : block.Movement.SpawnVoxel.WorldPosition;
-            voxelsInRoom.Add(new VoxelData2
+            voxelsInRoom.Add(new VoxelData
             {
                 Active = block.IsActivated && VoxelWorld.Instance.SaveProgress,
                 Object = "Block",
                 ObjectType = block.Type.ToString(),
-                LvlPos = Level.WorldToLevel(worldPos - RoomOffset),
+                LvlPos = Level.WorldToLevel(worldPos - PuzzleOffset),
             });
         }
         for (var i = 0; i < Upgrades.Count; i++)
@@ -287,28 +265,25 @@ public class Room
             var upgrade = Upgrades[i];
             if (upgrade != null)
             {
-                voxelsInRoom.Add(new VoxelData2
+                voxelsInRoom.Add(new VoxelData
                 {
                     Active = false,
                     Object = "Upgrade",
                     ObjectType = upgrade.Type.ToString(),
-                    LvlPos = Level.WorldToLevel(upgrade.transform.position - RoomOffset),
+                    LvlPos = Level.WorldToLevel(upgrade.transform.position - PuzzleOffset),
                 });
             }
         }
 
-        IOManager.SaveRoom(new RoomData2
+        IOManager.SavePuzzle(new PuzzleData
         {
             LevelName = Level.Name,
-            Name = Name,
-            RoomNum = RoomNumber,
-            RoomOffset = RoomOffset,
+            PuzzleName = Name,
+            PuzzleNum = Number,
+            PuzzleOffset = PuzzleOffset,
             TrackName = Track == null ? "" : Track.name,
             Voxels = voxelsInRoom.ToArray(),
         });
-
-        Level.Save();
-
     }
     public void Destroy()
     {
@@ -355,7 +330,7 @@ public class Room
             Upgrades.Remove(vox.Upgrade);
     }
 
-    public void CompleteRoom()
+    public void CompletePuzzle()
     {
         if (Level.IsLoaded)
         {
@@ -384,7 +359,7 @@ public class Room
 public class Voxel
 {
     public Level Level;
-    public Room Room;
+    public Puzzle Puzzle;
     public Vector3 WorldPosition;
 
     public GameObject Object;
@@ -397,27 +372,7 @@ public class Voxel
         Level = level;
         WorldPosition = worldPosition;
     }
-    public void Load(VoxelData data)
-    {
-        WorldPosition = data.WorldPosition;
-
-        var prefab = IOManager.LoadObject(data.ObjectName);
-        GameObject obj = null;
-        if (prefab != null)
-            obj = UnityEngine.Object.Instantiate(prefab, WorldPosition, Quaternion.identity);
-
-        Fill(obj, data.RoomNum);
-
-        if (Block != null)
-        {
-            Block.SetType(data.ObjectName);
-            if (data.IsActive)
-                Block.Activate();
-        }
-
-        if (data.RoomNum >= 0) ChangeRoom(data.RoomNum);
-    } //Depriciated
-    public void Load(VoxelData2 data, int roomNum = -1)
+    public void Load(VoxelData data, int roomNum = -1)
     {
         DestroyObject();
 
@@ -458,7 +413,7 @@ public class Voxel
 
         if(roomNum >= 0) ChangeRoom(roomNum);
     }
-    public GameObject TransferObject()
+    public GameObject Empty()
     {
         var obj = Object;
         Object = null;
@@ -482,8 +437,8 @@ public class Voxel
 
     private void ChangeRoom(int roomNum)
     {
-        if (Room != null) Room.RemoveVoxel(this);
-        Room = Level.GetRoom(roomNum);
-        if (Room != null) Room.AddVoxel(this);
+        if (Puzzle != null) Puzzle.RemoveVoxel(this);
+        Puzzle = Level.GetRoom(roomNum);
+        if (Puzzle != null) Puzzle.AddVoxel(this);
     }
 }

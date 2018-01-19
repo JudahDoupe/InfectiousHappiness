@@ -78,19 +78,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\LevelTemplates\CreativeTemplate.cs" />
-    <Compile Include="Assets\LevelTemplates\PlaygroundTemplate.cs" />
-    <Compile Include="Assets\Logic\Block.cs" />
-    <Compile Include="Assets\Logic\Camera.cs" />
-    <Compile Include="Assets\Logic\Character.cs" />
-    <Compile Include="Assets\Logic\LevelTemplate.cs" />
+    <Compile Include="Assets\Logic\Components\Block.cs" />
+    <Compile Include="Assets\Logic\Components\Camera.cs" />
+    <Compile Include="Assets\Logic\Components\Character.cs" />
+    <Compile Include="Assets\Logic\Components\Movement.cs" />
+    <Compile Include="Assets\Logic\Components\Upgrade.cs" />
     <Compile Include="Assets\Logic\Managers\IOManager.cs" />
     <Compile Include="Assets\Logic\Managers\MaterialManager.cs" />
     <Compile Include="Assets\Logic\Managers\UIManager.cs" />
-    <Compile Include="Assets\Logic\Movement.cs" />
     <Compile Include="Assets\Logic\SoundFX.cs" />
     <Compile Include="Assets\Logic\Tutorial.cs" />
-    <Compile Include="Assets\Logic\Upgrade.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>

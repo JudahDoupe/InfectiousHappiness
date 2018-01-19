@@ -261,6 +261,7 @@ public class Character : MonoBehaviour
             default:
                 break;
         }
+        VoxelWorld.ActiveLevel.Save();
     }
 
     // Movement

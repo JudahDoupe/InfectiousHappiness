@@ -196,7 +196,7 @@ public class Movement : MonoBehaviour
         var velocity = new Vector3(0,0,0);
         var potentialFloor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
 
-        while (VoxelWorld.IsInsideWorld(transform.position + VoxelWorld.GravityVector.normalized) && potentialFloor.Block == null)
+        while (potentialFloor != null && potentialFloor.Block == null)
         {
             velocity = velocity + VoxelWorld.GravityVector;
             transform.Translate(velocity,Space.World);
@@ -204,10 +204,7 @@ public class Movement : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
-        if (!VoxelWorld.IsInsideWorld(transform.position))
-            Reset();
-        else
-            EndMovement();
+        EndMovement();
     }
     private IEnumerator ExecuteTransport(Stack<Voxel> path)
     {
@@ -244,28 +241,31 @@ public class Movement : MonoBehaviour
     private void BeginMovement()
     {
         IsStunned = true;
-        _lastVoxel.TransferObject();
+        _lastVoxel.Empty();
         _lastVoxel = VoxelWorld.GetVoxel(transform.position);
     }
-    private void EndMovement(Voxel vox = null)
+    private void EndMovement()
     {
-        if (vox == null) vox = VoxelWorld.GetVoxel(transform.position);
-        var floor = VoxelWorld.GetVoxel(vox.WorldPosition + VoxelWorld.GravityVector.normalized);
-
-        if (floor != null && floor.Character != null && _parent == null) // We landed on a character
+        var vox = VoxelWorld.GetVoxel(transform.position);
+        var floor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
+        if (vox == null || floor == null)
+        {
+            Reset();
+            return;
+        }
+        
+        if (floor.Character != null && _parent == null) // We landed on a character
         {
             floor.Character.Load = this;
             Parent(floor.Character.Movement);
             SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Punch);
             IsStunned = false;
-
             return;
         }
 
-        if (floor == null || floor.Block == null) // There's nothing below us
+        if (floor.Block == null) // There's nothing below us
         {
-            if(!Fall())
-                Reset();
+            Fall();
             return;
         }
 
@@ -288,12 +288,8 @@ public class Movement : MonoBehaviour
         /* Clear to land */
 
         _lastVoxel = vox;
-        if (_lastVoxel.Object != null)
-        {
-            var upgrade = _lastVoxel.Object.GetComponent<Upgrade>();
-            if (upgrade != null)
-                VoxelWorld.Instance.MainCharacter.Upgrade(upgrade.Type);
-        }
+         if (_lastVoxel.Upgrade != null)
+            VoxelWorld.Instance.MainCharacter.Upgrade(_lastVoxel.Upgrade.Type);
         _lastVoxel.Fill(gameObject);
     }
 

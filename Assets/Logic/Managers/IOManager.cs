@@ -5,75 +5,105 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public class IOManager : MonoBehaviour {
+public class IOManager : MonoBehaviour
+{
 
-    private static bool debug = true;
-    private static string levelsDirPath;
+    public string[] LevelsToTransfer;
+
+    private static bool debug = false;
+    private static string _levelsDirPath;
+    private static string _defaultLevelsDirPath;
 
     public void Awake()
     {
-        levelsDirPath = Application.persistentDataPath + "/LevelData";
-        if (!Directory.Exists(levelsDirPath))
-            Directory.CreateDirectory(levelsDirPath);
+        _levelsDirPath = Application.persistentDataPath + "/LevelData";
+        _defaultLevelsDirPath = Application.dataPath + "/Levels";
+        if (!Directory.Exists(_levelsDirPath))
+            Directory.CreateDirectory(_levelsDirPath);
+
+        Debug.Log("POO");
+        for (var i = 0; i < LevelsToTransfer.Length; i++)
+        {
+            var levelName = LevelsToTransfer[i];
+            SaveLevel(LoadDefaultLevel(levelName));
+            for (var j = 0; j < Level.NumPuzzles; j++)
+            {
+                SavePuzzle(LoadDefaultPuzzle(levelName, j));
+            }
+        }
     }
 
-    public static void SaveRoom(RoomData2 roomData)
+    public static void SavePuzzle(PuzzleData puzzleData)
     {
-        var json = JsonUtility.ToJson(roomData);
-        File.WriteAllText(GetFilePath(roomData.LevelName, roomData.RoomNum), json);
+        var json = JsonUtility.ToJson(puzzleData);
+        File.WriteAllText(GetFilePath(puzzleData.LevelName, puzzleData.PuzzleNum), json);
 
-        if (debug) Debug.Log("Saving Room " + roomData.RoomNum + " in Level" + roomData.LevelName);
+        if (debug) Debug.Log("Saving Puzzle " + puzzleData.PuzzleNum + " in Level" + puzzleData.LevelName);
     }
-    public static RoomData2 LoadRoom(string levelName, int roomNum)
+    public static PuzzleData LoadPuzzle(string levelName, int puzzleNum)
     {
-        var filePath = GetFilePath(levelName, roomNum);
+        var filePath = GetFilePath(levelName, puzzleNum);
 
         if (!File.Exists(filePath))
         {
             Debug.Log("No file at: " + filePath);
-            return new RoomData2();
+            return new PuzzleData();
         }
 
         string jsonData = File.ReadAllText(filePath);
-        var roomData = JsonUtility.FromJson<RoomData2>(jsonData);
+        var roomData = JsonUtility.FromJson<PuzzleData>(jsonData);
+        return roomData;
+    }
+    public static PuzzleData LoadDefaultPuzzle(string levelName, int puzzleNum)
+    {
+        var filePath = GetDefaultFilePath(levelName, puzzleNum);
+
+        if (!File.Exists(filePath))
+        {
+            Debug.Log("No file at: " + filePath);
+            return new PuzzleData();
+        }
+
+        string jsonData = File.ReadAllText(filePath);
+        var roomData = JsonUtility.FromJson<PuzzleData>(jsonData);
         return roomData;
     }
 
-    public static void SaveLevel(LevelData2 data, string name)
+    public static void SaveLevel(LevelData data)
     {
         var json = JsonUtility.ToJson(data);
-        File.WriteAllText(GetFilePath(name), json);
+        File.WriteAllText(GetFilePath(data.Name), json);
 
         if(debug) Debug.Log("Saving Level Info");
     }
-    public static LevelData2 LoadLevel(string name)
+    public static LevelData LoadLevel(string name)
     {
         var filePath = GetFilePath(name);
 
         if (!File.Exists(filePath))
         {
             Debug.Log("No file at: " + filePath);
-            return new LevelData2();
-        }
-
-        string jsonData = File.ReadAllText(filePath);
-        var levelData = JsonUtility.FromJson<LevelData2>(jsonData);
-        return levelData;
-    }
-    public static LevelData LoadLevelOld(string name)
-    {
-        var filePath = levelsDirPath + "/" + name + ".json";
-
-        if (!File.Exists(filePath))
-        {
-            Debug.Log("No file at: "+filePath);
             return new LevelData();
         }
 
         string jsonData = File.ReadAllText(filePath);
         var levelData = JsonUtility.FromJson<LevelData>(jsonData);
         return levelData;
-    } // Depreciated
+    }
+    public static LevelData LoadDefaultLevel(string name)
+    {
+        var filePath = GetDefaultFilePath(name);
+
+        if (!File.Exists(filePath))
+        {
+            Debug.Log("No file at: " + filePath);
+            return new LevelData();
+        }
+
+        string jsonData = File.ReadAllText(filePath);
+        var levelData = JsonUtility.FromJson<LevelData>(jsonData);
+        return levelData;
+    }
 
     public static AudioClip LoadTrack(string name)
     {
@@ -84,17 +114,32 @@ public class IOManager : MonoBehaviour {
         return Resources.Load<GameObject>(objectName);
     }
 
-    private static string GetFilePath(string levelName, int roomNum = -1)
+    private static string GetFilePath(string levelName, int puzzleNum = -1)
     {
         levelName = levelName.ToLower().Replace(" ", "_");
-        var levelDir = levelsDirPath + "/" + levelName;
+        var levelDir = _levelsDirPath + "/" + levelName;
 
         if (!Directory.Exists(levelDir))
             Directory.CreateDirectory(levelDir);
 
         var filePath = levelDir + "/" + levelName;
-        if (roomNum >= 0)
-            filePath += "_room" + roomNum;
+        if (puzzleNum >= 0)
+            filePath += "_room" + puzzleNum;
+        filePath += ".json";
+
+        return filePath;
+    }
+    private static string GetDefaultFilePath(string levelName, int puzzleNum = -1)
+    {
+        levelName = levelName.ToLower().Replace(" ", "_");
+        var levelDir = _defaultLevelsDirPath + "/" + levelName;
+
+        if (!Directory.Exists(levelDir))
+            Directory.CreateDirectory(levelDir);
+
+        var filePath = levelDir + "/" + levelName;
+        if (puzzleNum >= 0)
+            filePath += "_room" + puzzleNum;
         filePath += ".json";
 
         return filePath;
@@ -105,35 +150,9 @@ public class IOManager : MonoBehaviour {
 public struct LevelData
 {
     public string Name;
-    public Vector3 Pos;
-    public Vector3 SpawnPos;
-
-    public RoomData[] Rooms;
-    public VoxelData[] Voxels;
-}
-[Serializable]
-public struct RoomData
-{
-    public string Name;
-    public int RoomNum;
-    public string TrackName;
-}
-[Serializable]
-public struct VoxelData
-{
-    public string ObjectName;
-    public Vector3 WorldPosition;
-    public int RoomNum;
-    public bool IsActive;
-}
-
-
-[Serializable]
-public struct LevelData2
-{
-    public string Name;
-    public Vector3 Pos;
-    public Vector3 SpawnPos;
+    public Vector3 Position;
+    public Vector3 SpawnPosition;
+    public Vector3 SpawnRotation;
 
     public bool PlayerCanJump;
     public bool PlayerCanPush;
@@ -142,17 +161,18 @@ public struct LevelData2
     public bool PlayerCanSwitch;
 }
 [Serializable]
-public struct RoomData2
+public struct PuzzleData
 {
     public string LevelName;
-    public string Name;
-    public int RoomNum;
+    public string PuzzleName;
+    public int PuzzleNum;
     public string TrackName;
-    public Vector3 RoomOffset;
-    public VoxelData2[] Voxels;
+    public Vector3 PuzzleOffset;
+
+    public VoxelData[] Voxels;
 }
 [Serializable]
-public struct VoxelData2
+public struct VoxelData
 {
     public string Object; 
     public string ObjectType; 

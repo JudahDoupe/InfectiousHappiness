@@ -127,8 +127,8 @@ public class Block : MonoBehaviour
             case BlockType.Goal:
                 if (IsActivated)
                 {
-                    var nextRoom = VoxelWorld.ActiveLevel.GetRoom(VoxelWorld.GetVoxel(transform.position).Room.RoomNumber + 1);
-                    if(nextRoom != null) nextRoom.Reload();
+                    var nextRoom = VoxelWorld.ActiveLevel.GetRoom(VoxelWorld.GetVoxel(transform.position).Puzzle.Number + 1);
+                    if(nextRoom != null) nextRoom.Reset();
                 }
                 else
                     Activate();
@@ -149,7 +149,7 @@ public class Block : MonoBehaviour
         if (_type == BlockType.Goal)
         {
             var voxel = VoxelWorld.GetVoxel(transform.position);
-            if (voxel.Room != null) voxel.Room.CompleteRoom();
+            if (voxel.Puzzle != null) voxel.Puzzle.CompletePuzzle();
         }
     }
     public void Deactivate()
