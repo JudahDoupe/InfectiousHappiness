@@ -219,23 +219,30 @@ public class Character : MonoBehaviour
 
         if (Load != null)
         {
-            Load.Drop(this);
+            Load.Throw(this, 2);
             return;
         }
 
-        var f = GetForwardBlock();
-        if (f == null) return;
+        var fB = GetForwardBlock();
+        var fD = GetForwardDroplet();
 
-        switch (f.Type)
+        if (fB)
         {
-            case BlockType.Movable:
-                if (CanLift) f.GetComponent<Movement>().Lift(this);
-                break;
-            case BlockType.Switch:
-                if (CanSwitch) f.PrimaryInteract(this);
-                break;
-            default:
-                break;
+            switch (fB.Type)
+            {
+                case BlockType.Movable:
+                    if (CanLift) fB.GetComponent<Movement>().Lift(this);
+                    break;
+                case BlockType.Switch:
+                    if (CanSwitch) fB.PrimaryInteract(this);
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (fD && CanLift)
+        {
+            fD.GetComponent<Movement>().Lift(this);
         }
     }
 
@@ -276,7 +283,7 @@ public class Character : MonoBehaviour
     private void Die()
     {
         if (Load != null)
-            Load.Drop(this);
+            Load.Throw(this);
         SoundFX.Instance.PlayRandomClip(SoundFX.Instance.Death);
     }
 
@@ -310,6 +317,14 @@ public class Character : MonoBehaviour
         var vox = VoxelWorld.GetVoxel(transform.position + transform.forward);
         if (vox != null && vox.Block)
             return vox.Block;
+
+        return null;
+    }
+    private Droplet GetForwardDroplet()
+    {
+        var vox = VoxelWorld.GetVoxel(transform.position + transform.forward);
+        if (vox != null && vox.Droplet)
+            return vox.Droplet;
 
         return null;
     }

@@ -21,7 +21,6 @@ public class IOManager : MonoBehaviour
         if (!Directory.Exists(_levelsDirPath))
             Directory.CreateDirectory(_levelsDirPath);
 
-        Debug.Log("POO");
         for (var i = 0; i < LevelsToTransfer.Length; i++)
         {
             var levelName = LevelsToTransfer[i];

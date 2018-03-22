@@ -81,16 +81,16 @@ public class Movement : MonoBehaviour
 
         return JumpToVoxel(VoxelWorld.GetVoxel(lifter.transform.position + lifter.transform.up));
     }
-    public bool Drop(Character dropper)
+    public bool Throw(Character thrower, int distance = 1)
     {
         if (IsStunned) return false;
 
-        dropper.Load = null;
+        thrower.Load = null;
         UnParent();
-        if (JumpToVoxel(VoxelWorld.GetVoxel(transform.position + dropper.transform.forward)))
+        if (JumpToVoxel(VoxelWorld.GetVoxel(transform.position + thrower.transform.forward * distance)))
             return true;
 
-        Parent(dropper.Movement);
+        Parent(thrower.Movement);
         MoveToVoxel(VoxelWorld.GetVoxel(transform.position));
         return false;
     }
@@ -160,7 +160,7 @@ public class Movement : MonoBehaviour
         for (var i = 0; i <= height; i++)
         {
             var voxInPath = VoxelWorld.GetVoxel(start.WorldPosition - VoxelWorld.GravityVector.normalized * i);
-            if (voxInPath != start && voxInPath.Block)
+            if (voxInPath != start && (voxInPath.Block))
                 return false;
         }
 
@@ -168,7 +168,7 @@ public class Movement : MonoBehaviour
         {
             var y = -(x * x) + distance * x;
             var voxInPath = VoxelWorld.GetVoxel(start.WorldPosition + (-VoxelWorld.GravityVector.normalized * (y + height)) + direction * x);
-            if (voxInPath != start && voxInPath.Block)
+            if (voxInPath != start && (voxInPath.Block))
                 return false;
         }
         return true;
@@ -247,6 +247,7 @@ public class Movement : MonoBehaviour
     private void EndMovement()
     {
         var vox = VoxelWorld.GetVoxel(transform.position);
+        var forwardVox = VoxelWorld.GetVoxel(transform.position + (transform.position - _lastVoxel.WorldPosition).normalized);
         var floor = VoxelWorld.GetVoxel(transform.position + VoxelWorld.GravityVector.normalized);
         if (vox == null || floor == null)
         {
@@ -263,8 +264,12 @@ public class Movement : MonoBehaviour
             return;
         }
 
+        var droplet = gameObject.GetComponent<Droplet>();
         if (floor.Block == null) // There's nothing below us
         {
+            if (droplet != null && forwardVox != null && forwardVox.Block != null)
+                droplet.Splash();
+
             Fall();
             return;
         }
@@ -282,11 +287,14 @@ public class Movement : MonoBehaviour
             _parent.IsStunned = false;
             return;
         }
+        if (droplet)
+            droplet.Splash();
+
+
         if (!floor.Block.Stand(this))
             return;
 
         /* Clear to land */
-
         _lastVoxel = vox;
          if (_lastVoxel.Upgrade != null)
             VoxelWorld.Instance.MainCharacter.Upgrade(_lastVoxel.Upgrade.Type);

@@ -97,6 +97,7 @@ public class Level
     }
     public void SaveAll()
     {
+        Debug.Log("Saving All");
         Save();
         for (int i = 0; i < NumPuzzles; i++)
         {
@@ -364,6 +365,7 @@ public class Voxel
 
     public GameObject Object;
     public Block Block;
+    public Droplet Droplet;
     public Upgrade Upgrade;
     public Character Character;
 
@@ -383,6 +385,7 @@ public class Voxel
             Block = Object.GetComponent<Block>();
             Upgrade = Object.GetComponent<Upgrade>();
             Character = Object.GetComponent<Character>();
+            Droplet = Object.GetComponent<Droplet>();
         }
 
         if (Block != null)
@@ -395,11 +398,16 @@ public class Voxel
         {
             Upgrade.SetType(data.ObjectType);
         }
+        if (Droplet != null)
+        {
+            Droplet.SetType(data.ObjectType);
+        }
 
         if (roomNum >= 0) ChangeRoom(roomNum);
     }
     public void Fill(GameObject obj, int roomNum = -1)
     {
+       // Debug.Log("old="+Object.name+" | new="+obj.name);
         DestroyObject();
 
         if (obj != null)
@@ -409,6 +417,7 @@ public class Voxel
             Block = Object.GetComponent<Block>();
             Upgrade = Object.GetComponent<Upgrade>();
             Character = Object.GetComponent<Character>();
+            Droplet = Object.GetComponent<Droplet>();
         }
 
         if(roomNum >= 0) ChangeRoom(roomNum);
@@ -420,6 +429,7 @@ public class Voxel
         Block = null;
         Upgrade = null;
         Character = null;
+        Droplet = null;
         return obj;
     }
     public void DestroyObject()
@@ -433,6 +443,7 @@ public class Voxel
         Block = null;
         Upgrade = null;
         Character = null;
+        Droplet = null;
     }
 
     private void ChangeRoom(int roomNum)

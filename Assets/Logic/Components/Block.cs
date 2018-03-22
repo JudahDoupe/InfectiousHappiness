@@ -60,6 +60,9 @@ public class Block : MonoBehaviour
             case "Falling":
                 Type = BlockType.Falling;
                 break;
+            case "InkWell":
+                Type = BlockType.InkWell;
+                break;
             default:
                 Type = BlockType.Static;
                 break;
@@ -82,6 +85,14 @@ public class Block : MonoBehaviour
     }
     void Update()
     {
+        if (!IsActivated)
+            return;
+
+        if (Type == BlockType.InkWell && VoxelWorld.GetVoxel(transform.position + Vector3.up).Droplet == null)
+        {
+            var droplet = Instantiate(IOManager.LoadObject("Droplet"));
+            VoxelWorld.GetVoxel(transform.position + Vector3.up).Fill(droplet);
+        }
         if (Type == BlockType.Pipe)
             UpdatePipe();
         if (Type == BlockType.Falling && IsActivated)
@@ -267,4 +278,5 @@ public enum BlockType
     Pipe,
     Switch,
     Falling,
+    InkWell
 }
