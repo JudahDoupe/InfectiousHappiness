@@ -7,56 +7,29 @@ using UnityEngine;
 
 public class IOManager : MonoBehaviour
 {
-
     public string[] LevelsToTransfer;
 
     private static bool debug = false;
-    private static string _levelsDirPath;
-    private static string _defaultLevelsDirPath;
 
     public void Awake()
     {
-        _levelsDirPath = Application.persistentDataPath + "/LevelData";
-        _defaultLevelsDirPath = Application.dataPath + "/Levels";
-        if (!Directory.Exists(_levelsDirPath))
-            Directory.CreateDirectory(_levelsDirPath);
-
-        Debug.Log("POO");
         for (var i = 0; i < LevelsToTransfer.Length; i++)
         {
             var levelName = LevelsToTransfer[i];
-            SaveLevel(LoadDefaultLevel(levelName));
-            for (var j = 0; j < Level.NumPuzzles; j++)
-            {
-                SavePuzzle(LoadDefaultPuzzle(levelName, j));
-            }
+            CopyLevelIfNonexistent(levelName);
         }
     }
 
     public static void SavePuzzle(PuzzleData puzzleData)
     {
         var json = JsonUtility.ToJson(puzzleData);
-        File.WriteAllText(GetFilePath(puzzleData.LevelName, puzzleData.PuzzleNum), json);
+        File.WriteAllText(GetLevelFilePath(puzzleData.LevelName, puzzleData.PuzzleNum), json);
 
         if (debug) Debug.Log("Saving Puzzle " + puzzleData.PuzzleNum + " in Level" + puzzleData.LevelName);
     }
     public static PuzzleData LoadPuzzle(string levelName, int puzzleNum)
     {
-        var filePath = GetFilePath(levelName, puzzleNum);
-
-        if (!File.Exists(filePath))
-        {
-            Debug.Log("No file at: " + filePath);
-            return new PuzzleData();
-        }
-
-        string jsonData = File.ReadAllText(filePath);
-        var roomData = JsonUtility.FromJson<PuzzleData>(jsonData);
-        return roomData;
-    }
-    public static PuzzleData LoadDefaultPuzzle(string levelName, int puzzleNum)
-    {
-        var filePath = GetDefaultFilePath(levelName, puzzleNum);
+        var filePath = GetLevelFilePath(levelName, puzzleNum);
 
         if (!File.Exists(filePath))
         {
@@ -72,27 +45,13 @@ public class IOManager : MonoBehaviour
     public static void SaveLevel(LevelData data)
     {
         var json = JsonUtility.ToJson(data);
-        File.WriteAllText(GetFilePath(data.Name), json);
+        File.WriteAllText(GetLevelFilePath(data.Name), json);
 
         if(debug) Debug.Log("Saving Level Info");
     }
     public static LevelData LoadLevel(string name)
     {
-        var filePath = GetFilePath(name);
-
-        if (!File.Exists(filePath))
-        {
-            Debug.Log("No file at: " + filePath);
-            return new LevelData();
-        }
-
-        string jsonData = File.ReadAllText(filePath);
-        var levelData = JsonUtility.FromJson<LevelData>(jsonData);
-        return levelData;
-    }
-    public static LevelData LoadDefaultLevel(string name)
-    {
-        var filePath = GetDefaultFilePath(name);
+        var filePath = GetLevelFilePath(name);
 
         if (!File.Exists(filePath))
         {
@@ -114,10 +73,14 @@ public class IOManager : MonoBehaviour
         return Resources.Load<GameObject>(objectName);
     }
 
-    private static string GetFilePath(string levelName, int puzzleNum = -1)
+    private static string GetLevelFilePath(string levelName, int puzzleNum = -1)
     {
+        var levelsDirPath = Application.persistentDataPath + "/LevelData";
+        if (!Directory.Exists(levelsDirPath))
+            Directory.CreateDirectory(levelsDirPath);
+
         levelName = levelName.ToLower().Replace(" ", "_");
-        var levelDir = _levelsDirPath + "/" + levelName;
+        var levelDir = levelsDirPath + "/" + levelName;
 
         if (!Directory.Exists(levelDir))
             Directory.CreateDirectory(levelDir);
@@ -129,20 +92,36 @@ public class IOManager : MonoBehaviour
 
         return filePath;
     }
-    private static string GetDefaultFilePath(string levelName, int puzzleNum = -1)
+    private static string GetResourceLevelPath(string levelName, int puzzleNum = -1)
     {
         levelName = levelName.ToLower().Replace(" ", "_");
-        var levelDir = _defaultLevelsDirPath + "/" + levelName;
-
-        if (!Directory.Exists(levelDir))
-            Directory.CreateDirectory(levelDir);
+        var levelDir = "Levels/" + levelName;
 
         var filePath = levelDir + "/" + levelName;
         if (puzzleNum >= 0)
             filePath += "_room" + puzzleNum;
-        filePath += ".json";
 
         return filePath;
+    }
+    public void CopyLevelIfNonexistent(string levelName)
+    {
+        var filePath = GetLevelFilePath(levelName);
+        if (!File.Exists(filePath))
+        {
+            var json = Resources.Load<TextAsset>(GetResourceLevelPath(levelName));
+            File.WriteAllText(filePath, json.text);
+
+            for (int i = 0; i < Level.NumPuzzles; i++)
+            {
+                var roomFilePath = GetLevelFilePath(levelName,i);
+                if (!File.Exists(roomFilePath))
+                {
+                    json = Resources.Load<TextAsset>(GetResourceLevelPath(levelName,i));
+                    File.WriteAllText(roomFilePath, json.text);
+                }
+            }
+        }
+
     }
 }
 

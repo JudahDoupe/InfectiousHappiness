@@ -254,7 +254,7 @@ public class Puzzle
             var worldPos = block.Movement == null ? block.transform.position : block.Movement.SpawnVoxel.WorldPosition;
             voxelsInRoom.Add(new VoxelData
             {
-                Active = block.IsActivated && VoxelWorld.Instance.SaveProgress,
+                Active = block.IsActive && VoxelWorld.Instance.SaveProgress,
                 Object = "Block",
                 ObjectType = block.Type.ToString(),
                 LvlPos = Level.WorldToLevel(worldPos - PuzzleOffset),
@@ -330,7 +330,7 @@ public class Puzzle
             Upgrades.Remove(vox.Upgrade);
     }
 
-    public void CompletePuzzle()
+    public void ActivateAllBlocks()
     {
         if (Level.IsLoaded)
         {
@@ -387,7 +387,7 @@ public class Voxel
 
         if (Block != null)
         {
-            Block.SetType(data.ObjectType);
+            Block.Type = (BlockType)Enum.Parse(typeof(BlockType), data.ObjectType);
             if (data.Active)
                 Block.Activate();
         }
