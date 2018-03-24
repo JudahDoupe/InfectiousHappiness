@@ -1,1 +1,1 @@
-{"Name":"Playground","Position":{"x":0.0,"y":0.0,"z":0.0},"SpawnPosition":{"x":24.0,"y":6.0,"z":23.0},"SpawnRotation":{"x":0.0,"y":0.0,"z":0.0},"PlayerCanJump":false,"PlayerCanPush":false,"PlayerCanLift":false,"PlayerCanPipe":false,"PlayerCanSwitch":false}
+{"Name":"Playground","Position":{"x":0.0,"y":0.0,"z":0.0},"SpawnPosition":{"x":24.0,"y":6.0,"z":23.0},"SpawnRotation":{"x":0.0,"y":0.0,"z":0.0},"PlayerCanJump":true,"PlayerCanPush":true,"PlayerCanLift":true,"PlayerCanPipe":true,"PlayerCanSwitch":true}
