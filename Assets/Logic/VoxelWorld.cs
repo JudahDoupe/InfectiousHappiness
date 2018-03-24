@@ -310,6 +310,7 @@ public class Voxel
         Entity = entity;
         Entity.Voxel = this;
         Entity.transform.position = WorldPosition;
+        Entity.transform.parent = VoxelWorld.Instance.transform;
 
         if(puzzleNum >= 0) ChangePuzzle(puzzleNum);
     }

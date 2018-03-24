@@ -61,6 +61,12 @@ public class EntityConstructor : MonoBehaviour
             case "DyeWell":
                 block = obj.AddComponent<DyeWell>();
                 break;
+            case "WaterWell":
+                block = obj.AddComponent<WaterWell>();
+                break;
+            case "FireWell":
+                block = obj.AddComponent<FireWell>();
+                break;
             default:
                 block = obj.AddComponent<Block>();
                 break;
@@ -72,7 +78,7 @@ public class EntityConstructor : MonoBehaviour
     }
     public static Droplet NewDroplet(string type)
     {
-        var obj = Instantiate(Resources.Load<GameObject>("Droplete"), new Vector3(0, 0, 0), Quaternion.identity);
+        var obj = Instantiate(Resources.Load<GameObject>("Droplet"), new Vector3(0, 0, 0), Quaternion.identity);
 
         switch (type)
         {

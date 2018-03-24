@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DyeWell : Block
+public class FireWell : Block
 {
     public int SpringInterval = 1;
 
@@ -12,14 +12,14 @@ public class DyeWell : Block
     void Start()
     {
         Class = "Block";
-        Type = "DyeWell";
+        Type = "FireWell";
         _springVox = VoxelWorld.GetVoxel(transform.position + Vector3.up);
     }
 
     void FixedUpdate()
     {
-        if ( IsDyed && _springTimer == 0 && _springVox.Entity == null)
-            _springVox.Fill(EntityConstructor.NewDroplet("Dye"));
+        if (IsDyed && _springTimer == 0 && _springVox.Entity == null)
+            _springVox.Fill(EntityConstructor.NewDroplet("Fire"));
 
         _springTimer = (_springTimer + 1) % (SpringInterval * 60);
     }

@@ -277,7 +277,7 @@ public class Character : Entity, IMovable {
             return;
         }
 
-        var forwardVox = VoxelWorld.GetVoxel(transform.position + Vector3.forward);
+        var forwardVox = VoxelWorld.GetVoxel(transform.position + transform.forward);
         if (forwardVox.Entity == null)
             return;
         else if (forwardVox.Entity is IInteractable)
@@ -299,7 +299,7 @@ public class Character : Entity, IMovable {
             return;
         }
 
-        var forwardVox = VoxelWorld.GetVoxel(transform.position + Vector3.forward);
+        var forwardVox = VoxelWorld.GetVoxel(transform.position + transform.forward);
         if (forwardVox.Entity == null)
             return;
         else if (forwardVox.Entity is IInteractable)
@@ -314,9 +314,14 @@ public class Character : Entity, IMovable {
     }
     private void Throw()
     {
-        if(Load is Block)
-            Load.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
-        else if (Load is Droplet)
-            Load.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward * 5), true);
+        var load = Load;
+        Load = null;
+        VoxelWorld.GetVoxel(transform.position + transform.up).Fill(load as Entity);
+        if(load is Block)
+            load.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
+        else if (load is Droplet)
+            load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward * 5));
+        else
+            load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
     }
 }
