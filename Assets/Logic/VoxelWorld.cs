@@ -25,9 +25,9 @@ public class VoxelWorld : MonoBehaviour
         AudioSource baseTrack = null;
         for (var i = 0; i < 8; i++)
         {
-            if (baseTrack == null) baseTrack = ActiveLevel.GetRoom(i).Track;
+            if (baseTrack == null) baseTrack = ActiveLevel.GetPuzzle(i).Track;
 
-            var track = ActiveLevel.GetRoom(i).Track;
+            var track = ActiveLevel.GetPuzzle(i).Track;
             if (track != null) track.timeSamples = baseTrack.timeSamples;
         }
     }
@@ -44,7 +44,6 @@ public class VoxelWorld : MonoBehaviour
     [Space(10)]
     //Options
     public bool PlayMusic = true;
-    public bool SaveProgress;
     [Space(10)]
 
     // Level
@@ -101,7 +100,7 @@ public class Level
         Save();
         for (int i = 0; i < NumPuzzles; i++)
         {
-            GetRoom(i).Save();
+            GetPuzzle(i).Save();
         }
     }
     public void Save()
@@ -137,38 +136,25 @@ public class Level
 
         for (int i = 0; i < NumPuzzles; i++)
         {
-            GetRoom(i).Reset();
+            GetPuzzle(i).Reset();
         }
         IsLoaded = true;
     }
     public void Unload()
     {
-        for (var x = 0; x < Size; x++)
+        foreach (var puzzle in _puzzles)
         {
-            for (var y = 0; y < Size; y++)
-            {
-                for (var z = 0; z < Size; z++)
-                {
-                    if (_voxels[x, y, z] != null && _voxels[x, y, z].Character == null)
-                    {
-                        _voxels[x, y, z].DestroyObject();
-                    }
-                }
-            }
-        }
-        foreach (var room in _puzzles)
-        {
-            room.Destroy();
+            puzzle.Destroy();
         }
         IsLoaded = false;
     }
 
-    public Puzzle GetRoom(int roomNum)
+    public Puzzle GetPuzzle(int roomNum)
     {
         if (roomNum < 0 || roomNum >= NumPuzzles) return null;
         return _puzzles[roomNum] ?? (_puzzles[roomNum] = new Puzzle(this,roomNum));
     }
-    public Puzzle GetRoom(Vector3 levelPos)
+    public Puzzle GetPuzzle(Vector3 levelPos)
     {
         return GetVoxel(levelPos).Puzzle;
     }
@@ -207,8 +193,6 @@ public class Puzzle
     public Vector3 PuzzleOffset = new Vector3(0,0,0);
 
     public List<Voxel> Voxels = new List<Voxel>();
-    public List<Block> Blocks = new List<Block>();
-    public List<Upgrade> Upgrades = new List<Upgrade>();
 
     public Puzzle(Level level, int puzzleNum)
     {
@@ -246,36 +230,6 @@ public class Puzzle
     }
     public void Save()
     {
-        List<VoxelData> voxelsInRoom = new List<VoxelData>();
-        for (var i = 0; i < Blocks.Count; i++)
-        {
-            var block = Blocks[i];
-            if (block == null) continue;
-
-            var worldPos = block.Movement == null ? block.transform.position : block.Movement.SpawnVoxel.WorldPosition;
-            voxelsInRoom.Add(new VoxelData
-            {
-                Active = block.IsActivated && VoxelWorld.Instance.SaveProgress,
-                Object = "Block",
-                ObjectType = block.Type.ToString(),
-                LvlPos = Level.WorldToLevel(worldPos - PuzzleOffset),
-            });
-        }
-        for (var i = 0; i < Upgrades.Count; i++)
-        {
-            var upgrade = Upgrades[i];
-            if (upgrade != null)
-            {
-                voxelsInRoom.Add(new VoxelData
-                {
-                    Active = false,
-                    Object = "Upgrade",
-                    ObjectType = upgrade.Type.ToString(),
-                    LvlPos = Level.WorldToLevel(upgrade.transform.position - PuzzleOffset),
-                });
-            }
-        }
-
         IOManager.SavePuzzle(new PuzzleData
         {
             LevelName = Level.Name,
@@ -283,75 +237,37 @@ public class Puzzle
             PuzzleNum = Number,
             PuzzleOffset = PuzzleOffset,
             TrackName = Track == null ? "" : Track.name,
-            Voxels = voxelsInRoom.ToArray(),
+            Voxels = Voxels.Select(voxel => voxel.ToData()).ToArray(),
         });
     }
     public void Destroy()
     {
-        for (var i = 0; i < Voxels.Count; i++)
+        foreach (Voxel voxel in Voxels)
         {
-            Voxels[i].DestroyObject();
+            voxel.Destroy();
         }
-        Voxels = new List<Voxel>();
-
-        for (var i = 0; i < Blocks.Count; i++)
-        {
-            if (Blocks[i] != null)
-                Object.Destroy(Blocks[i].gameObject);
-        }
-        Blocks = new List<Block>();
-
-        for (var i = 0; i < Upgrades.Count; i++)
-        {
-            if (Upgrades[i] != null)
-                Object.Destroy(Upgrades[i].gameObject);
-        }
-        Upgrades = new List<Upgrade>();
-
         Name = "";
         Object.Destroy(Track);
-    }
-
-    public void AddVoxel(Voxel vox)
-    {
-        Voxels.Add(vox);
-
-        if (vox.Block)
-            Blocks.Add(vox.Block);
-        else if(vox.Upgrade)
-            Upgrades.Add(vox.Upgrade);
-    }
-    public void RemoveVoxel(Voxel vox)
-    {
-        Voxels.Remove(vox);
-
-        if (vox.Block)
-            Blocks.Remove(vox.Block);
-        if (vox.Upgrade)
-            Upgrades.Remove(vox.Upgrade);
     }
 
     public void CompletePuzzle()
     {
         if (Level.IsLoaded)
         {
-            VoxelWorld.Instance.StartCoroutine(ActivateAllFloorBlocks());
-            Level.SpawnVoxel = VoxelWorld.GetVoxel(VoxelWorld.Instance.MainCharacter.transform.position);
-            Level.Save();
+            VoxelWorld.Instance.StartCoroutine(DyeAllBlocks());
         }
     }
-    private IEnumerator ActivateAllFloorBlocks()
+    private IEnumerator DyeAllBlocks()
     {
-        var blocks = Blocks.Where(b => b.Type == BlockType.Floor).OrderBy(x => Random.Range(0, 100)).ToArray();
         var i = 0;
         const int speed = 5;
-        for (var index = 0; index < blocks.Length; index++)
+        foreach (var voxel in Voxels)
         {
-            var block = blocks[index];
-            block.Stand();
+            if (voxel.Entity is Block)
+                (voxel.Entity as Block).Dye();
+            i = (i+1) % speed;
             if (i == 0)
                 yield return new WaitForFixedUpdate();
-            i = (i + 1) % speed;
         }
         Save();
     }
@@ -363,93 +279,73 @@ public class Voxel
     public Puzzle Puzzle;
     public Vector3 WorldPosition;
 
-    public GameObject Object;
-    public Block Block;
-    public Droplet Droplet;
-    public Upgrade Upgrade;
-    public Character Character;
+    public Entity Entity;
 
     public Voxel(Level level, Vector3 worldPosition)
     {
         Level = level;
         WorldPosition = worldPosition;
     }
-    public void Load(VoxelData data, int roomNum = -1)
+    public void Load(VoxelData data, int puzzleNum = -1)
     {
-        DestroyObject();
-
-        var prefab = IOManager.LoadObject(data.Object);
-        if (prefab != null)
-        {
-            Object = UnityEngine.Object.Instantiate(prefab, WorldPosition, Quaternion.identity);
-            Block = Object.GetComponent<Block>();
-            Upgrade = Object.GetComponent<Upgrade>();
-            Character = Object.GetComponent<Character>();
-            Droplet = Object.GetComponent<Droplet>();
-        }
-
-        if (Block != null)
-        {
-            Block.SetType(data.ObjectType);
-            if (data.Active)
-                Block.Activate();
-        }
-        if (Upgrade != null)
-        {
-            Upgrade.SetType(data.ObjectType);
-        }
-        if (Droplet != null)
-        {
-            Droplet.SetType(data.ObjectType);
-        }
-
-        if (roomNum >= 0) ChangeRoom(roomNum);
+        Fill(EntityConstructor.NewEntity(data.Object, data.ObjectType), puzzleNum);
     }
-    public void Fill(GameObject obj, int roomNum = -1)
+    public VoxelData ToData()
     {
-       // Debug.Log("old="+Object.name+" | new="+obj.name);
-        DestroyObject();
+        var Object = "";
+        var ObjectType = "";
+        var active = false;
 
-        if (obj != null)
+        if (Entity)
         {
-            Object = obj;
-            Object.transform.position = WorldPosition;
-            Block = Object.GetComponent<Block>();
-            Upgrade = Object.GetComponent<Upgrade>();
-            Character = Object.GetComponent<Character>();
-            Droplet = Object.GetComponent<Droplet>();
+            if (Entity is Block)
+                Object = "Block";
+            if (Entity is Droplet)
+                Object = "Droplet";
+            if (Entity is Upgrade)
+                Object = "Upgrade";
+            ObjectType = Entity.Type;
         }
 
-        if(roomNum >= 0) ChangeRoom(roomNum);
-    }
-    public GameObject Empty()
-    {
-        var obj = Object;
-        Object = null;
-        Block = null;
-        Upgrade = null;
-        Character = null;
-        Droplet = null;
-        return obj;
-    }
-    public void DestroyObject()
-    {
-        ChangeRoom(-1);
 
-        if (Object != null && Character == null)
-            UnityEngine.Object.Destroy(Object);
-
-        Object = null;
-        Block = null;
-        Upgrade = null;
-        Character = null;
-        Droplet = null;
+        return new VoxelData
+        {
+            Object = Object,
+            ObjectType = ObjectType,
+            LvlPos = Level.WorldToLevel(WorldPosition),
+            Active = active,
+        };
     }
-
-    private void ChangeRoom(int roomNum)
+    public void Fill(Entity entity, int puzzleNum = -1)
     {
-        if (Puzzle != null) Puzzle.RemoveVoxel(this);
-        Puzzle = Level.GetRoom(roomNum);
-        if (Puzzle != null) Puzzle.AddVoxel(this);
+        Destroy();
+
+        Entity = entity;
+        Entity.Voxel = this;
+        Entity.transform.position = WorldPosition;
+
+        if(puzzleNum >= 0) ChangePuzzle(puzzleNum);
+    }
+    public Entity Release()
+    {
+        var entity = Entity;
+        Entity.Voxel = null;
+        Entity = null;
+        return entity;
+    }
+    public void Destroy()
+    {
+        ChangePuzzle(-1);
+
+        if (Entity == null || Entity is Character) return;
+
+        UnityEngine.Object.Destroy(Entity.gameObject);
+        Entity = null;
+    }
+    private void ChangePuzzle(int puzzleNum)
+    {
+        if (Puzzle != null) Puzzle.Voxels.Remove(this);
+        Puzzle = Level.GetPuzzle(puzzleNum);
+        if (Puzzle != null) Puzzle.Voxels.Add(this);
     }
 }

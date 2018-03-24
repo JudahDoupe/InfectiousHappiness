@@ -108,10 +108,6 @@ public class IOManager : MonoBehaviour
     {
         return Resources.Load<AudioClip>(name);
     }
-    public static GameObject LoadObject(string objectName)
-    {
-        return Resources.Load<GameObject>(objectName);
-    }
 
     private static string GetFilePath(string levelName, int puzzleNum = -1)
     {

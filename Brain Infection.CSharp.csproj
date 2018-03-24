@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>Android:13</UnityBuildTarget>
     <UnityVersion>5.6.3p2</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -80,17 +78,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Logic\Components\Block.cs" />
-    <Compile Include="Assets\Logic\Components\Camera.cs" />
-    <Compile Include="Assets\Logic\Components\Character.cs" />
-    <Compile Include="Assets\Logic\Components\Droplet.cs" />
-    <Compile Include="Assets\Logic\Components\Movement.cs" />
-    <Compile Include="Assets\Logic\Components\Upgrade.cs" />
+    <Compile Include="Assets\Logic\Camera.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Block.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Cloud.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\DyeWell.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Moveable.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Pipe.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Static.cs" />
+    <Compile Include="Assets\Logic\Entities\Character.cs" />
+    <Compile Include="Assets\Logic\Entities\Droplets\Droplet.cs" />
+    <Compile Include="Assets\Logic\Entities\Droplets\Dye.cs" />
+    <Compile Include="Assets\Logic\Entities\Droplets\Fire.cs" />
+    <Compile Include="Assets\Logic\Entities\Droplets\Water.cs" />
+    <Compile Include="Assets\Logic\Entities\Entity.cs" />
+    <Compile Include="Assets\Logic\Entities\EntityConstructor.cs" />
+    <Compile Include="Assets\Logic\Entities\IInteractable.cs" />
+    <Compile Include="Assets\Logic\Entities\IMovable.cs" />
+    <Compile Include="Assets\Logic\Entities\Upgrade.cs" />
     <Compile Include="Assets\Logic\Managers\IOManager.cs" />
-    <Compile Include="Assets\Logic\Managers\MaterialManager.cs" />
-    <Compile Include="Assets\Logic\Managers\UIManager.cs" />
     <Compile Include="Assets\Logic\SoundFX.cs" />
-    <Compile Include="Assets\Logic\Tutorial.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>
