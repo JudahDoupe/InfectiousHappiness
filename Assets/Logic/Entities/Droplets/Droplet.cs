@@ -5,9 +5,13 @@ using UnityEditor;
 using UnityEngine;
 
 public class Droplet : Entity, IMovable {
-    public new const string Name = "Droplet";
-    public new const string Type = "Dye";
-    public const int SplashRadius = 3;
+
+    public int SplashRadius = 3;
+
+    void Start()
+    {
+        Class = "Droplet";
+    }
 
     public virtual void Splash()
     {

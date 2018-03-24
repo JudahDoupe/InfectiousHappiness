@@ -10,23 +10,18 @@ public class Character : Entity, IMovable {
         Player,
         Builder,
     }
-
-    //Building Properties
-    public string BuildingEntityName = "";
-    public string BuildingEntityType = "";
-    public int PuzzleNum;
+    public CharacterType Mode;
     private GameObject _cursorModel;
-
-    //Playing Properties
-    public CharacterType Type;
-    public IMovable Load;
-    public float MovementSpeed = 1;
-    public bool CanJump;
-    public bool CanPush;
-    public bool CanLift;
-    public bool CanPipe;
-    public bool CanSwitch;
     private GameObject _playerModel;
+
+    [Header("Player Settings")]
+    public float MovementSpeed = 5;
+    public IMovable Load;
+
+    [Header("Builder Settings")]
+    public string EntityName = "";
+    public string EntityType = "";
+    public int PuzzleNumber;
 
     //Control Properties
     private float _doubleTapSpeed = 0.2f;
@@ -40,12 +35,13 @@ public class Character : Entity, IMovable {
         _cursorModel = transform.Find("Cursor").gameObject;
 
         VoxelWorld.SpawnVoxel.Fill(this);
-        if (Type == CharacterType.Player)
+        if (Mode == CharacterType.Player)
             Reset();
     }
     void Update()
     {
-        switch (Type)
+        Type = Mode.ToString();
+        switch (Mode)
         {
             case CharacterType.Player:
                 _playerModel.SetActive(true);
@@ -79,15 +75,15 @@ public class Character : Entity, IMovable {
         if (Voxel == null) return;
         StartCoroutine(_MoveTo(vox,forceMove));
     }
-    public void MoveAlongPath(Voxel[] path, bool forceMove = true)
-    {
-        if (Voxel == null) return;
-        StartCoroutine(_MoveAlongPath(path, forceMove));
-    }
     public void ArchTo(Voxel vox, bool forceMove = false)
     {
         if (Voxel == null) return;
         StartCoroutine(_ArchTo(vox, forceMove));
+    }
+    public void MoveAlongPath(Voxel[] path, bool forceMove = true)
+    {
+        if (Voxel == null) return;
+        StartCoroutine(_MoveAlongPath(path, forceMove));
     }
 
     private IEnumerator _Fall()
@@ -184,11 +180,11 @@ public class Character : Entity, IMovable {
             Primary();
         else if (Input.GetButtonDown("Secondary"))
             Secondary();
-        else if (Input.GetKeyDown(KeyCode.Space) && Type == CharacterType.Builder)
+        else if (Input.GetKeyDown(KeyCode.Space) && Mode == CharacterType.Builder)
             transform.position += transform.up;
-        else if (Input.GetKeyDown(KeyCode.LeftShift) && Type == CharacterType.Builder)
+        else if (Input.GetKeyDown(KeyCode.LeftShift) && Mode == CharacterType.Builder)
             transform.position -= transform.up;
-        else if (Input.GetKeyDown(KeyCode.F) && Type == CharacterType.Builder)
+        else if (Input.GetKeyDown(KeyCode.F) && Mode == CharacterType.Builder)
             transform.Rotate(new Vector3(0, 0, 180));
         else if (Input.GetKeyDown(KeyCode.S))
             VoxelWorld.ActiveLevel.SaveAll();
@@ -244,7 +240,7 @@ public class Character : Entity, IMovable {
 
     private void Forward()
     {
-        if (Type == CharacterType.Builder)
+        if (Mode == CharacterType.Builder)
         {
             transform.position += transform.forward;
             return;
@@ -257,7 +253,7 @@ public class Character : Entity, IMovable {
     }
     private void Back()
     {
-        if (Type == CharacterType.Builder)
+        if (Mode == CharacterType.Builder)
         {
             transform.position -= transform.forward;
             return;
@@ -275,9 +271,9 @@ public class Character : Entity, IMovable {
     }
     private void Primary()
     {
-        if (Type == CharacterType.Builder)
+        if (Mode == CharacterType.Builder)
         {
-            VoxelWorld.GetVoxel(transform.position).Fill(EntityConstructor.NewEntity(BuildingEntityName,BuildingEntityType),PuzzleNum);
+            VoxelWorld.GetVoxel(transform.position).Fill(EntityConstructor.NewEntity(EntityName,EntityType),PuzzleNumber);
             return;
         }
 
@@ -291,7 +287,7 @@ public class Character : Entity, IMovable {
     }
     private void Secondary()
     {
-        if (Type == CharacterType.Builder)
+        if (Mode == CharacterType.Builder)
         {
             VoxelWorld.GetVoxel(transform.position).Destroy();
             return;

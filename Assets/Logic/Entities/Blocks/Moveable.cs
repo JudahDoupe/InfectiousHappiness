@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class Moveable : Block, IMovable {
 
-    public new const string Type = "Moveable";
+    void Start()
+    {
+        Class = "Block";
+        Type = "Moveable";
+    }
 
     public void Reset()
     {

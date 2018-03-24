@@ -32,7 +32,8 @@ public class EntityConstructor : MonoBehaviour
                 e = NewUpgrade(type);
                 break;
             default:
-                e = Instantiate(Resources.Load<GameObject>(name).GetComponent<Entity>(),new Vector3(0,0,0), Quaternion.identity);
+                Debug.Log(name+" "+type+" entity not supported");
+                e =  new GameObject("").AddComponent<Entity>();
                 break;
         }
         e.transform.name = type+name;

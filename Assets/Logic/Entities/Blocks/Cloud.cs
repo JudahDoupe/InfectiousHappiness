@@ -4,5 +4,9 @@ using UnityEngine;
 
 public class Cloud : Block {
 
-    public new const string Type = "Cloud";
+    void Start()
+    {
+        Class = "Block";
+        Type = "Cloud";
+    }
 }

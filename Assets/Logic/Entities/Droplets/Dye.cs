@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class Dye : Droplet
 {
-    public new const string Type = "Dye";
-    public new const int SplashRadius = 3;
+    void Start()
+    {
+        Class = "Droplet";
+        Type = "Dye";
+        SplashRadius = 3;
+    }
 
     public override void Splash()
     {

@@ -5,8 +5,10 @@ using UnityEngine;
 
 public class Block : Entity
 {
-    public new const string Name = "Block";
-    public new const string Type = "Static";
+    void Start()
+    {
+        Class = "Block";
+    }
 
     public Material DyeMaterial;
 

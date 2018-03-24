@@ -4,5 +4,10 @@ using UnityEngine;
 
 public class Fire : Droplet
 {
-    public new const string Type = "Fire";
+    void Start()
+    {
+        Class = "Droplet";
+        Type = "Fire";
+        SplashRadius = 1;
+    }
 }

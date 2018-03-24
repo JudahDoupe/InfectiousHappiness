@@ -4,5 +4,9 @@ using UnityEngine;
 
 public class Pipe : Block {
 
-    public new const string Type = "Pipe";
+    void Start()
+    {
+        Class = "Block";
+        Type = "Pipe";
+    }
 }

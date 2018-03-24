@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
-    public const string Name = "";
-    public const string Type = "";
+    [HideInInspector]
+    public string Class;
+    [HideInInspector]
+    public string Type;
+    [HideInInspector]
+    public int Variation;
 
     public Voxel Voxel;
 }

@@ -110,11 +110,11 @@ public class Level
             Name = Name,
             Position = WorldPostition,
             SpawnPosition = SpawnVoxel == null ? new Vector3(0, 0, 0) : SpawnVoxel.WorldPosition,
-            PlayerCanJump = VoxelWorld.Instance.MainCharacter.CanJump,
-            PlayerCanPush = VoxelWorld.Instance.MainCharacter.CanPush,
-            PlayerCanLift = VoxelWorld.Instance.MainCharacter.CanLift,
-            PlayerCanPipe = VoxelWorld.Instance.MainCharacter.CanPipe,
-            PlayerCanSwitch = VoxelWorld.Instance.MainCharacter.CanSwitch,
+            PlayerCanJump = true,
+            PlayerCanPush = true,
+            PlayerCanLift = true,
+            PlayerCanPipe = true,
+            PlayerCanSwitch = true,
         };
         IOManager.SaveLevel(saveData);
     }
@@ -126,13 +126,6 @@ public class Level
 
         WorldPostition = data.Position;
         SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
-
-        var player = VoxelWorld.Instance.MainCharacter;
-        player.CanJump = data.PlayerCanJump;
-        player.CanPush = data.PlayerCanPush;
-        player.CanLift = data.PlayerCanLift;
-        player.CanPipe = data.PlayerCanPipe;
-        player.CanSwitch = data.PlayerCanSwitch;
 
         for (int i = 0; i < NumPuzzles; i++)
         {
@@ -298,15 +291,9 @@ public class Voxel
 
         if (Entity)
         {
-            if (Entity is Block)
-                Object = "Block";
-            if (Entity is Droplet)
-                Object = "Droplet";
-            if (Entity is Upgrade)
-                Object = "Upgrade";
+            Object = Entity.Class;
             ObjectType = Entity.Type;
         }
-
 
         return new VoxelData
         {

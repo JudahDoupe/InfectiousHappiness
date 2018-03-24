@@ -4,5 +4,9 @@ using UnityEngine;
 
 public class DyeWell : Block
 {
-    public new const string Type = "DyeWell";
+    void Start()
+    {
+        Class = "Block";
+        Type = "DyeWell";
+    }
 }
