@@ -51,9 +51,6 @@ public class EntityConstructor : MonoBehaviour
             case "Cloud":
                 block = obj.AddComponent<Cloud>();
                 break;
-            case "Pipe":
-                block = obj.AddComponent<Pipe>();
-                break;
             case "DyeWell":
                 block = obj.AddComponent<DyeWell>();
                 break;

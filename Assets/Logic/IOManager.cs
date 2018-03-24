@@ -148,12 +148,6 @@ public struct LevelData
     public Vector3 Position;
     public Vector3 SpawnPosition;
     public Vector3 SpawnRotation;
-
-    public bool PlayerCanJump;
-    public bool PlayerCanPush;
-    public bool PlayerCanLift;
-    public bool PlayerCanPipe;
-    public bool PlayerCanSwitch;
 }
 [Serializable]
 public struct PuzzleData

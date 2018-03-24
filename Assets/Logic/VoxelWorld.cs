@@ -110,11 +110,6 @@ public class Level
             Name = Name,
             Position = WorldPostition,
             SpawnPosition = SpawnVoxel == null ? new Vector3(0, 0, 0) : SpawnVoxel.WorldPosition,
-            PlayerCanJump = true,
-            PlayerCanPush = true,
-            PlayerCanLift = true,
-            PlayerCanPipe = true,
-            PlayerCanSwitch = true,
         };
         IOManager.SaveLevel(saveData);
     }
