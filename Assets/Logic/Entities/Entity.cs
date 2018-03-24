@@ -8,8 +8,6 @@ public class Entity : MonoBehaviour
     public string Class;
     [HideInInspector]
     public string Type;
-    [HideInInspector]
-    public int Variation;
 
     public Voxel Voxel;
 }

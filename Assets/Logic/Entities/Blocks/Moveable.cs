@@ -61,14 +61,18 @@ public class Moveable : Block, IMovable
         }
 
         if (floorVox == null)
+        {
             Reset();
-        else if (floorVox.Entity is Block)
-            VoxelWorld.GetVoxel(transform.position).Fill(this);
-        else if (floorVox.Entity is Character)
+        }
+        else if (floorVox.Entity is Character && (floorVox.Entity as Character).Load == null)
         {
             (floorVox.Entity as Character).Load = this;
             transform.position = floorVox.Entity.transform.position + Vector3.up;
             transform.parent = floorVox.Entity.transform;
+        }
+        else
+        {
+            VoxelWorld.GetVoxel(transform.position).Fill(this);
         }
     }
     private IEnumerator _MoveTo(Voxel vox, bool forceMove)

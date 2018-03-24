@@ -24,7 +24,17 @@ public class Water : Droplet
                 {
                     var vox = VoxelWorld.GetVoxel(transform.position + Vector3.right * i + Vector3.up * j + Vector3.forward * k);
                     if (vox != null && vox.Entity is Block && Vector3.Distance(Vector3.zero, new Vector3(i, j, k)) < r)
-                        (vox.Entity as Block).Undye();
+                    {
+                        if (vox.Entity is Cloud)
+                        {
+                            (vox.Entity as Cloud).Dye();
+                            (vox.Entity as Cloud).DroppletType = Type;
+                        }
+                        else
+                        {
+                            (vox.Entity as Block).Undye();
+                        }
+                    }
                 }
             }
         }

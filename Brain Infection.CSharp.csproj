@@ -98,7 +98,6 @@
     <Compile Include="Assets\Logic\Entities\EntityConstructor.cs" />
     <Compile Include="Assets\Logic\Entities\IInteractable.cs" />
     <Compile Include="Assets\Logic\Entities\IMovable.cs" />
-    <Compile Include="Assets\Logic\Entities\Upgrade.cs" />
     <Compile Include="Assets\Logic\IOManager.cs" />
     <Compile Include="Assets\Logic\SoundFX.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />

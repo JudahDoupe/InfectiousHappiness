@@ -23,11 +23,21 @@ public class Fire : Droplet
                 for (int k = -r; k <= r; k++)
                 {
                     var vox = VoxelWorld.GetVoxel(transform.position + Vector3.right * i + Vector3.up * j + Vector3.forward * k);
-                    if (vox != Voxel && 
-                        vox != null && 
-                        vox.Entity is Block && 
+                    if (vox != Voxel &&
+                        vox != null &&
+                        vox.Entity is Block &&
                         Vector3.Distance(Vector3.zero, new Vector3(i, j, k)) < r)
-                        vox.Destroy();
+                    {
+                        if (vox.Entity is Cloud)
+                        {
+                            (vox.Entity as Cloud).Dye();
+                            (vox.Entity as Cloud).DroppletType = Type;
+                        }
+                        else
+                        {
+                            vox.Destroy();
+                        }
+                    }
                 }
             }
         }

@@ -15,7 +15,6 @@ public class EntityConstructor : MonoBehaviour
     public Material UndyedBlockMaterial;
     public List<TypeMaterial> BlockMaterials = new List<TypeMaterial>();
     public List<TypeMaterial> DropletMaterials = new List<TypeMaterial>();
-    public List<TypeMaterial> UpgradeMaterials = new List<TypeMaterial>();
 
     public static Entity NewEntity(string name, string type)
     {
@@ -27,9 +26,6 @@ public class EntityConstructor : MonoBehaviour
                 break;
             case "Droplet":
                 e = NewDroplet(type);
-                break;
-            case "Upgrade":
-                e = NewUpgrade(type);
                 break;
             default:
                 Debug.Log(name+" "+type+" entity not supported");
@@ -98,13 +94,6 @@ public class EntityConstructor : MonoBehaviour
 
         obj.GetComponentInChildren<Renderer>().material = Instance.DropletMaterials.FirstOrDefault(x => x.Type == type).Material;
         return obj.GetComponent<Droplet>();
-    }
-    public static Upgrade NewUpgrade(string type)
-    {
-        var obj = Instantiate(Resources.Load<GameObject>("Upgrade"), new Vector3(0, 0, 0), Quaternion.identity);
-        obj.AddComponent<Upgrade>().Type = type;
-        obj.GetComponentInChildren<Renderer>().material = Instance.UpgradeMaterials.FirstOrDefault(x => x.Type == type).Material;
-        return obj.GetComponent<Upgrade>();
     }
 }
 
