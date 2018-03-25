@@ -25,7 +25,7 @@ public class Moveable : Block, IMovable
     //Movement Methods
     public void Reset()
     {
-        MoveTo(_spawn, true);
+        StartCoroutine(_MoveTo(_spawn, true));
     }
     public void Fall()
     {
@@ -84,9 +84,10 @@ public class Moveable : Block, IMovable
         var forward = (end - start).normalized;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         var t = 0f;
+        var d = Vector3.Distance(start, end);
         while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
         {
-            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
+            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / d);
             yield return new WaitForFixedUpdate();
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         }
@@ -104,9 +105,10 @@ public class Moveable : Block, IMovable
             var forward = (end - start).normalized;
             var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
             var t = 0f;
+            var d = Vector3.Distance(start, end);
             while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
             {
-                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
+                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed/d);
                 yield return new WaitForFixedUpdate();
                 forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
             }
@@ -124,9 +126,10 @@ public class Moveable : Block, IMovable
         var height = 3f;
         var t = 0f;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
+        var d = Vector3.Distance(start, end);
         while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
         {
-            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / 2) + new Vector3(0, (0.25f - Mathf.Pow(t - 0.5f, 2)) * height, 0);
+            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / (d*1.2f)) + new Vector3(0, (0.25f - Mathf.Pow(t - 0.5f, 2)) * height, 0);
             yield return new WaitForFixedUpdate();
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         }

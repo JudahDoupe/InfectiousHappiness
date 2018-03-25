@@ -82,9 +82,10 @@ public class Droplet : Entity, IMovable {
         var forward = (end - start).normalized;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         var t = 0f;
+        var d = Vector3.Distance(start, end);
         while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
         {
-            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
+            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed/d);
             yield return new WaitForFixedUpdate();
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         }
@@ -104,9 +105,10 @@ public class Droplet : Entity, IMovable {
             var forward = (end - start).normalized;
             var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
             var t = 0f;
+            var d = Vector3.Distance(start, end);
             while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
             {
-                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
+                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / d);
                 yield return new WaitForFixedUpdate();
                 forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
             }
