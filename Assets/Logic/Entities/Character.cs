@@ -115,7 +115,7 @@ public class Character : Entity, IMovable {
         var end = vox.WorldPosition;
         var t = 0f;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-        while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
+        while (t < 1 && forwardVox != null && (!(forwardVox.Entity is Block) || forceMove))
         {
             transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
             yield return new WaitForFixedUpdate();

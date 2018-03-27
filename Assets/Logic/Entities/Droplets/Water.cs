@@ -27,8 +27,8 @@ public class Water : Droplet
                     {
                         if (vox.Entity is Cloud)
                         {
-                            (vox.Entity as Cloud).Dye();
-                            (vox.Entity as Cloud).DroppletType = Type;
+                            var cloud = (vox.Entity as Cloud);
+                            cloud.StartCoroutine(cloud.SpreadDye(Type));
                         }
                         else
                         {

@@ -4,32 +4,43 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class IOManager : MonoBehaviour
 {
-
+    public Text DebugOutput;
     public string[] LevelsToTransfer;
 
-    private static bool debug = false;
+    private static bool debug = true;
     private static string _levelsDirPath;
     private static string _defaultLevelsDirPath;
 
     public void Awake()
     {
+        DebugOutput.text = "Starting IO Manager";
+
         _levelsDirPath = Application.persistentDataPath + "/LevelData";
         _defaultLevelsDirPath = Application.dataPath + "/Levels";
+
+        DebugOutput.text = "Creating Perminant Directtory";
         if (!Directory.Exists(_levelsDirPath))
             Directory.CreateDirectory(_levelsDirPath);
+        DebugOutput.text = "Permenant Directory Created";
 
         for (var i = 0; i < LevelsToTransfer.Length; i++)
         {
             var levelName = LevelsToTransfer[i];
+            DebugOutput.text = "Saving Level " + levelName;
             SaveLevel(LoadDefaultLevel(levelName));
+            DebugOutput.text = "Saved Level "+ levelName;
             for (var j = 0; j < Level.NumPuzzles; j++)
             {
                 SavePuzzle(LoadDefaultPuzzle(levelName, j));
+                DebugOutput.text = "Saved " + levelName + " Puzzle " + j;
             }
         }
+
+        DebugOutput.text = "All Saved";
     }
 
     public static void SavePuzzle(PuzzleData puzzleData)

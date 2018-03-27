@@ -25,8 +25,15 @@ public class Dye : Droplet
                     var vox = VoxelWorld.GetVoxel(transform.position + Vector3.right * i + Vector3.up * j + Vector3.forward * k);
                     if (vox != null && vox.Entity is Block && Vector3.Distance(Vector3.zero, new Vector3(i, j, k)) < r)
                     {
-                        (vox.Entity as Block).Dye();
-                        if (vox.Entity is Cloud) (vox.Entity as Cloud).DroppletType = Type;
+                        if (vox.Entity is Cloud)
+                        {
+                            var cloud = (vox.Entity as Cloud);
+                            cloud.StartCoroutine(cloud.SpreadDye(Type));
+                        }
+                        else
+                        {
+                            (vox.Entity as Block).Dye();
+                        }
                     }
                 }
             }
