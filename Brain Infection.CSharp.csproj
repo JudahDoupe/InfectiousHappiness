@@ -81,11 +81,12 @@
     <Compile Include="Assets\Logic\Camera.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Block.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Cloud.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\DyeWell.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\FireWell.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Moveable.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Static.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\WaterWell.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Well\DyeWell.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Well\FireWell.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Well\WaterWell.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Well\Well.cs" />
     <Compile Include="Assets\Logic\Entities\Character.cs" />
     <Compile Include="Assets\Logic\Entities\Droplets\Droplet.cs" />
     <Compile Include="Assets\Logic\Entities\Droplets\Dye.cs" />

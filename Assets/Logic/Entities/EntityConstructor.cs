@@ -37,7 +37,7 @@ public class EntityConstructor : MonoBehaviour
     }
     public static Block NewBlock(string type)
     {
-        var obj = Instantiate(Resources.Load<GameObject>("Block"), new Vector3(0,0,0), Quaternion.identity);
+        var obj = Instantiate(Resources.Load<GameObject>("Entities/Block"), new Vector3(0,0,0), Quaternion.identity);
         Block block;
 
         switch (type)
@@ -71,7 +71,7 @@ public class EntityConstructor : MonoBehaviour
     }
     public static Droplet NewDroplet(string type)
     {
-        var obj = Instantiate(Resources.Load<GameObject>("Droplet"), new Vector3(0, 0, 0), Quaternion.identity);
+        var obj = Instantiate(Resources.Load<GameObject>("Entities/Droplet"), new Vector3(0, 0, 0), Quaternion.identity);
 
         switch (type)
         {
