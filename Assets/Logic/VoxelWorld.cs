@@ -80,8 +80,8 @@ public class Level
     public Voxel SpawnVoxel;
     public bool IsLoaded;
 
-    private readonly Puzzle[] _puzzles = new Puzzle[NumPuzzles];
-    private readonly Voxel[,,] _voxels = new Voxel[Size, Size, Size];
+    public readonly Puzzle[] Puzzles = new Puzzle[NumPuzzles];
+    public readonly Voxel[,,] Voxels = new Voxel[Size, Size, Size];
 
     public Level(string name)
     {
@@ -130,7 +130,7 @@ public class Level
     }
     public void Unload()
     {
-        foreach (var puzzle in _puzzles)
+        foreach (var puzzle in Puzzles)
         {
             puzzle.Destroy();
         }
@@ -140,7 +140,7 @@ public class Level
     public Puzzle GetPuzzle(int roomNum)
     {
         if (roomNum < 0 || roomNum >= NumPuzzles) return null;
-        return _puzzles[roomNum] ?? (_puzzles[roomNum] = new Puzzle(this,roomNum));
+        return Puzzles[roomNum] ?? (Puzzles[roomNum] = new Puzzle(this,roomNum));
     }
     public Puzzle GetPuzzle(Vector3 levelPos)
     {
@@ -158,8 +158,8 @@ public class Level
         if (!pos.All(x => x >= 0 && x < Size))
             return null;
 
-        return _voxels[pos[0], pos[1], pos[2]] ??
-                (_voxels[pos[0], pos[1], pos[2]] = new Voxel(this, LevelToWorld(new Vector3(pos[0], pos[1], pos[2]))));
+        return Voxels[pos[0], pos[1], pos[2]] ??
+                (Voxels[pos[0], pos[1], pos[2]] = new Voxel(this, LevelToWorld(new Vector3(pos[0], pos[1], pos[2]))));
     }
 
     public Vector3 WorldToLevel(Vector3 worldPos)
