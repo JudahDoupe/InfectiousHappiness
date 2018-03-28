@@ -11,8 +11,8 @@ public class Character : Entity, IMovable {
         Builder,
     }
     public CharacterType Mode;
-    private GameObject _cursorModel;
-    private GameObject _playerModel;
+    public GameObject CursorModel;
+    public GameObject PlayerModel;
 
     [Header("Player Settings")]
     public float MovementSpeed = 5;
@@ -31,27 +31,15 @@ public class Character : Entity, IMovable {
 
     void Start()
     {
-        _playerModel = transform.Find("Model").gameObject;
-        _cursorModel = transform.Find("Cursor").gameObject;
-
-        VoxelWorld.SpawnVoxel.Fill(this);
-        if (Mode == CharacterType.Player)
-            Reset();
+        Type = Mode.ToString();
+        PlayerModel = transform.Find("Model").gameObject;
+        CursorModel = transform.Find("Cursor").gameObject;
     }
     void Update()
     {
-        Type = Mode.ToString();
-        switch (Mode)
-        {
-            case CharacterType.Player:
-                _playerModel.SetActive(true);
-                _cursorModel.SetActive(false);
-                break;
-            case CharacterType.Builder:
-                _playerModel.SetActive(false);
-                _cursorModel.SetActive(true);
-                break;
-        }
+        if (Type != Mode.ToString())
+            UpdateType();
+        
         #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
         ListenForKeyboardInput();
         #elif UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
@@ -323,5 +311,21 @@ public class Character : Entity, IMovable {
             load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward * 5));
         else
             load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
+    }
+
+    private void UpdateType()
+    {
+        Type = Mode.ToString();
+        switch (Mode)
+        {
+            case CharacterType.Player:
+                PlayerModel.SetActive(true);
+                CursorModel.SetActive(false);
+                break;
+            case CharacterType.Builder:
+                PlayerModel.SetActive(false);
+                CursorModel.SetActive(true);
+                break;
+        }
     }
 }

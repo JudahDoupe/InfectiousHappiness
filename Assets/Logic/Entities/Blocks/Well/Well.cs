@@ -16,7 +16,7 @@ public class Well : Block
             Dye();
 
         if (_springTimer == 0 && SpringVox.Entity == null && DropletType != "")
-            SpringVox.Fill(EntityConstructor.NewDroplet(DropletType));
+            SpringVox.Fill(EntityConstructor.NewDroplet(DropletType),Voxel.Puzzle.Number);
 
         _springTimer = (_springTimer + 1) % (SpringInterval * 60);
     }

@@ -12,7 +12,7 @@ public class Camera : MonoBehaviour
 
     void Start()
     {
-        _character = VoxelWorld.Instance.MainCharacter;
+        _character = VoxelWorld.MainCharacter;
     }
     void FixedUpdate()
     {

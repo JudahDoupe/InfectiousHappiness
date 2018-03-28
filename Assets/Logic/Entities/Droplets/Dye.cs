@@ -13,8 +13,6 @@ public class Dye : Droplet
 
     public override void Splash()
     {
-        VoxelWorld.GetVoxel(transform.position).Fill(this);
-
         var r = SplashRadius;
         for (int i = -r; i <= r; i++)
         {
@@ -39,6 +37,6 @@ public class Dye : Droplet
             }
         }
 
-        Voxel.Destroy();
+        Destroy(gameObject);
     }
 }

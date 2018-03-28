@@ -14,47 +14,44 @@ public class VoxelWorld : MonoBehaviour
         if (Instance == null) Instance = this;
         if (MainCharacter == null)
             MainCharacter = FindObjectOfType<Character>();
-        
-        //Setup Active Level 
-        ActiveLevel = new Level(LevelData.Name);
-        ActiveLevel.Load();
-        ActiveLevel.WorldPostition = LevelData.Position;
-        ActiveLevel.SpawnVoxel = ActiveLevel.GetVoxel(LevelData.SpawnPosition);
-
-        //Sync Audio
-        AudioSource baseTrack = null;
-        for (var i = 0; i < 8; i++)
-        {
-            if (baseTrack == null) baseTrack = ActiveLevel.GetPuzzle(i).Track;
-
-            var track = ActiveLevel.GetPuzzle(i).Track;
-            if (track != null) track.timeSamples = baseTrack.timeSamples;
-        }
     }
 
-    // Properties
-    public Character MainCharacter;
     public static VoxelWorld Instance;
+    public static Character MainCharacter;
+    public static Level ActiveLevel;
     public static Voxel SpawnVoxel
     {
         get { return ActiveLevel == null ? null : ActiveLevel.SpawnVoxel; }
     }
-    public static Vector3 GravityVector = new Vector3(0, -0.01f, 0);
 
-    [Space(10)]
-    //Options
-    public bool PlayMusic = true;
-    [Space(10)]
+    public void LoadLevel(string levelName)
+    {
+        UnloadActiveLevel();
 
-    // Level
-    public LevelData LevelData;
-    public static Level ActiveLevel;
+        ActiveLevel = new Level(levelName);
+        if (!ActiveLevel.Load())
+        {
+            ActiveLevel.Unload();
+            ActiveLevel = null;
+            return;
+        }
 
-    // Queries
+        ProgressTracker.Instance.Activate();
+
+        MainCharacter.PlayerModel.SetActive(true);
+        MainCharacter.Reset();
+    }
+    public void UnloadActiveLevel()
+    {
+        MainCharacter.PlayerModel.SetActive(false);
+        ProgressTracker.Instance.Deactivate();
+        if(ActiveLevel != null)ActiveLevel.Unload();
+        ActiveLevel = null;
+    }
     public static Voxel GetVoxel(Vector3 worldPos)
     {
         if (ActiveLevel != null) return ActiveLevel.GetVoxel(ActiveLevel.WorldToLevel(worldPos));
-        Debug.Log("Unable to get voxel because level does not exist at location: "+ worldPos);
+        //Debug.Log("Unable to get voxel because level does not exist at location: "+ worldPos);
         return null;
     }
     public static List<Voxel> GetNeighboringVoxels(Vector3 worldPos)
@@ -113,11 +110,11 @@ public class Level
         };
         IOManager.SaveLevel(saveData);
     }
-    public void Load()
+    public bool Load()
     {
-        if(IsLoaded) return;
+        if(IsLoaded) return false;
         var data = IOManager.LoadLevel(Name);
-        if (data.Name == null) return;
+        if (data.Name == null) return false;
 
         WorldPostition = data.Position;
         SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
@@ -127,6 +124,7 @@ public class Level
             GetPuzzle(i).Reset();
         }
         IsLoaded = true;
+        return true;
     }
     public void Unload()
     {
@@ -156,7 +154,10 @@ public class Level
         };
 
         if (!pos.All(x => x >= 0 && x < Size))
+        {
+            //Debug.Log("Unable to get voxel because "+levelPos+" is outside of level.");
             return null;
+        }
 
         return Voxels[pos[0], pos[1], pos[2]] ??
                 (Voxels[pos[0], pos[1], pos[2]] = new Voxel(this, LevelToWorld(new Vector3(pos[0], pos[1], pos[2]))));
@@ -230,7 +231,7 @@ public class Puzzle
     }
     public void Destroy()
     {
-        foreach (Voxel voxel in Voxels)
+        foreach (Voxel voxel in Voxels.ToArray())
         {
             voxel.Destroy();
         }
