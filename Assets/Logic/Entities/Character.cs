@@ -114,21 +114,14 @@ public class Character : Entity, IMovable {
     }
     private IEnumerator _MoveAlongPath(Voxel[] path, bool forceMove)
     {
-        if (Voxel != null) Voxel.Release();
-
-        foreach (var vox in path)
+        foreach (var voxel in path)
         {
-            var start = transform.position;
-            var end = vox.WorldPosition;
-            var forward = (end - start).normalized;
-            var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            var t = 0f;
-            while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
-            {
-                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
-                yield return new WaitForFixedUpdate();
-                forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            }
+            while (Voxel == null)
+                yield return new WaitForEndOfFrame();
+            if(Math.Abs(Voxel.WorldPosition.y - voxel.WorldPosition.y) < 0.1f)
+                MoveTo(voxel);
+            else
+                ArchTo(voxel);
         }
 
         StartCoroutine(_Fall());
@@ -283,7 +276,9 @@ public class Character : Entity, IMovable {
 
         if (Load != null)
         {
-            Throw();
+            var target = VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward);
+            if(Load is Droplet) target = VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward* 5);
+            Throw(target);
             return;
         }
 
@@ -296,21 +291,21 @@ public class Character : Entity, IMovable {
             Lift(forwardVox.Entity as IMovable);
     }
 
-    private void Lift(IMovable entity)
+    public void Lift(IMovable entity)
     {
         entity.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up));
     }
-    private void Throw()
+    public void Throw(Voxel target)
     {
         var load = Load;
         Load = null;
         VoxelWorld.GetVoxel(transform.position + transform.up).Fill(load as Entity);
         if(load is Block)
-            load.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
+            load.MoveTo(target);
         else if (load is Droplet)
-            load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward * 5));
+            load.ArchTo(target);
         else
-            load.ArchTo(VoxelWorld.GetVoxel(transform.position + transform.up + transform.forward));
+            load.ArchTo(target);
     }
 
     private void UpdateType()

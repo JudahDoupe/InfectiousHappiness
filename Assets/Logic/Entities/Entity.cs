@@ -10,4 +10,9 @@ public class Entity : MonoBehaviour
     public string Type;
 
     public Voxel Voxel;
+
+    public virtual void Tap(Vector3 tapPos)
+    {
+        Debug.Log("Tapped "+Type+" "+Class+" at "+tapPos);
+    }
 }
