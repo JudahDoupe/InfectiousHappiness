@@ -4,10 +4,11 @@ using UnityEngine;
 
 public interface IMovable
 {
+    bool IsMoving();
+
     void Reset();
     void Fall();
 
-    void ArchTo(Voxel vox, bool forceMove = false);
     void MoveTo(Voxel vox, bool forceMove = false);
-    void MoveAlongPath(Voxel[] path, bool forceMove = true);
+    void FollowPath(Voxel[] path, bool forceMove = true);
 }

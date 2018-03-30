@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions.Comparers;
@@ -23,6 +24,14 @@ public class Moveable : Block, IMovable
     }
 
     //Movement Methods
+    private bool _isMoving;
+    private bool _isFalling;
+    private bool _isOnPath;
+
+    public bool IsMoving()
+    {
+        return _isMoving || _isFalling || _isOnPath;
+    }
     public void Reset()
     {
         StartCoroutine(_MoveTo(_spawn, true));
@@ -35,21 +44,20 @@ public class Moveable : Block, IMovable
     public void MoveTo(Voxel vox, bool forceMove = false)
     {
         if (Voxel == null) return;
-        StartCoroutine(_MoveTo(vox, forceMove));
+        if (Mathf.Abs(Voxel.WorldPosition.y - vox.WorldPosition.y) < 0.1f)
+            StartCoroutine(_MoveTo(vox, forceMove));
+        else
+            StartCoroutine(_ArchTo(vox, forceMove));
     }
-    public void ArchTo(Voxel vox, bool forceMove = false)
+    public void FollowPath(Voxel[] path, bool forceMove = true)
     {
         if (Voxel == null) return;
-        StartCoroutine(_ArchTo(vox, forceMove));
-    }
-    public void MoveAlongPath(Voxel[] path, bool forceMove = true)
-    {
-        if (Voxel == null) return;
-        StartCoroutine(_MoveAlongPath(path, forceMove));
+        StartCoroutine(_FollowPath(path, forceMove));
     }
 
     private IEnumerator _Fall()
     {
+        _isFalling = true;
         if (Voxel != null) Voxel.Release();
 
         var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
@@ -74,9 +82,11 @@ public class Moveable : Block, IMovable
         {
             VoxelWorld.GetVoxel(transform.position).Fill(this);
         }
+        _isFalling = false;
     }
     private IEnumerator _MoveTo(Voxel vox, bool forceMove)
     {
+        _isMoving = true;
         if (Voxel != null) Voxel.Release();
 
         var start = transform.position;
@@ -92,32 +102,12 @@ public class Moveable : Block, IMovable
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         }
 
-        StartCoroutine(_Fall());
-    }
-    private IEnumerator _MoveAlongPath(Voxel[] path, bool forceMove)
-    {
-        if (Voxel != null) Voxel.Release();
-
-        foreach (var vox in path)
-        {
-            var start = transform.position;
-            var end = vox.WorldPosition;
-            var forward = (end - start).normalized;
-            var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            var t = 0f;
-            var d = Vector3.Distance(start, end);
-            while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
-            {
-                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed/d);
-                yield return new WaitForFixedUpdate();
-                forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            }
-        }
-
+        _isMoving = false;
         StartCoroutine(_Fall());
     }
     private IEnumerator _ArchTo(Voxel vox, bool forceMove)
     {
+        _isMoving = true;
         if (Voxel != null) Voxel.Release();
         var forward = (vox.WorldPosition - transform.position).normalized;
 
@@ -134,6 +124,18 @@ public class Moveable : Block, IMovable
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
         }
 
+        _isMoving = false;
         StartCoroutine(_Fall());
+    }
+    private IEnumerator _FollowPath(Voxel[] path, bool forceMove)
+    {
+        _isOnPath = true;
+        foreach (var voxel in path)
+        {
+            while (Voxel == null)
+                yield return new WaitForEndOfFrame();
+            MoveTo(voxel, forceMove);
+        }
+        _isOnPath = false;
     }
 }

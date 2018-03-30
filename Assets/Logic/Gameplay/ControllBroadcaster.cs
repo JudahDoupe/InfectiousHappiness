@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ControllBroadcaster : MonoBehaviour {
 
+    public Text DebugOutput;
     public LayerMask LayerMask;
 
-    private Touch? _touch = null;
+    private Vector2? touchScreenPos;
 
     public void Update()
     {
@@ -29,27 +31,23 @@ public class ControllBroadcaster : MonoBehaviour {
     }
     public void UpdateTouch()
     {
-        foreach (var t in Input.touches)
-        {
-            if (!_touch.HasValue && t.phase == TouchPhase.Began)
-                _touch = t;
-        }
-
-        switch (_touch.Value.phase)
+        if(Input.touches.Length == 0) return;
+        var touch = Input.touches.First();
+        switch (touch.phase)
         {
             case TouchPhase.Began:
-                StartTouch(_touch.Value.position);
+                StartTouch(touch.position);
                 break;
             case TouchPhase.Moved:
-                MoveTouch(_touch.Value.position);
+                MoveTouch(touch.position);
                 break;
             case TouchPhase.Stationary:
                 break;
             case TouchPhase.Ended:
-                EndTouch(_touch.Value.position);
+                EndTouch(touch.position);
                 break;
             case TouchPhase.Canceled:
-                EndTouch(_touch.Value.position);
+                EndTouch(touch.position);
                 break;
             default:
                 break;
@@ -58,15 +56,18 @@ public class ControllBroadcaster : MonoBehaviour {
 
     public void StartTouch(Vector2 screenPos)
     {
+        touchScreenPos = screenPos;
     }
     public void MoveTouch(Vector2 screenPos)
     {
+        touchScreenPos = screenPos;
     }
     public void EndTouch(Vector2 screenPos)
     {
+        touchScreenPos = null;
         var vox = GetVoxel(screenPos);
         var player = VoxelWorld.MainCharacter;
-        if (vox == null || player == null) return;
+        if (player == null || vox == null) return;
 
         if (player.Load != null)
         {
@@ -74,12 +75,16 @@ public class ControllBroadcaster : MonoBehaviour {
             return;
         }
 
-        if(vox.Entity is Block)
-            vox = VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.up);
-
-        if (!(vox.Entity is Block))
+        if (vox.Entity is IMovable)
         {
-            player.MoveAlongPath(Pathfinder.FindPath(player.Voxel,vox).ToArray());
+            player.FollowPath(Pathfinder.FindPath(player.Voxel, GetNearestWalkableVoxel(vox, player.Voxel)).ToArray());
+            player.Lift(vox.Entity as IMovable);
+            return;
+        }
+        else
+        {
+            var topVox = VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.up);
+            player.FollowPath(Pathfinder.FindPath(player.Voxel, topVox).ToArray());
             return;
         }
     }
@@ -94,5 +99,31 @@ public class ControllBroadcaster : MonoBehaviour {
             return voxel;
         }
         return null;
+    }
+    public Voxel GetNearestWalkableVoxel(Voxel target, Voxel start)
+    {
+        if (target == null || start == null) return null;
+        var voxels = new List<Voxel>
+        {
+            VoxelWorld.GetVoxel(target.WorldPosition + Vector3.forward),
+            VoxelWorld.GetVoxel(target.WorldPosition + Vector3.back),
+            VoxelWorld.GetVoxel(target.WorldPosition + Vector3.left),
+            VoxelWorld.GetVoxel(target.WorldPosition + Vector3.right),
+        };
+        Voxel min = null;
+        foreach (var voxel in voxels)
+        {
+            if (voxel == null || (voxel.Entity != null && voxel.Entity is Block)) continue;
+            var floor = VoxelWorld.GetVoxel(voxel.WorldPosition + Vector3.down);
+            if (floor == null ||
+                floor.Entity == null ||
+                !(floor.Entity is Block)) continue;
+
+            if (min == null ||
+                Vector3.Distance(start.WorldPosition, voxel.WorldPosition) <
+                Vector3.Distance(start.WorldPosition, min.WorldPosition))
+                min = voxel;
+        }
+        return min;
     }
 }

@@ -19,6 +19,14 @@ public class Droplet : Entity, IMovable {
         Voxel.Destroy();
     }
 
+    private bool _isMoving;
+    private bool _isFalling;
+    private bool _isOnPath;
+
+    public bool IsMoving()
+    {
+        return _isMoving || _isFalling || _isOnPath;
+    }
     public void Reset()
     {
         Splash();
@@ -38,14 +46,15 @@ public class Droplet : Entity, IMovable {
         if (Voxel == null) return;
         StartCoroutine(_ArchTo(vox, forceMove));
     }
-    public void MoveAlongPath(Voxel[] path, bool forceMove = true)
+    public void FollowPath(Voxel[] path, bool forceMove = true)
     {
         if (Voxel == null) return;
-        StartCoroutine(_MoveAlongPath(path, forceMove));
+        StartCoroutine(_FollowPath(path, forceMove));
     }
 
     private IEnumerator _Fall()
     {
+        _isFalling = true;
         if (Voxel != null) Voxel.Release();
 
         var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
@@ -70,9 +79,11 @@ public class Droplet : Entity, IMovable {
         {
             Splash();
         }
+        _isFalling = true;
     }
     private IEnumerator _MoveTo(Voxel vox, bool forceMove)
     {
+        _isMoving = true;
         if (Voxel != null) Voxel.Release();
 
         var start = transform.position;
@@ -91,31 +102,12 @@ public class Droplet : Entity, IMovable {
             Splash();
         else
             StartCoroutine(_Fall());
-    }
-    private IEnumerator _MoveAlongPath(Voxel[] path, bool forceMove)
-    {
-        if (Voxel != null) Voxel.Release();
 
-        foreach (var vox in path)
-        {
-            var start = transform.position;
-            var end = vox.WorldPosition;
-            var forward = (end - start).normalized;
-            var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            var t = 0f;
-            var d = Vector3.Distance(start, end);
-            while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
-            {
-                transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / d);
-                yield return new WaitForFixedUpdate();
-                forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-            }
-        }
-
-        StartCoroutine(_Fall());
+        _isMoving = false;
     }
     private IEnumerator _ArchTo(Voxel vox, bool forceMove)
     {
+        _isMoving = true;
         if (Voxel != null) Voxel.Release();
         var forward = (vox.WorldPosition - transform.position).normalized;
 
@@ -135,5 +127,17 @@ public class Droplet : Entity, IMovable {
             Splash();
         else
             StartCoroutine(_Fall());
+        _isMoving = false;
+    }
+    private IEnumerator _FollowPath(Voxel[] path, bool forceMove)
+    {
+        _isOnPath = true;
+        foreach (var voxel in path)
+        {
+            while (Voxel == null)
+                yield return new WaitForEndOfFrame();
+            MoveTo(voxel, forceMove);
+        }
+        _isOnPath = false;
     }
 }
