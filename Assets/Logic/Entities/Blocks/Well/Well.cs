@@ -12,8 +12,7 @@ public class Well : Block
 
     public void UpdateSpring()
     {
-        if(!IsDyed)
-            Dye();
+        IsDyed = true;
 
         if (_springTimer == 0 && SpringVox.Entity == null && DropletType != "")
             SpringVox.Fill(EntityConstructor.NewDroplet(DropletType),Voxel.Puzzle.Number);

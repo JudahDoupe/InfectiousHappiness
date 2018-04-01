@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions.Comparers;
 
-public class Moveable : Block, IMovable
+public class Movable : Block, IMovable
 {
     public float MovementSpeed = 5;
 
@@ -13,7 +13,8 @@ public class Moveable : Block, IMovable
     void Start()
     {
         Class = "Block";
-        Type = "Moveable";
+        Type = "Movable";
+        UpdateMaterial();
         StartCoroutine(SetSpawn());
     }
     private IEnumerator SetSpawn()

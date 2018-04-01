@@ -8,6 +8,7 @@ public class Fire : Droplet
     {
         Class = "Droplet";
         Type = "Fire";
+        IsDyed = true;
         SplashRadius = 2;
     }
 

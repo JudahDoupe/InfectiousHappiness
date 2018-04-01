@@ -252,8 +252,8 @@ public class Puzzle
         const int speed = 5;
         foreach (var voxel in Voxels)
         {
-            if (voxel.Entity is Block)
-                (voxel.Entity as Block).Dye();
+            if (voxel.Entity != null)
+                voxel.Entity.IsDyed = true;
             i = (i+1) % speed;
             if (i == 0)
                 yield return new WaitForFixedUpdate();

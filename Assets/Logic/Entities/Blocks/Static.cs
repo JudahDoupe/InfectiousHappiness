@@ -8,5 +8,6 @@ public class Static : Block {
     {
         Class = "Block";
         Type = "Static";
+        UpdateMaterial();
     }
 }

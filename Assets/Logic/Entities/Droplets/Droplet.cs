@@ -10,6 +10,8 @@ public class Droplet : Entity, IMovable {
     void Start()
     {
         Class = "Droplet";
+        IsDyed = true;
+        UpdateMaterial();
     }
 
     public virtual void Splash()
@@ -37,11 +39,6 @@ public class Droplet : Entity, IMovable {
         StartCoroutine(_Fall());
     }
     public void MoveTo(Voxel vox, bool forceMove = false)
-    {
-        if (Voxel == null) return;
-        StartCoroutine(_MoveTo(vox, forceMove));
-    }
-    public void ArchTo(Voxel vox, bool forceMove = false)
     {
         if (Voxel == null) return;
         StartCoroutine(_ArchTo(vox, forceMove));
@@ -80,30 +77,6 @@ public class Droplet : Entity, IMovable {
             Splash();
         }
         _isFalling = true;
-    }
-    private IEnumerator _MoveTo(Voxel vox, bool forceMove)
-    {
-        _isMoving = true;
-        if (Voxel != null) Voxel.Release();
-
-        var start = transform.position;
-        var end = vox.WorldPosition;
-        var forward = (end - start).normalized;
-        var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-        var t = 0f;
-        var d = Vector3.Distance(start, end);
-        while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
-        {
-            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed/d);
-            yield return new WaitForFixedUpdate();
-            forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-        }
-        if (forwardVox.Entity is Block)
-            Splash();
-        else
-            StartCoroutine(_Fall());
-
-        _isMoving = false;
     }
     private IEnumerator _ArchTo(Voxel vox, bool forceMove)
     {

@@ -8,6 +8,7 @@ public class Water : Droplet
     {
         Class = "Droplet";
         Type = "Water";
+        IsDyed = true;
         SplashRadius = 2;
     }
 
@@ -32,7 +33,7 @@ public class Water : Droplet
                         }
                         else
                         {
-                            (vox.Entity as Block).Undye();
+                            vox.Entity.IsDyed = false;
                         }
                     }
                 }

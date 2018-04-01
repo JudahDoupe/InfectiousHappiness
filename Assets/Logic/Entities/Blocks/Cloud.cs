@@ -16,6 +16,7 @@ public class Cloud : Block
     {
         Class = "Block";
         Type = "Cloud";
+        UpdateMaterial();
         _rainVox = VoxelWorld.GetVoxel(transform.position + Vector3.down);
         _rainInterval = Random.Range(_rainIntervalMim, _rainIntervalMax);
     }
@@ -38,7 +39,7 @@ public class Cloud : Block
         if(dropletType == DropletType) yield break;
 
         DropletType = dropletType;
-        Dye();
+        IsDyed = true;
 
         yield return new WaitForSeconds(Random.Range(0.2f,0.5f));
 

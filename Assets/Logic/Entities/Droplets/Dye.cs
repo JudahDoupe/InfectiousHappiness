@@ -8,6 +8,7 @@ public class Dye : Droplet
     {
         Class = "Droplet";
         Type = "Dye";
+        IsDyed = true;
         SplashRadius = 3;
     }
 
@@ -30,7 +31,7 @@ public class Dye : Droplet
                         }
                         else
                         {
-                            (vox.Entity as Block).Dye();
+                            vox.Entity.IsDyed = true;
                         }
                     }
                 }

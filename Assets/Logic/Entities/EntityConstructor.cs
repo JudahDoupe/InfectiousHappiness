@@ -12,10 +12,6 @@ public class EntityConstructor : MonoBehaviour
         Instance = this;
     }
 
-    public Material UndyedBlockMaterial;
-    public List<TypeMaterial> BlockMaterials = new List<TypeMaterial>();
-    public List<TypeMaterial> DropletMaterials = new List<TypeMaterial>();
-
     public static Entity NewEntity(string name, string type)
     {
         Entity e;
@@ -45,8 +41,8 @@ public class EntityConstructor : MonoBehaviour
             case "Static":
                 block = obj.AddComponent<Static>();
                 break;
-            case "Moveable":
-                block = obj.AddComponent<Moveable>();
+            case "Movable":
+                block = obj.AddComponent<Movable>();
                 break;
             case "Cloud":
                 block = obj.AddComponent<Cloud>();
@@ -65,38 +61,29 @@ public class EntityConstructor : MonoBehaviour
                 break;
         }
 
-        block.DyeMaterial = Instance.BlockMaterials.FirstOrDefault(x => x.Type == type).Material;
-        obj.GetComponentInChildren<Renderer>().material = Instance.UndyedBlockMaterial;
         return block;
     }
     public static Droplet NewDroplet(string type)
     {
         var obj = Instantiate(Resources.Load<GameObject>("Entities/Droplet"), new Vector3(0, 0, 0), Quaternion.identity);
+        Droplet droplet;
 
         switch (type)
         {
             case "Dye":
-                obj.AddComponent<Dye>();
+                droplet = obj.AddComponent<Dye>();
                 break;
             case "Water":
-                obj.AddComponent<Water>();
+                droplet = obj.AddComponent<Water>();
                 break;
             case "Fire":
-                obj.AddComponent<Fire>();
+                droplet = obj.AddComponent<Fire>();
                 break;
             default:
-                obj.AddComponent<Droplet>();
+                droplet = obj.AddComponent<Droplet>();
                 break;
         }
 
-        obj.GetComponentInChildren<Renderer>().material = Instance.DropletMaterials.FirstOrDefault(x => x.Type == type).Material;
         return obj.GetComponent<Droplet>();
     }
-}
-
-[Serializable]
-public struct TypeMaterial
-{
-    public string Type;
-    public Material Material;
 }

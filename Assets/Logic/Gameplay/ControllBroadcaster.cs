@@ -67,7 +67,7 @@ public class ControllBroadcaster : MonoBehaviour {
         touchScreenPos = null;
         var vox = GetVoxel(screenPos);
         var player = VoxelWorld.MainCharacter;
-        if (player == null || vox == null) return;
+        if (player == null || vox == null || vox.Entity.IsActive == false) return;
 
         if (player.Load != null)
         {
@@ -75,7 +75,13 @@ public class ControllBroadcaster : MonoBehaviour {
             return;
         }
 
-        if (vox.Entity is IMovable)
+        if (vox.Entity.IsDyed == false)
+        {
+            var topVox = VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.up);
+            player.FollowPath(Pathfinder.FindPath(player.Voxel, topVox).ToArray());
+            return;
+        }
+        else if (vox.Entity is IMovable)
         {
             player.FollowPath(Pathfinder.FindPath(player.Voxel, GetNearestWalkableVoxel(vox, player.Voxel)).ToArray());
             player.Lift(vox.Entity as IMovable);

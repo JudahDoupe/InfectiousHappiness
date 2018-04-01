@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Character : Entity, IMovable {
@@ -91,7 +92,8 @@ public class Character : Entity, IMovable {
         else if (floorVox.Entity is Block)
         {
             VoxelWorld.GetVoxel(transform.position).Fill(this);
-            (floorVox.Entity as Block).Dye();
+            UpdateActiveEntities(5);
+            floorVox.Entity.IsDyed = true;
         }
     }
     private IEnumerator _MoveTo(Voxel vox, bool forceMove)
@@ -112,6 +114,7 @@ public class Character : Entity, IMovable {
 
         _isMoving = false;
         VoxelWorld.GetVoxel(transform.position).Fill(this);
+        UpdateActiveEntities(5);
         Fall();
     }
     private IEnumerator _ArchTo(Voxel vox, bool forceMove)
@@ -133,6 +136,7 @@ public class Character : Entity, IMovable {
 
         _isMoving = false;
         VoxelWorld.GetVoxel(transform.position).Fill(this);
+        UpdateActiveEntities(5);
         Fall();
     }
     private IEnumerator _FollowPath(Voxel[] path, bool forceMove)
@@ -162,7 +166,10 @@ public class Character : Entity, IMovable {
     {
         while (IsMoving())
             yield return new WaitForFixedUpdate();
-        entity.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up));
+        var e = (entity as Entity);
+        if (Mathf.Abs(e.transform.position.y - transform.position.y) < 0.1f && 
+            Vector3.Distance(transform.position, e.transform.position) < 1.1f)
+            entity.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up));
     }
 
     private void BuilderControls()
@@ -205,6 +212,36 @@ public class Character : Entity, IMovable {
                 PlayerModel.SetActive(false);
                 CursorModel.SetActive(true);
                 break;
+        }
+    }
+
+    private List<Entity> _activeEntities = new List<Entity>();
+    private void UpdateActiveEntities(int radius)
+    {
+        _activeEntities.RemoveAll(x => x == null);
+        foreach (var entity in _activeEntities.Where(e => Vector3.Distance(transform.position, e.Voxel.WorldPosition) > radius).ToArray())
+        {
+            entity.IsActive = false;
+            _activeEntities.Remove(entity);
+        }
+
+        for (int x = -radius; x <= radius; x++)
+        {
+            for (int y = -radius; y <= radius; y++)
+            {
+                for (int z = -radius; z <= radius; z++)
+                {
+                    var vox = VoxelWorld.GetVoxel(transform.position + new Vector3(x, y, z));
+                    if (vox != null && 
+                        vox.Entity != null && 
+                        !_activeEntities.Contains(vox.Entity) &&
+                        Vector3.Distance(transform.position,vox.WorldPosition) <= radius)
+                    {
+                        vox.Entity.IsActive = true;
+                        _activeEntities.Add(vox.Entity);
+                    }
+                }
+            }
         }
     }
 }
