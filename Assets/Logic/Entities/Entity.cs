@@ -7,8 +7,8 @@ public class Entity : MonoBehaviour
     private bool _isActive;
     private bool _isDyed;
 
-    public string Class;
-    public string Type;
+    public string Class { get; set; }
+    public string Type { get; set; }
     public bool IsActive
     {
         get { return _isActive; }

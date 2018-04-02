@@ -55,7 +55,7 @@ public class ProgressTracker : MonoBehaviour
     }
 
 	void Update () {
-        if(!_tracking)return;
+        if(!_tracking || Blocks.Count == 0) return;
 
 	    var completionProgress = Blocks.Count(x => x.IsDyed) / (float)Blocks.Count;
 	    _progressBar.localScale = new Vector3(completionProgress, 1, 1);

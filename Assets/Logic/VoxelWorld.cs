@@ -29,24 +29,17 @@ public class VoxelWorld : MonoBehaviour
         UnloadActiveLevel();
 
         ActiveLevel = new Level(levelName);
-        if (!ActiveLevel.Load())
-        {
-            ActiveLevel.Unload();
-            ActiveLevel = null;
-            return;
-        }
+        ActiveLevel.Load();
 
         ProgressTracker.Instance.Activate();
-
-        MainCharacter.PlayerModel.SetActive(true);
         MainCharacter.Reset();
     }
     public void UnloadActiveLevel()
     {
-        MainCharacter.PlayerModel.SetActive(false);
-        ProgressTracker.Instance.Deactivate();
-        if(ActiveLevel != null)ActiveLevel.Unload();
+        if(ActiveLevel == null)return;
+        ActiveLevel.Unload();
         ActiveLevel = null;
+        ProgressTracker.Instance.Deactivate();
     }
     public static Voxel GetVoxel(Vector3 worldPos)
     {

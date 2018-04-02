@@ -3,15 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Character : Entity, IMovable {
-
-    public enum CharacterType
-    {
-        Player,
-        Builder,
-    }
-    public CharacterType Mode;
+public class Character : Entity, IMovable
+{
+    public bool IsBuilder;
     public GameObject CursorModel;
     public GameObject PlayerModel;
 
@@ -24,17 +20,11 @@ public class Character : Entity, IMovable {
     public string EntityType = "";
     public int PuzzleNumber;
 
-    void Start()
-    {
-        Type = Mode.ToString();
-        PlayerModel = transform.Find("Model").gameObject;
-        CursorModel = transform.Find("Cursor").gameObject;
-    }
+    private bool shouldUpdate;
     void Update()
     {
-        if (Type != Mode.ToString())
-            UpdateType();
-        
+        PlayerModel.SetActive(!IsBuilder);
+        CursorModel.SetActive(IsBuilder);
         BuilderControls();
     }
 
@@ -49,8 +39,12 @@ public class Character : Entity, IMovable {
     }
     public void Reset()
     {
+        if (VoxelWorld.SpawnVoxel == null) return;
+
         VoxelWorld.SpawnVoxel.Fill(this);
-        Fall();
+
+        if (!IsBuilder)
+            Fall();
     }
     public void Fall()
     {
@@ -174,16 +168,16 @@ public class Character : Entity, IMovable {
 
     private void BuilderControls()
     {
-        if (Mode != CharacterType.Builder)return;
+        if (IsBuilder == false)return;
 
         if (Input.GetButtonDown("Up"))
             transform.position += transform.forward;
         else if (Input.GetButtonDown("Down"))
             transform.position -= transform.forward;
         else if (Input.GetButtonDown("Left"))
-            transform.Rotate(new Vector3(0, 90, 0));
-        else if (Input.GetButtonDown("Right"))
             transform.Rotate(new Vector3(0, -90, 0));
+        else if (Input.GetButtonDown("Right"))
+            transform.Rotate(new Vector3(0, 90, 0));
         else if (Input.GetButtonDown("Primary"))
             VoxelWorld.GetVoxel(transform.position).Fill(EntityConstructor.NewEntity(EntityName, EntityType), PuzzleNumber);
         else if (Input.GetButtonDown("Secondary"))
@@ -198,21 +192,6 @@ public class Character : Entity, IMovable {
             VoxelWorld.ActiveLevel.SaveAll();
         else if (Input.GetKeyDown(KeyCode.Escape))
             Time.timeScale = Time.timeScale <= 0.1f ? 1 : 0;
-    }
-    private void UpdateType()
-    {
-        Type = Mode.ToString();
-        switch (Mode)
-        {
-            case CharacterType.Player:
-                PlayerModel.SetActive(true);
-                CursorModel.SetActive(false);
-                break;
-            case CharacterType.Builder:
-                PlayerModel.SetActive(false);
-                CursorModel.SetActive(true);
-                break;
-        }
     }
 
     private List<Entity> _activeEntities = new List<Entity>();

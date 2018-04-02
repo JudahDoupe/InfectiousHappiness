@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 public class IOManager : MonoBehaviour
 {
+    public bool HARDRESET;
     public Text DebugOutput;
     public string[] LevelsToTransfer;
     public static IOManager Instance;
@@ -16,14 +17,17 @@ public class IOManager : MonoBehaviour
     {
         Instance = this;
 
-        DirectoryInfo dataDir = new DirectoryInfo(Application.persistentDataPath);
-        dataDir.Delete(true);
-
-        for (var i = 0; i < LevelsToTransfer.Length; i++)
+        if (HARDRESET)
         {
-            var levelName = LevelsToTransfer[i];
-            CopyLevelIfNonexistent(levelName);
+            DirectoryInfo dataDir = new DirectoryInfo(Application.persistentDataPath);
+            dataDir.Delete(true);
+            for (var i = 0; i < LevelsToTransfer.Length; i++)
+            {
+                var levelName = LevelsToTransfer[i];
+                CopyLevelIfNonexistent(levelName);
+            }
         }
+
     }
 
     public static void SavePuzzle(PuzzleData puzzleData)
@@ -41,8 +45,15 @@ public class IOManager : MonoBehaviour
 
         if (!File.Exists(filePath))
         {
-            Debug.Log("No file at: " + filePath);
-            return new PuzzleData();
+            SavePuzzle(new PuzzleData
+            {
+                LevelName = levelName,
+                PuzzleName = "",
+                PuzzleNum = puzzleNum,
+                PuzzleOffset = new Vector3(0,0,0),
+                TrackName = "",
+                Voxels = new VoxelData[0],
+            });
         }
 
         string jsonData = File.ReadAllText(filePath);
@@ -65,8 +76,14 @@ public class IOManager : MonoBehaviour
 
         if (!File.Exists(filePath))
         {
-            Debug.Log("No file at: " + filePath);
-            return new LevelData();
+            Debug.Log("Creating new Level \""+name+"\" at " + filePath);
+            SaveLevel(new LevelData
+            {
+                Name = name,
+                Position = new Vector3(0,0,0),
+                SpawnPosition = new Vector3(Level.Size/2f,Level.Size/2f, Level.Size/2f),
+                SpawnRotation = new Vector3(0,0,0),
+            });
         }
 
         string jsonData = File.ReadAllText(filePath);
