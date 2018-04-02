@@ -15,6 +15,10 @@ public class IOManager : MonoBehaviour
     public void Awake()
     {
         Instance = this;
+
+        DirectoryInfo dataDir = new DirectoryInfo(Application.persistentDataPath);
+        dataDir.Delete(true);
+
         for (var i = 0; i < LevelsToTransfer.Length; i++)
         {
             var levelName = LevelsToTransfer[i];

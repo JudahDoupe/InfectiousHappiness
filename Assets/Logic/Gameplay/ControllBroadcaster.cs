@@ -9,7 +9,9 @@ public class ControllBroadcaster : MonoBehaviour {
 
     public Text DebugOutput;
     public LayerMask LayerMask;
+    public float TouchMovementTolerance = 5;
 
+    private Vector2? touchScreenStartPos;
     private Vector2? touchScreenPos;
 
     public void Update()
@@ -56,15 +58,28 @@ public class ControllBroadcaster : MonoBehaviour {
 
     public void StartTouch(Vector2 screenPos)
     {
+        touchScreenStartPos = screenPos;
         touchScreenPos = screenPos;
     }
     public void MoveTouch(Vector2 screenPos)
     {
+        if (touchScreenPos.HasValue == false) return;
+
+        var delta = screenPos - touchScreenPos.Value;
+        var deltaX = delta.x / Screen.width;
+        var deltaY = delta.y / Screen.height;
+
+        VoxelWorld.MainCharacter.transform.Rotate(Vector3.up,-deltaX * 150);
+        Camera.main.GetComponent<CameraController>().Height -= deltaY * 10;
+
         touchScreenPos = screenPos;
     }
     public void EndTouch(Vector2 screenPos)
     {
         touchScreenPos = null;
+        if (Vector2.Distance(screenPos, touchScreenStartPos.Value) > TouchMovementTolerance)
+            return;
+
         var vox = GetVoxel(screenPos);
         var player = VoxelWorld.MainCharacter;
         if (player == null || vox == null || vox.Entity.IsActive == false) return;
