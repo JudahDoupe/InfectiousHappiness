@@ -24,23 +24,6 @@ public class VoxelWorld : MonoBehaviour
         get { return ActiveLevel == null ? null : ActiveLevel.SpawnVoxel; }
     }
 
-    public void LoadLevel(string levelName)
-    {
-        UnloadActiveLevel();
-
-        ActiveLevel = new Level(levelName);
-        ActiveLevel.Load();
-
-        ProgressTracker.Instance.Activate();
-        MainCharacter.Reset();
-    }
-    public void UnloadActiveLevel()
-    {
-        if(ActiveLevel == null)return;
-        ActiveLevel.Unload();
-        ActiveLevel = null;
-        ProgressTracker.Instance.Deactivate();
-    }
     public static Voxel GetVoxel(Vector3 worldPos)
     {
         if (ActiveLevel != null) return ActiveLevel.GetVoxel(ActiveLevel.WorldToLevel(worldPos));
@@ -59,16 +42,52 @@ public class VoxelWorld : MonoBehaviour
             GetVoxel(worldPos + Vector3.right),
         }.Where(x => x != null).ToList();
     }
+
+    public void LoadLevel(string levelName)
+    {
+        UnloadActiveLevel();
+
+        ActiveLevel = new Level(levelName);
+        ActiveLevel.Load();
+
+        ProgressTracker.Instance.Activate();
+        MainCharacter.Reset();
+    }
+    public void UnloadActiveLevel()
+    {
+        if(ActiveLevel == null)return;
+        ActiveLevel.Unload();
+        ActiveLevel = null;
+        ProgressTracker.Instance.Deactivate();
+    }
+
+    public void Update()
+    {
+        if (ActiveLevel != null && ActiveLevel.ActivePuzzle.CompletionFraction >= 1)
+        {
+            if (ActiveLevel.ActivePuzzle.Number >= Level.NumPuzzles)
+            {
+                UnloadActiveLevel();
+            }
+            else
+            {
+                ActiveLevel.ActivePuzzle = ActiveLevel.GetPuzzle(ActiveLevel.ActivePuzzle.Number + 1);
+                ActiveLevel.ActivePuzzle.Load();
+            }
+        }
+    }
 }
 
 public class Level
 {
     public const int NumPuzzles = 8;
     public const int Size = 48;
+
     public string Name;
     public Vector3 WorldPostition;
     public Voxel SpawnVoxel;
     public bool IsLoaded;
+    public Puzzle ActivePuzzle;
 
     public readonly Puzzle[] Puzzles = new Puzzle[NumPuzzles];
     public readonly Voxel[,,] Voxels = new Voxel[Size, Size, Size];
@@ -112,10 +131,8 @@ public class Level
         WorldPostition = data.Position;
         SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
 
-        for (int i = 0; i < NumPuzzles; i++)
-        {
-            GetPuzzle(i).Reset();
-        }
+        ActivePuzzle = GetPuzzle(0);
+        ActivePuzzle.Load();
         IsLoaded = true;
         return true;
     }
@@ -173,18 +190,26 @@ public class Puzzle
     public int Number;
     public AudioSource Track;
     public Vector3 PuzzleOffset = new Vector3(0,0,0);
-
     public List<Voxel> Voxels = new List<Voxel>();
+    public float CompletionFraction
+    {
+        get
+        {
+            if (Voxels.Count == 0) return 1;
+            return Voxels.Count(v => v.Entity != null && v.Entity.IsDyed) / (float)Voxels.Count(v => v.Entity != null);
+        }
+    }
 
     public Puzzle(Level level, int puzzleNum)
     {
         Level = level;
         Number = puzzleNum;
     }
-    public void Load(PuzzleData data)
+    public void Load()
     {
         Destroy();
 
+        var data = IOManager.LoadPuzzle(Level.Name, Number);
         Name = data.PuzzleName;
         PuzzleOffset = data.PuzzleOffset;
 
@@ -204,11 +229,6 @@ public class Puzzle
                 vox.Load(voxData, Number);
             }
         }
-    }
-    public void Reset()
-    {
-        var data = IOManager.LoadPuzzle(Level.Name, Number);
-        Load(data);
     }
     public void Save()
     {
@@ -230,28 +250,6 @@ public class Puzzle
         }
         Name = "";
         Object.Destroy(Track);
-    }
-
-    public void CompletePuzzle()
-    {
-        if (Level.IsLoaded)
-        {
-            VoxelWorld.Instance.StartCoroutine(DyeAllBlocks());
-        }
-    }
-    private IEnumerator DyeAllBlocks()
-    {
-        var i = 0;
-        const int speed = 5;
-        foreach (var voxel in Voxels)
-        {
-            if (voxel.Entity != null)
-                voxel.Entity.IsDyed = true;
-            i = (i+1) % speed;
-            if (i == 0)
-                yield return new WaitForFixedUpdate();
-        }
-        Save();
     }
 }
 
@@ -300,6 +298,8 @@ public class Voxel
         Entity.Voxel = this;
         Entity.transform.position = WorldPosition;
         Entity.transform.parent = VoxelWorld.Instance.transform;
+
+        VoxelWorld.MainCharacter.UpdateActiveEntities();
 
         if(puzzleNum >= 0) ChangePuzzle(puzzleNum);
     }

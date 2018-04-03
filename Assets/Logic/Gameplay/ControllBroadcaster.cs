@@ -82,7 +82,7 @@ public class ControllBroadcaster : MonoBehaviour {
 
         var vox = GetVoxel(screenPos);
         var player = VoxelWorld.MainCharacter;
-        if (player == null || vox == null || vox.Entity.IsActive == false) return;
+        if (player == null || vox == null || vox.Entity == null || vox.Entity.IsActive == false) return;
 
         if (player.Load != null)
         {
