@@ -5,14 +5,14 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ControllBroadcaster : MonoBehaviour {
-
+public class ControllBroadcaster : MonoBehaviour
+{
     public Text DebugOutput;
     public LayerMask LayerMask;
-    public float TouchMovementTolerance = 5;
+    public float TouchMovementTolerance = 50;
 
-    private Vector2? touchScreenStartPos;
-    private Vector2? touchScreenPos;
+    private Vector2? _touchOrigin;
+    private Vector2? _touchPos;
 
     public void Update()
     {
@@ -58,26 +58,24 @@ public class ControllBroadcaster : MonoBehaviour {
 
     public void StartTouch(Vector2 screenPos)
     {
-        touchScreenStartPos = screenPos;
-        touchScreenPos = screenPos;
+        _touchOrigin = screenPos;
+        _touchPos = screenPos;
     }
     public void MoveTouch(Vector2 screenPos)
     {
-        if (touchScreenPos.HasValue == false) return;
+        if (_touchPos.HasValue == false) return;
 
-        var delta = screenPos - touchScreenPos.Value;
-        var deltaX = delta.x / Screen.width;
-        var deltaY = delta.y / Screen.height;
+        var delta = new Vector2(_touchOrigin.Value.y > Screen.height/2f ? -(screenPos.x - _touchPos.Value.x) : screenPos.x - _touchPos.Value.x, screenPos.y - _touchPos.Value.y);
 
-        VoxelWorld.MainCharacter.transform.Rotate(Vector3.up,-deltaX * 150);
-        Camera.main.GetComponent<CameraController>().Height -= deltaY * 10;
 
-        touchScreenPos = screenPos;
+        VoxelWorld.MainCamera.Move(delta / Screen.dpi * 0.75f);
+
+        _touchPos = screenPos;
     }
     public void EndTouch(Vector2 screenPos)
     {
-        touchScreenPos = null;
-        if (Vector2.Distance(screenPos, touchScreenStartPos.Value) > TouchMovementTolerance)
+        _touchPos = null;
+        if (Vector2.Distance(screenPos, _touchOrigin.Value) > TouchMovementTolerance)
             return;
 
         var vox = GetVoxel(screenPos);

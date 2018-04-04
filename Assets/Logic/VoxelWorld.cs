@@ -14,10 +14,13 @@ public class VoxelWorld : MonoBehaviour
         if (Instance == null) Instance = this;
         if (MainCharacter == null)
             MainCharacter = FindObjectOfType<Character>();
+        if (MainCamera == null)
+            MainCamera = FindObjectOfType<CameraController>();
     }
 
     public static VoxelWorld Instance;
     public static Character MainCharacter;
+    public static CameraController MainCamera;
     public static Level ActiveLevel;
     public static Voxel SpawnVoxel
     {
@@ -65,7 +68,7 @@ public class VoxelWorld : MonoBehaviour
     {
         if (ActiveLevel != null && ActiveLevel.ActivePuzzle.CompletionFraction >= 1)
         {
-            if (ActiveLevel.ActivePuzzle.Number >= Level.NumPuzzles)
+            if (ActiveLevel.ActivePuzzle.Number+1 >= Level.NumPuzzles)
             {
                 UnloadActiveLevel();
             }
@@ -222,11 +225,13 @@ public class Puzzle
         }
         if (data.Voxels != null)
         {
+            
             for (var i = 0; i < data.Voxels.Length; i++)
             {
                 var voxData = data.Voxels[i];
                 var vox = Level.GetVoxel(voxData.LvlPos + PuzzleOffset);
                 vox.Load(voxData, Number);
+                if(i == 0) VoxelWorld.MainCamera.CenterOn(vox.WorldPosition, 10);
             }
         }
     }
