@@ -23,7 +23,7 @@ public class Cloud : Block
 
     void FixedUpdate()
     {
-        if (IsDyed && _rainTimer == 0 && _rainVox.Entity == null && DropletType != "")
+        if (DropletType != "" && _rainTimer == 0 && _rainVox.Entity == null)
         {
             var rain = EntityConstructor.NewDroplet(DropletType);
             _rainVox.Fill(rain);
@@ -39,7 +39,6 @@ public class Cloud : Block
         if(dropletType == DropletType) yield break;
 
         DropletType = dropletType;
-        IsDyed = true;
 
         yield return new WaitForSeconds(Random.Range(0.2f,0.5f));
 

@@ -87,7 +87,6 @@ public class Character : Entity, IMovable
         else if (floorVox.Entity is Block)
         {
             VoxelWorld.GetVoxel(transform.position).Fill(this);
-            floorVox.Entity.IsDyed = true;
         }
     }
     private IEnumerator _MoveTo(Voxel vox, bool forceMove)
@@ -192,33 +191,4 @@ public class Character : Entity, IMovable
             Time.timeScale = Time.timeScale <= 0.1f ? 1 : 0;
     }
 
-    private List<Entity> _activeEntities = new List<Entity>();
-    public void UpdateActiveEntities()
-    {
-        _activeEntities.RemoveAll(x => x == null || x.Voxel == null);
-        foreach (var entity in _activeEntities.Where(e => Vector3.Distance(transform.position, e.Voxel.WorldPosition) > MovementRadius).ToArray())
-        {
-            entity.IsActive = false;
-            _activeEntities.Remove(entity);
-        }
-
-        for (int x = -MovementRadius; x <= MovementRadius; x++)
-        {
-            for (int y = -MovementRadius; y <= MovementRadius; y++)
-            {
-                for (int z = -MovementRadius; z <= MovementRadius; z++)
-                {
-                    var vox = VoxelWorld.GetVoxel(transform.position + new Vector3(x, y, z));
-                    if (vox != null && 
-                        vox.Entity != null && 
-                        !_activeEntities.Contains(vox.Entity) &&
-                        Vector3.Distance(transform.position,vox.WorldPosition) <= MovementRadius)
-                    {
-                        vox.Entity.IsActive = true;
-                        _activeEntities.Add(vox.Entity);
-                    }
-                }
-            }
-        }
-    }
 }

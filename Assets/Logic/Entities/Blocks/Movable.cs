@@ -17,15 +17,6 @@ public class Movable : Block, IMovable
         UpdateMaterial();
         StartCoroutine(SetSpawn());
     }
-    private bool _wasDyed = false;
-    void Update()
-    {
-        if (IsDyed && ! _wasDyed)
-        {
-            _wasDyed = IsDyed;
-            Fall();
-        }
-    }
     private IEnumerator SetSpawn()
     {
         while (Voxel == null)

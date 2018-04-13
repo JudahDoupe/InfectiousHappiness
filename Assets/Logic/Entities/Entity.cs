@@ -19,22 +19,12 @@ public class Entity : MonoBehaviour
             UpdateMaterial();
         }
     }
-    public bool IsDyed
-    {
-        get { return _isDyed; }
-        set
-        {
-            if (_isDyed == value) return;
-            _isDyed = value;
-            UpdateMaterial();
-        }
-    }
 
     public Voxel Voxel;
 
     public virtual void UpdateMaterial()
     {
-        var mat = Resources.Load<Material>("Entities/Materials/" + Class + "/" + (IsDyed ? Type : "Undyed") + (IsActive ? "" : "Inactive"));
+        var mat = Resources.Load<Material>("Entities/Materials/" + Class + "/" + Type);
         if (mat == null)return;
         transform.Find("Model").GetComponent<Renderer>().material = mat;
     }

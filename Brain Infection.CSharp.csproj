@@ -79,26 +79,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Logic\Entities\Blocks\Block.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Bounce.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Cloud.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Goal.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Movable.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Static.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\Well\DyeWell.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\Well\FireWell.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\Well\WaterWell.cs" />
-    <Compile Include="Assets\Logic\Entities\Blocks\Well\Well.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Undyed.cs" />
     <Compile Include="Assets\Logic\Entities\Character.cs" />
     <Compile Include="Assets\Logic\Entities\Droplets\Droplet.cs" />
-    <Compile Include="Assets\Logic\Entities\Droplets\Dye.cs" />
-    <Compile Include="Assets\Logic\Entities\Droplets\Fire.cs" />
-    <Compile Include="Assets\Logic\Entities\Droplets\Water.cs" />
     <Compile Include="Assets\Logic\Entities\Entity.cs" />
-    <Compile Include="Assets\Logic\Entities\EntityConstructor.cs" />
     <Compile Include="Assets\Logic\Entities\IInteractable.cs" />
     <Compile Include="Assets\Logic\Entities\IMovable.cs" />
+    <Compile Include="Assets\Logic\EntityConstructor.cs" />
     <Compile Include="Assets\Logic\Gameplay\CameraController.cs" />
     <Compile Include="Assets\Logic\Gameplay\ControllBroadcaster.cs" />
     <Compile Include="Assets\Logic\Gameplay\Pathfinder.cs" />
-    <Compile Include="Assets\Logic\Gameplay\ProgressTracker.cs" />
     <Compile Include="Assets\Logic\IOManager.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>

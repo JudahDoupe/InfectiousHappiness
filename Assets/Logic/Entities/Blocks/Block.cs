@@ -10,4 +10,9 @@ public class Block : Entity
         Class = "Block";
         UpdateMaterial();
     }
+
+    public virtual void Collide(Droplet droplet)
+    {
+        Destroy(droplet.gameObject);
+    }
 }

@@ -53,7 +53,6 @@ public class VoxelWorld : MonoBehaviour
         ActiveLevel = new Level(levelName);
         ActiveLevel.Load();
 
-        ProgressTracker.Instance.Activate();
         MainCharacter.Reset();
     }
     public void UnloadActiveLevel()
@@ -61,24 +60,8 @@ public class VoxelWorld : MonoBehaviour
         if(ActiveLevel == null)return;
         ActiveLevel.Unload();
         ActiveLevel = null;
-        ProgressTracker.Instance.Deactivate();
     }
 
-    public void Update()
-    {
-        if (ActiveLevel != null && ActiveLevel.ActivePuzzle.CompletionFraction >= 1)
-        {
-            if (ActiveLevel.ActivePuzzle.Number+1 >= Level.NumPuzzles)
-            {
-                UnloadActiveLevel();
-            }
-            else
-            {
-                ActiveLevel.ActivePuzzle = ActiveLevel.GetPuzzle(ActiveLevel.ActivePuzzle.Number + 1);
-                ActiveLevel.ActivePuzzle.Load();
-            }
-        }
-    }
 }
 
 public class Level
@@ -135,9 +118,19 @@ public class Level
         SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
 
         ActivePuzzle = GetPuzzle(0);
-        ActivePuzzle.Load();
-        IsLoaded = true;
-        return true;
+        if (VoxelWorld.MainCharacter.IsBuilder)
+        {
+            for (var i = 0; i < NumPuzzles; i++)
+            {
+                GetPuzzle(i).Load();
+            }
+        }
+        else
+        {
+            ActivePuzzle.Load();
+        }
+
+        return IsLoaded = true;
     }
     public void Unload()
     {
@@ -191,17 +184,24 @@ public class Puzzle
     public Level Level;
     public string Name;
     public int Number;
-    public AudioSource Track;
-    public Vector3 PuzzleOffset = new Vector3(0,0,0);
-    public List<Voxel> Voxels = new List<Voxel>();
-    public float CompletionFraction
+
+    private bool _isComplete = false;
+    public bool IsComplete
     {
-        get
+        get { return _isComplete; }
+        set
         {
-            if (Voxels.Count == 0) return 1;
-            return Voxels.Count(v => v.Entity != null && v.Entity.IsDyed) / (float)Voxels.Count(v => v.Entity != null);
+            _isComplete = value;
+            if (_isComplete && Number < Level.NumPuzzles)
+            {
+                Level.ActivePuzzle = Level.GetPuzzle(Number + 1);
+                Level.ActivePuzzle.Load();
+            }
         }
     }
+
+    public Vector3 PuzzleOffset = new Vector3(0,0,0);
+    public List<Voxel> Voxels = new List<Voxel>();
 
     public Puzzle(Level level, int puzzleNum)
     {
@@ -216,23 +216,10 @@ public class Puzzle
         Name = data.PuzzleName;
         PuzzleOffset = data.PuzzleOffset;
 
-        if (data.TrackName != "")
+        foreach (var voxData in data.Voxels)
         {
-            if(Track) Object.Destroy(Track);
-            Track = VoxelWorld.Instance.gameObject.AddComponent<AudioSource>();
-            Track.clip = IOManager.LoadTrack(data.TrackName);
-            Track.volume = 0;
-        }
-        if (data.Voxels != null)
-        {
-            
-            for (var i = 0; i < data.Voxels.Length; i++)
-            {
-                var voxData = data.Voxels[i];
-                var vox = Level.GetVoxel(voxData.LvlPos + PuzzleOffset);
-                vox.Load(voxData, Number);
-                if(i == 0) VoxelWorld.MainCamera.CenterOn(vox.WorldPosition, 10);
-            }
+            var vox = Level.GetVoxel(voxData.LvlPos + PuzzleOffset);
+            vox.Load(voxData, Number);
         }
     }
     public void Save()
@@ -243,7 +230,6 @@ public class Puzzle
             PuzzleName = Name,
             PuzzleNum = Number,
             PuzzleOffset = PuzzleOffset,
-            TrackName = Track == null ? "" : Track.name,
             Voxels = Voxels.Select(voxel => voxel.ToData()).ToArray(),
         });
     }
@@ -254,7 +240,6 @@ public class Puzzle
             voxel.Destroy();
         }
         Name = "";
-        Object.Destroy(Track);
     }
 }
 
@@ -303,8 +288,6 @@ public class Voxel
         Entity.Voxel = this;
         Entity.transform.position = WorldPosition;
         Entity.transform.parent = VoxelWorld.Instance.transform;
-
-        VoxelWorld.MainCharacter.UpdateActiveEntities();
 
         if(puzzleNum >= 0) ChangePuzzle(puzzleNum);
     }
