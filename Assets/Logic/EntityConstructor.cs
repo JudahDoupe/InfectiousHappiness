@@ -41,6 +41,9 @@ public class EntityConstructor : MonoBehaviour
             case "Static":
                 block = obj.AddComponent<Static>();
                 break;
+            case "Undyed":
+                block = obj.AddComponent<Undyed>();
+                break;
             case "Movable":
                 block = obj.AddComponent<Movable>();
                 break;

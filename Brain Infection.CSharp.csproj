@@ -98,6 +98,7 @@
     <Compile Include="Assets\Logic\VoxelWorld.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Art\Materials\Glow.shader" />
     <None Include="Assets\Art\Shadows\ProjectorMultiply.shader" />
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Gradient Skybox.shader" />
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Horizon With Sun Skybox.shader" />

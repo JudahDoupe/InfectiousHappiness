@@ -14,7 +14,6 @@ public class Bounce : Block {
     public override void Collide(Droplet droplet)
     {
         var direction = droplet.MovementVector;
-        Debug.Log(direction);
         if (!direction.HasValue)
         {
             Destroy(droplet.gameObject);

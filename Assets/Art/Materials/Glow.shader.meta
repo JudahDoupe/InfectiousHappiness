@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 7dcb19fda9202c345856fe7d6044e92d
+timeCreated: 1523721846
+licenseType: Free
+ShaderImporter:
+  defaultTextures:
+  - _MainTex: {fileID: 2800000, guid: fdf1a0d76db123745ad01f023d7de700, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

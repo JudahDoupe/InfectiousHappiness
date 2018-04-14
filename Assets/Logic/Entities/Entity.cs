@@ -5,7 +5,6 @@ using UnityEngine;
 public class Entity : MonoBehaviour
 {
     private bool _isActive;
-    private bool _isDyed;
 
     public string Class { get; set; }
     public string Type { get; set; }
@@ -24,7 +23,7 @@ public class Entity : MonoBehaviour
 
     public virtual void UpdateMaterial()
     {
-        var mat = Resources.Load<Material>("Entities/Materials/" + Class + "/" + Type);
+        var mat = Resources.Load<Material>("Entities/Materials/" + Class + "/" + Type + (IsActive ? "Glowing" : ""));
         if (mat == null)return;
         transform.Find("Model").GetComponent<Renderer>().material = mat;
     }

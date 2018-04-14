@@ -66,6 +66,11 @@ public class Droplet : Entity, IMovable {
         {
             (VoxelWorld.GetVoxel(transform.position).Entity as Block).Collide(this);
         }
+        else if(floorVox == null)
+        {
+            Destroy(gameObject);
+            yield break;
+        }
         else if (floorVox.Entity is Character && (floorVox.Entity as Character).Load == null)
         {
             (floorVox.Entity as Character).Load = this;
@@ -77,7 +82,6 @@ public class Droplet : Entity, IMovable {
         {
             VoxelWorld.GetVoxel(transform.position).Fill(this);
             _lastStationaryPosition = null;
-
         }
         _isFalling = true;
     }
