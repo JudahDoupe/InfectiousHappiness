@@ -13,15 +13,24 @@ public class Character : Entity, IMovable
 
     [Header("Player Settings")]
     public float MovementSpeed = 5;
-    public int MovementRadius = 5;
-    public IMovable Load;
+
+    private IMovable _load;
+    public IMovable Load
+    {
+        set
+        {
+            _load = value;
+            var floor = VoxelWorld.GetVoxel(transform.position - transform.up);
+            if (floor != null) floor.Puzzle.UpdateActiveBlocks(_load);
+        }
+        get { return _load; }
+    }
 
     [Header("Builder Settings")]
     public string EntityName = "";
     public string EntityType = "";
     public int PuzzleNumber;
 
-    private bool shouldUpdate;
     void Update()
     {
         PlayerModel.SetActive(!IsBuilder);
@@ -42,6 +51,10 @@ public class Character : Entity, IMovable
     {
         if (VoxelWorld.SpawnVoxel == null) return;
 
+        if (Voxel != null) Voxel.Release();
+        _isFalling = false;
+        _isMoving = false;
+        _isOnPath = false;
         VoxelWorld.SpawnVoxel.Fill(this);
 
         if (!IsBuilder)
@@ -77,8 +90,9 @@ public class Character : Entity, IMovable
         while (floorVox != null && !(floorVox.Entity is Block))
         {
             transform.position =  transform.position + (Vector3.down * Time.deltaTime * MovementSpeed);
-            yield return new WaitForFixedUpdate();
             floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+            yield return new WaitForFixedUpdate();
+            if(!_isFalling)yield break;
         }
         _isFalling = false;
 
@@ -101,8 +115,9 @@ public class Character : Entity, IMovable
         while (t < 1 && forwardVox != null && (!(forwardVox.Entity is Block) || forceMove))
         {
             transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
-            yield return new WaitForFixedUpdate();
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
+            yield return new WaitForFixedUpdate();
+            if (!_isMoving) yield break;
         }
 
         _isMoving = false;
@@ -122,8 +137,9 @@ public class Character : Entity, IMovable
         while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
         {
             transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / 2) + new Vector3(0, (0.25f - Mathf.Pow(t-0.5f,2))* height, 0);
-            yield return new WaitForFixedUpdate();
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
+            yield return new WaitForFixedUpdate();
+            if(!_isMoving)yield break;
         }
 
         _isMoving = false;
@@ -136,6 +152,7 @@ public class Character : Entity, IMovable
         {
             while (Voxel == null)
                 yield return new WaitForEndOfFrame();
+            if (!_isOnPath) yield break;
             MoveTo(voxel, forceMove);
         }
         _isOnPath = false;

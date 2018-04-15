@@ -75,20 +75,19 @@ public class ControllBroadcaster : MonoBehaviour
     public void EndTouch(Vector2 screenPos)
     {
         _touchPos = null;
-        if (Vector2.Distance(screenPos, _touchOrigin.Value) > TouchMovementTolerance)
-            return;
-
+        if (Vector2.Distance(screenPos, _touchOrigin.Value) > TouchMovementTolerance) return;
+ 
         var vox = GetVoxel(screenPos);
         var player = VoxelWorld.MainCharacter;
+
         if (player == null || vox == null || vox.Entity == null) return;
 
-        if (player.Load != null)
+        if (player.Load != null && vox.Entity.IsActive)
         {
             player.Throw(vox);
             return;
         }
-
-        if (vox.Entity is IMovable)
+        else if(player.Load == null && vox.Entity.IsActive)
         {
             player.FollowPath(Pathfinder.FindPath(player.Voxel, GetNearestWalkableVoxel(vox, player.Voxel)).ToArray());
             player.Lift(vox.Entity as IMovable);

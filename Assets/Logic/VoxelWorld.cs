@@ -22,10 +22,7 @@ public class VoxelWorld : MonoBehaviour
     public static Character MainCharacter;
     public static CameraController MainCamera;
     public static Level ActiveLevel;
-    public static Voxel SpawnVoxel
-    {
-        get { return ActiveLevel == null ? null : ActiveLevel.SpawnVoxel; }
-    }
+    public static Voxel SpawnVoxel;
 
     public static Voxel GetVoxel(Vector3 worldPos)
     {
@@ -62,6 +59,12 @@ public class VoxelWorld : MonoBehaviour
         ActiveLevel = null;
     }
 
+    public void ResetActivePuzzle()
+    {
+        if (ActiveLevel == null) return;
+        
+        ActiveLevel.ActivePuzzle.Reset();
+    }
 }
 
 public class Level
@@ -71,9 +74,9 @@ public class Level
 
     public string Name;
     public Vector3 WorldPostition;
-    public Voxel SpawnVoxel;
     public bool IsLoaded;
     public Puzzle ActivePuzzle;
+    public Voxel SpawnVoxel;
 
     public readonly Puzzle[] Puzzles = new Puzzle[NumPuzzles];
     public readonly Voxel[,,] Voxels = new Voxel[Size, Size, Size];
@@ -88,6 +91,7 @@ public class Level
         if (spawnPos == null) spawnPos = new Vector3(24, 1, 24);
         WorldPostition = worldPos;
         SpawnVoxel = GetVoxel(spawnPos.Value);
+        VoxelWorld.SpawnVoxel = SpawnVoxel;
     }
     public void SaveAll()
     {
@@ -116,6 +120,8 @@ public class Level
 
         WorldPostition = data.Position;
         SpawnVoxel = GetVoxel(WorldToLevel(data.SpawnPosition));
+        VoxelWorld.SpawnVoxel = SpawnVoxel;
+        VoxelWorld.SpawnVoxel.Fill(VoxelWorld.MainCharacter);
 
         ActivePuzzle = GetPuzzle(0);
         if (VoxelWorld.MainCharacter.IsBuilder)
@@ -203,15 +209,31 @@ public class Puzzle
     public Vector3 PuzzleOffset = new Vector3(0,0,0);
     public List<Voxel> Voxels = new List<Voxel>();
 
+
+    private IMovable _lastLoad = new Droplet();
+    public List<Entity> ActiveEntities = new List<Entity>();
+
     public Puzzle(Level level, int puzzleNum)
     {
         Level = level;
         Number = puzzleNum;
     }
+
+    public void Reset()
+    {
+        if (VoxelWorld.MainCharacter.Load != null)
+        {
+            Object.Destroy((VoxelWorld.MainCharacter.Load as Entity).gameObject);
+            VoxelWorld.MainCharacter.Load = null;
+        }
+
+        VoxelWorld.MainCharacter.Reset();
+        Destroy();
+        Load();
+        UpdateActiveBlocks(null, true);
+    }
     public void Load()
     {
-        Destroy();
-
         var data = IOManager.LoadPuzzle(Level.Name, Number);
         Name = data.PuzzleName;
         PuzzleOffset = data.PuzzleOffset;
@@ -221,6 +243,8 @@ public class Puzzle
             var vox = Level.GetVoxel(voxData.LvlPos + PuzzleOffset);
             vox.Load(voxData, Number);
         }
+
+        VoxelWorld.SpawnVoxel = VoxelWorld.MainCharacter.Voxel;
     }
     public void Save()
     {
@@ -239,7 +263,59 @@ public class Puzzle
         {
             voxel.Destroy();
         }
+        ActiveEntities = new List<Entity>();
         Name = "";
+    }
+
+    public void UpdateActiveBlocks(IMovable load, bool hardReset = false)
+    {
+        if (_lastLoad != load || hardReset)
+        {
+            _lastLoad = load;
+            foreach (var activeEntity in ActiveEntities)
+            {
+                activeEntity.IsActive = false;
+            }
+            ActiveEntities = new List<Entity>();
+            foreach (var Vox in Voxels)
+            {
+                if (Vox.Entity == null) continue;
+
+                if (load == null)
+                {
+                    if (Vox.Entity is IMovable) ActiveEntities.Add(Vox.Entity);
+                }
+                else if (load is Block)
+                {
+                    if (Vox.Entity is Bounce ||
+                        Vox.Entity is Undyed ||
+                        Vox.Entity is Static ||
+                        Vox.Entity is Movable) ActiveEntities.Add(Vox.Entity);
+                }
+                else
+                {
+                    if ((load as Entity).Type == "Goal")
+                    {
+                        if (Vox.Entity is Bounce ||
+                            Vox.Entity is Goal) ActiveEntities.Add(Vox.Entity);
+                    }
+                    else
+                    {
+                        if (Vox.Entity is Bounce ||
+                            Vox.Entity is Undyed ||
+                            Vox.Entity is Cloud) ActiveEntities.Add(Vox.Entity);
+                    }
+                }
+            }
+        }
+
+        foreach (var activeEntity in ActiveEntities)
+        {
+            if (load is Block)
+                activeEntity.IsActive = Vector3.Distance(activeEntity.transform.position, VoxelWorld.MainCharacter.transform.position) < 1;
+            else
+                activeEntity.IsActive = Vector3.Distance(activeEntity.transform.position, VoxelWorld.MainCharacter.transform.position) < 5;
+        }
     }
 }
 
@@ -283,6 +359,12 @@ public class Voxel
     public void Fill(Entity entity, int puzzleNum = -1)
     {
         Destroy();
+
+        if (entity is Character)
+        {
+            var floor = VoxelWorld.GetVoxel(entity.transform.position - entity.transform.up);
+            if (floor != null && floor.Entity != null) floor.Puzzle.UpdateActiveBlocks((entity as Character).Load);
+        }
 
         Entity = entity;
         Entity.Voxel = this;

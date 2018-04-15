@@ -40,7 +40,7 @@ public class Droplet : Entity, IMovable {
     }
     public void MoveTo(Voxel vox, bool forceMove = false)
     {
-        if (Voxel == null) return;
+        if (Voxel == null && !forceMove) return;
         StartCoroutine(_ArchTo(vox, forceMove));
     }
     public void FollowPath(Voxel[] path, bool forceMove = true)
@@ -55,21 +55,21 @@ public class Droplet : Entity, IMovable {
         if (Voxel != null) Voxel.Release();
 
         var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
-        while (floorVox != null && !(VoxelWorld.GetVoxel(transform.position).Entity is Block) && !(floorVox.Entity is Character))
+        while (floorVox != null && floorVox.Entity == null)
         {
             transform.position = transform.position + (Vector3.down * Time.deltaTime * MovementSpeed);
-            yield return new WaitForFixedUpdate();
             floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+            yield return new WaitForFixedUpdate();
         }
 
-        if (VoxelWorld.GetVoxel(transform.position).Entity is Block)
-        {
-            (VoxelWorld.GetVoxel(transform.position).Entity as Block).Collide(this);
-        }
-        else if(floorVox == null)
+        if(floorVox == null)
         {
             Destroy(gameObject);
             yield break;
+        }
+        else if (floorVox.Entity is Block)
+        {
+            (floorVox.Entity as Block).Collide(this);
         }
         else if (floorVox.Entity is Character && (floorVox.Entity as Character).Load == null)
         {

@@ -81,6 +81,7 @@
     <Compile Include="Assets\Logic\Entities\Blocks\Block.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Bounce.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Cloud.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Dispenser.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Goal.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Movable.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Static.cs" />
@@ -99,6 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Art\Materials\Glow.shader" />
+    <None Include="Assets\Art\Materials\GlowUnlit.shader" />
     <None Include="Assets\Art\Shadows\ProjectorMultiply.shader" />
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Gradient Skybox.shader" />
     <None Include="Assets\Art\Skyboxes\Skybox Shaders\Horizon With Sun Skybox.shader" />

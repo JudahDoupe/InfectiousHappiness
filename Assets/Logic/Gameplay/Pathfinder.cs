@@ -7,7 +7,7 @@ using UnityEngine;
 public class Pathfinder : MonoBehaviour
 {
     public static Pathfinder Instance;
-    public int MaxDistance;
+    public int MaxDistance = 10;
 
     void Awake()
     {
@@ -72,7 +72,7 @@ public class Pathfinder : MonoBehaviour
         };
         foreach (var voxel in voxels)
         {
-            if(voxel == null || (voxel.Entity != null && voxel.Entity is Block))continue;
+            if(voxel == null || voxel.Entity != null)continue;
             var floor = VoxelWorld.GetVoxel(voxel.WorldPosition + Vector3.down);
             if (floor == null ||
                 floor.Entity == null ||

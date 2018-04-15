@@ -17,6 +17,11 @@ public class IOManager : MonoBehaviour
     {
         Instance = this;
 
+#if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
+#elif UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
+        HARDRESET = true;
+#endif
+
         if (HARDRESET)
         {
             DirectoryInfo dataDir = new DirectoryInfo(Application.persistentDataPath);
