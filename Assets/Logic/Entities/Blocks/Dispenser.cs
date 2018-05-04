@@ -44,20 +44,11 @@ public class Dispenser : Block
 
     private IEnumerator SetOutput()
     {
-        var candidates = new List<Voxel>
-        {
-            VoxelWorld.GetVoxel(transform.position + Vector3.forward),
-            VoxelWorld.GetVoxel(transform.position + Vector3.back),
-            VoxelWorld.GetVoxel(transform.position + Vector3.left),
-            VoxelWorld.GetVoxel(transform.position + Vector3.right),
-        }.Where(x => x != null).ToList();
+        var candidate = VoxelWorld.GetVoxel(transform.position + Vector3.down * 2);
         while (_output == null)
         {
-            foreach (var candidate in candidates)
-            {
-                if (candidate.Entity != null && candidate.Entity is Droplet)
-                    _output = candidate;
-            }
+            if (candidate.Entity != null && candidate.Entity is Droplet)
+                _output = candidate;
             yield return new WaitForFixedUpdate();
         }
     }

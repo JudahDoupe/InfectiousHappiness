@@ -9,6 +9,6 @@ public interface IMovable
     void Reset();
     void Fall();
 
-    void MoveTo(Voxel vox, bool forceMove = false);
-    void FollowPath(Voxel[] path, bool forceMove = true);
+    void MoveTo(Voxel vox, bool moveThroughBlocks = false, bool enterVoxel = true);
+    void FollowPath(Voxel[] path, bool moveThroughBlocks = true);
 }

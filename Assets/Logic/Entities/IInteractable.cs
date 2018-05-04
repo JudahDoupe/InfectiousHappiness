@@ -4,6 +4,5 @@ using UnityEngine;
 
 public interface IInteractable
 {
-    void InteractPrimary(Entity actor);
-    void InteractSecondary(Entity actor);
+    void Interact(Entity actor);
 }

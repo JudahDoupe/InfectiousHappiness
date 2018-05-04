@@ -59,6 +59,9 @@ public class EntityConstructor : MonoBehaviour
             case "Dispenser":
                 block = obj.AddComponent<Dispenser>();
                 break;
+            case "Switch":
+                block = obj.AddComponent<Switch>();
+                break;
             default:
                 block = obj.AddComponent<Block>();
                 break;

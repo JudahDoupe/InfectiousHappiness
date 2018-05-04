@@ -33,8 +33,8 @@ public class Character : Entity, IMovable
 
     void Update()
     {
-        PlayerModel.SetActive(!IsBuilder);
-        CursorModel.SetActive(IsBuilder);
+        PlayerModel.SetActive(!IsBuilder && VoxelWorld.ActiveLevel != null);
+        CursorModel.SetActive(IsBuilder && VoxelWorld.ActiveLevel != null);
         BuilderControls();
     }
 
@@ -62,35 +62,35 @@ public class Character : Entity, IMovable
     }
     public void Fall()
     {
-        if (Voxel == null) return;
+        if(_isFalling) return;
         _isFalling = true;
         StartCoroutine(_Fall());
     }
-    public void MoveTo(Voxel vox, bool forceMove = false)
+    public void MoveTo(Voxel vox, bool moveThroughBlocks = false, bool enterVoxel = true)
     {
-        if (Voxel == null) return;
+        if (_isMoving) return;
         _isMoving = true;
         if (Mathf.Abs(Voxel.WorldPosition.y - vox.WorldPosition.y) < 0.1f)
-            StartCoroutine(_MoveTo(vox, forceMove));
+            StartCoroutine(_MoveTo(vox, moveThroughBlocks, enterVoxel));
         else
-            StartCoroutine(_ArchTo(vox, forceMove));
+            StartCoroutine(_ArchTo(vox, moveThroughBlocks, enterVoxel));
     }
-    public void FollowPath(Voxel[] path, bool forceMove = true)
+    public void FollowPath(Voxel[] path, bool moveThroughBlocks = true)
     {
-        if (Voxel == null) return;
+        if (_isOnPath) return;
         _isOnPath = true;
-        StartCoroutine(_FollowPath(path, forceMove));
+        StartCoroutine(_FollowPath(path, moveThroughBlocks));
     }
 
     private IEnumerator _Fall()
     {
         if(Voxel != null)Voxel.Release();
 
-        var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+        var floorVox = VoxelWorld.GetVoxel(transform.position - transform.up * 0.6f);
         while (floorVox != null && !(floorVox.Entity is Block))
         {
-            transform.position =  transform.position + (Vector3.down * Time.deltaTime * MovementSpeed);
-            floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+            transform.position =  transform.position - transform.up * Time.deltaTime * MovementSpeed;
+            floorVox = VoxelWorld.GetVoxel(transform.position - transform.up * 0.6f);
             yield return new WaitForFixedUpdate();
             if(!_isFalling)yield break;
         }
@@ -103,16 +103,16 @@ public class Character : Entity, IMovable
             VoxelWorld.GetVoxel(transform.position).Fill(this);
         }
     }
-    private IEnumerator _MoveTo(Voxel vox, bool forceMove)
+    private IEnumerator _MoveTo(Voxel vox, bool moveThroughBlocks, bool enterVoxel)
     {
-        Voxel.Release();
+        if (Voxel != null) Voxel.Release();
 
         var start = transform.position;
         var end = vox.WorldPosition;
         var t = 0f;
         var forward  = (end - start).normalized;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-        while (t < 1 && forwardVox != null && (!(forwardVox.Entity is Block) || forceMove))
+        while (t < 1 && forwardVox != null && (!(forwardVox.Entity is Block) || moveThroughBlocks))
         {
             transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed);
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
@@ -121,12 +121,12 @@ public class Character : Entity, IMovable
         }
 
         _isMoving = false;
-        VoxelWorld.GetVoxel(transform.position).Fill(this);
+        if(enterVoxel) VoxelWorld.GetVoxel(transform.position).Fill(this);
         Fall();
     }
-    private IEnumerator _ArchTo(Voxel vox, bool forceMove)
+    private IEnumerator _ArchTo(Voxel vox, bool moveThroughBlocks, bool enterVoxel)
     {
-        Voxel.Release();
+        if(Voxel != null) Voxel.Release();
 
         var start = transform.position;
         var end = vox.WorldPosition;
@@ -134,7 +134,7 @@ public class Character : Entity, IMovable
         var t = 0f;
         var forward = (end - start).normalized;
         var forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
-        while (t < 1 && (!(forwardVox.Entity is Block) || forceMove))
+        while (t < 1 && (!(forwardVox.Entity is Block) || moveThroughBlocks))
         {
             transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / 2) + new Vector3(0, (0.25f - Mathf.Pow(t-0.5f,2))* height, 0);
             forwardVox = VoxelWorld.GetVoxel(transform.position + forward * 0.6f);
@@ -143,24 +143,27 @@ public class Character : Entity, IMovable
         }
 
         _isMoving = false;
-        VoxelWorld.GetVoxel(transform.position).Fill(this);
+        if (enterVoxel) VoxelWorld.GetVoxel(transform.position).Fill(this);
         Fall();
     }
-    private IEnumerator _FollowPath(Voxel[] path, bool forceMove)
+    private IEnumerator _FollowPath(Voxel[] path, bool moveThroughBlocks)
     {
         foreach (var voxel in path)
         {
             while (Voxel == null)
-                yield return new WaitForEndOfFrame();
+                yield return new WaitForFixedUpdate();
             if (!_isOnPath) yield break;
-            MoveTo(voxel, forceMove);
+            MoveTo(voxel, moveThroughBlocks, voxel == path.Last());
         }
         _isOnPath = false;
     }
 
     public void Lift(IMovable entity)
     {
-        StartCoroutine(_Lift(entity));
+        var e = (entity as Entity);
+        if (Mathf.Abs(e.transform.position.y - transform.position.y) < 0.1f && 
+            Vector3.Distance(transform.position, e.transform.position) < 1.1f)
+            entity.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up));
     }
     public void Throw(Voxel target)
     {
@@ -168,16 +171,6 @@ public class Character : Entity, IMovable
         Load = null;
         VoxelWorld.GetVoxel(transform.position + transform.up).Fill(load as Entity);
         load.MoveTo(target);
-    }
-
-    private IEnumerator _Lift(IMovable entity)
-    {
-        while (IsMoving())
-            yield return new WaitForFixedUpdate();
-        var e = (entity as Entity);
-        if (Mathf.Abs(e.transform.position.y - transform.position.y) < 0.1f && 
-            Vector3.Distance(transform.position, e.transform.position) < 1.1f)
-            entity.MoveTo(VoxelWorld.GetVoxel(transform.position + transform.up));
     }
 
     private void BuilderControls()

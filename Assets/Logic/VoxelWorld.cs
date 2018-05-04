@@ -190,8 +190,14 @@ public class Puzzle
     public Level Level;
     public string Name;
     public int Number;
-
-    private bool _isComplete = false;
+    public Vector3 Center
+    {
+        get
+        {
+            var sum = Voxels.Aggregate(Vector3.zero, (current, voxel) => current + voxel.WorldPosition);
+            return sum / Voxels.Count;
+        }
+    }
     public bool IsComplete
     {
         get { return _isComplete; }
@@ -205,13 +211,12 @@ public class Puzzle
             }
         }
     }
-
     public Vector3 PuzzleOffset = new Vector3(0,0,0);
     public List<Voxel> Voxels = new List<Voxel>();
 
-
+    private bool _isComplete = false;
     private IMovable _lastLoad = new Droplet();
-    public List<Entity> ActiveEntities = new List<Entity>();
+    private List<Entity> _activeEntities = new List<Entity>();
 
     public Puzzle(Level level, int puzzleNum)
     {
@@ -245,6 +250,11 @@ public class Puzzle
         }
 
         VoxelWorld.SpawnVoxel = VoxelWorld.MainCharacter.Voxel;
+
+        if(Number == 0)
+            VoxelWorld.MainCamera.LookAt(Center);    
+        else
+            VoxelWorld.MainCamera.CinematicLookAt(Center);
     }
     public void Save()
     {
@@ -263,7 +273,7 @@ public class Puzzle
         {
             voxel.Destroy();
         }
-        ActiveEntities = new List<Entity>();
+        _activeEntities = new List<Entity>();
         Name = "";
     }
 
@@ -272,51 +282,56 @@ public class Puzzle
         if (_lastLoad != load || hardReset)
         {
             _lastLoad = load;
-            foreach (var activeEntity in ActiveEntities)
+            foreach (var activeEntity in _activeEntities)
             {
                 activeEntity.IsActive = false;
             }
-            ActiveEntities = new List<Entity>();
+            _activeEntities = new List<Entity>();
             foreach (var Vox in Voxels)
             {
                 if (Vox.Entity == null) continue;
 
                 if (load == null)
                 {
-                    if (Vox.Entity is IMovable) ActiveEntities.Add(Vox.Entity);
+                    if (Vox.Entity is IInteractable) _activeEntities.Add(Vox.Entity);
                 }
                 else if (load is Block)
                 {
                     if (Vox.Entity is Bounce ||
                         Vox.Entity is Undyed ||
                         Vox.Entity is Static ||
-                        Vox.Entity is Movable) ActiveEntities.Add(Vox.Entity);
+                        Vox.Entity is Switch ||
+                        Vox.Entity is Movable) _activeEntities.Add(Vox.Entity);
                 }
                 else
                 {
                     if ((load as Entity).Type == "Goal")
                     {
                         if (Vox.Entity is Bounce ||
-                            Vox.Entity is Goal) ActiveEntities.Add(Vox.Entity);
+                            Vox.Entity is Switch ||
+                            Vox.Entity is Goal) _activeEntities.Add(Vox.Entity);
                     }
                     else
                     {
                         if (Vox.Entity is Bounce ||
                             Vox.Entity is Undyed ||
-                            Vox.Entity is Cloud) ActiveEntities.Add(Vox.Entity);
+                            Vox.Entity is Switch ||
+                            Vox.Entity is Cloud) _activeEntities.Add(Vox.Entity);
                     }
                 }
             }
         }
 
-        foreach (var activeEntity in ActiveEntities)
+        foreach (var activeEntity in _activeEntities)
         {
+            if (activeEntity == null)continue;
             if (load is Block)
                 activeEntity.IsActive = Vector3.Distance(activeEntity.transform.position, VoxelWorld.MainCharacter.transform.position) < 1;
             else
                 activeEntity.IsActive = Vector3.Distance(activeEntity.transform.position, VoxelWorld.MainCharacter.transform.position) < 5;
         }
     }
+
 }
 
 public class Voxel

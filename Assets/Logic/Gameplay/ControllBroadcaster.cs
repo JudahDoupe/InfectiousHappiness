@@ -10,12 +10,14 @@ public class ControllBroadcaster : MonoBehaviour
     public Text DebugOutput;
     public LayerMask LayerMask;
     public float TouchMovementTolerance = 50;
+    public static bool IsActive = true;
 
     private Vector2? _touchOrigin;
     private Vector2? _touchPos;
 
     public void Update()
     {
+        if(!IsActive)return;
         #if UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_EDITOR
         UpdateClick();
         #elif UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
@@ -65,10 +67,8 @@ public class ControllBroadcaster : MonoBehaviour
     {
         if (_touchPos.HasValue == false) return;
 
-        var delta = new Vector2(_touchOrigin.Value.y > Screen.height/2f ? -(screenPos.x - _touchPos.Value.x) : screenPos.x - _touchPos.Value.x, screenPos.y - _touchPos.Value.y);
-
-
-        VoxelWorld.MainCamera.Move(delta / Screen.dpi * 0.75f);
+        VoxelWorld.MainCamera.Height -= (screenPos.y - _touchPos.Value.y) * 0.0025f;
+        VoxelWorld.MainCamera.Rotate((_touchOrigin.Value.y > Screen.height / 3.5f ? -(screenPos.x - _touchPos.Value.x) : screenPos.x - _touchPos.Value.x)*0.3f);
 
         _touchPos = screenPos;
     }
@@ -82,22 +82,19 @@ public class ControllBroadcaster : MonoBehaviour
 
         if (player == null || vox == null || vox.Entity == null) return;
 
-        if (player.Load != null && vox.Entity.IsActive)
-        {
-            player.Throw(vox);
-            return;
-        }
-        else if(player.Load == null && vox.Entity.IsActive)
+        if (vox.Entity is IInteractable)
         {
             player.FollowPath(Pathfinder.FindPath(player.Voxel, GetNearestWalkableVoxel(vox, player.Voxel)).ToArray());
-            player.Lift(vox.Entity as IMovable);
-            return;
+            StartCoroutine(Interact(player, vox.Entity as IInteractable));
+        }
+        else if (player.Load != null && vox.Entity.IsActive)
+        {
+            player.Throw(vox);
         }
         else
         {
-            var topVox = VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.up);
+            var topVox = VoxelWorld.GetVoxel(vox.WorldPosition + VoxelWorld.MainCharacter.transform.up);
             player.FollowPath(Pathfinder.FindPath(player.Voxel, topVox).ToArray());
-            return;
         }
     }
 
@@ -126,7 +123,7 @@ public class ControllBroadcaster : MonoBehaviour
         foreach (var voxel in voxels)
         {
             if (voxel == null || (voxel.Entity != null && voxel.Entity is Block)) continue;
-            var floor = VoxelWorld.GetVoxel(voxel.WorldPosition + Vector3.down);
+            var floor = VoxelWorld.GetVoxel(voxel.WorldPosition - VoxelWorld.MainCharacter.transform.up);
             if (floor == null ||
                 floor.Entity == null ||
                 !(floor.Entity is Block)) continue;
@@ -137,5 +134,13 @@ public class ControllBroadcaster : MonoBehaviour
                 min = voxel;
         }
         return min;
+    }
+
+
+    private IEnumerator Interact(Character player, IInteractable entity)
+    {
+        while (player.IsMoving())
+            yield return new WaitForFixedUpdate();
+        entity.Interact(player);
     }
 }

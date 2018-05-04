@@ -42,18 +42,18 @@ public class Movable : Block, IMovable
         if (Voxel == null) return;
         StartCoroutine(_Fall());
     }
-    public void MoveTo(Voxel vox, bool forceMove = false)
+    public void MoveTo(Voxel vox, bool moveThroughBlocks = false, bool enterVoxel = true)
     {
         if (Voxel == null) return;
         if (Mathf.Abs(Voxel.WorldPosition.y - vox.WorldPosition.y) < 0.1f)
-            StartCoroutine(_MoveTo(vox, forceMove));
+            StartCoroutine(_MoveTo(vox, moveThroughBlocks));
         else
-            StartCoroutine(_ArchTo(vox, forceMove));
+            StartCoroutine(_ArchTo(vox, moveThroughBlocks));
     }
-    public void FollowPath(Voxel[] path, bool forceMove = true)
+    public void FollowPath(Voxel[] path, bool moveThroughBlocks = true)
     {
         if (Voxel == null) return;
-        StartCoroutine(_FollowPath(path, forceMove));
+        StartCoroutine(_FollowPath(path, moveThroughBlocks));
     }
 
     private IEnumerator _Fall()
@@ -61,12 +61,12 @@ public class Movable : Block, IMovable
         _isFalling = true;
         if (Voxel != null) Voxel.Release();
 
-        var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+        var floorVox = VoxelWorld.GetVoxel(transform.position - VoxelWorld.MainCharacter.transform.up * 0.6f);
         while (floorVox != null && !(floorVox.Entity is Block) && !(floorVox.Entity is Character))
         {
-            transform.position = transform.position + (Vector3.down * Time.deltaTime * MovementSpeed);
+            transform.position = transform.position - VoxelWorld.MainCharacter.transform.up * Time.deltaTime * MovementSpeed;
             yield return new WaitForFixedUpdate();
-            floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+            floorVox = VoxelWorld.GetVoxel(transform.position - VoxelWorld.MainCharacter.transform.up * 0.6f);
         }
 
         if (floorVox == null)
@@ -76,7 +76,7 @@ public class Movable : Block, IMovable
         else if (floorVox.Entity is Character && (floorVox.Entity as Character).Load == null)
         {
             (floorVox.Entity as Character).Load = this;
-            transform.position = floorVox.Entity.transform.position + Vector3.up;
+            transform.position = floorVox.Entity.transform.position + VoxelWorld.MainCharacter.transform.up;
             transform.parent = floorVox.Entity.transform;
         }
         else

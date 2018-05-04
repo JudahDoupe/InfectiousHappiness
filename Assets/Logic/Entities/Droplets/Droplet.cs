@@ -1,8 +1,9 @@
 ﻿
+using System;
 using System.Collections;
 using UnityEngine;
 
-public class Droplet : Entity, IMovable {
+public class Droplet : Entity, IMovable, IInteractable {
 
     public float MovementSpeed = 5;
     public Vector3? MovementVector
@@ -25,6 +26,12 @@ public class Droplet : Entity, IMovable {
     private bool _isFalling;
     private bool _isOnPath;
 
+    public void Interact(Entity actor)
+    {
+        if (actor is Character)
+            (actor as Character).Lift(this);
+    }
+
     public bool IsMoving()
     {
         return _isMoving || _isFalling || _isOnPath;
@@ -38,15 +45,15 @@ public class Droplet : Entity, IMovable {
         if (Voxel == null) return;
         StartCoroutine(_Fall());
     }
-    public void MoveTo(Voxel vox, bool forceMove = false)
+    public void MoveTo(Voxel vox, bool moveThroughBlocks = false, bool enterVoxel = true)
     {
-        if (Voxel == null && !forceMove) return;
-        StartCoroutine(_ArchTo(vox, forceMove));
+        if (Voxel == null && !moveThroughBlocks) return;
+        StartCoroutine(_ArchTo(vox, moveThroughBlocks));
     }
-    public void FollowPath(Voxel[] path, bool forceMove = true)
+    public void FollowPath(Voxel[] path, bool moveThroughBlocks = true)
     {
         if (Voxel == null) return;
-        StartCoroutine(_FollowPath(path, forceMove));
+        StartCoroutine(_FollowPath(path, moveThroughBlocks));
     }
 
     private IEnumerator _Fall()
@@ -54,11 +61,11 @@ public class Droplet : Entity, IMovable {
         _isFalling = true;
         if (Voxel != null) Voxel.Release();
 
-        var floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+        var floorVox = VoxelWorld.GetVoxel(transform.position - VoxelWorld.MainCharacter.transform.up * 0.6f);
         while (floorVox != null && floorVox.Entity == null)
         {
-            transform.position = transform.position + (Vector3.down * Time.deltaTime * MovementSpeed);
-            floorVox = VoxelWorld.GetVoxel(transform.position + Vector3.down * 0.6f);
+            transform.position = transform.position - VoxelWorld.MainCharacter.transform.up * Time.deltaTime * MovementSpeed;
+            floorVox = VoxelWorld.GetVoxel(transform.position - VoxelWorld.MainCharacter.transform.up * 0.6f);
             yield return new WaitForFixedUpdate();
         }
 
@@ -74,7 +81,7 @@ public class Droplet : Entity, IMovable {
         else if (floorVox.Entity is Character && (floorVox.Entity as Character).Load == null)
         {
             (floorVox.Entity as Character).Load = this;
-            transform.position = floorVox.Entity.transform.position + Vector3.up;
+            transform.position = floorVox.Entity.transform.position + VoxelWorld.MainCharacter.transform.up;
             transform.parent = floorVox.Entity.transform;
             _lastStationaryPosition = null;
         }
@@ -100,7 +107,9 @@ public class Droplet : Entity, IMovable {
         var t = 0f;
         while (t < 1 && (!(VoxelWorld.GetVoxel(transform.position).Entity is Block) || forceMove))
         {
-            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / 2) + new Vector3(0, (0.25f - Mathf.Pow(t - 0.5f, 2)) * height, 0);
+            var verticalOffset = new Vector3(0, (0.25f - Mathf.Pow(t - 0.5f, 2)) * height, 0);
+            verticalOffset.Scale(VoxelWorld.MainCharacter.transform.up);
+            transform.position = Vector3.Lerp(start, end, t += Time.deltaTime * MovementSpeed / 2) + verticalOffset;
             yield return new WaitForFixedUpdate();
         }
 
@@ -121,4 +130,5 @@ public class Droplet : Entity, IMovable {
         }
         _isOnPath = false;
     }
+
 }

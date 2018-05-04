@@ -85,6 +85,7 @@
     <Compile Include="Assets\Logic\Entities\Blocks\Goal.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Movable.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Static.cs" />
+    <Compile Include="Assets\Logic\Entities\Blocks\Switch.cs" />
     <Compile Include="Assets\Logic\Entities\Blocks\Undyed.cs" />
     <Compile Include="Assets\Logic\Entities\Character.cs" />
     <Compile Include="Assets\Logic\Entities\Droplets\Droplet.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="Assets\Logic\EntityConstructor.cs" />
     <Compile Include="Assets\Logic\Gameplay\CameraController.cs" />
     <Compile Include="Assets\Logic\Gameplay\ControllBroadcaster.cs" />
+    <Compile Include="Assets\Logic\Gameplay\GlowPulse.cs" />
     <Compile Include="Assets\Logic\Gameplay\Pathfinder.cs" />
     <Compile Include="Assets\Logic\IOManager.cs" />
     <Compile Include="Assets\Logic\VoxelWorld.cs" />

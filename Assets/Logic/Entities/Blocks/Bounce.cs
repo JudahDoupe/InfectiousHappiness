@@ -20,7 +20,7 @@ public class Bounce : Block {
             return;
         }
 
-        VoxelWorld.GetVoxel(transform.position + Vector3.up).Fill(droplet);
+        VoxelWorld.GetVoxel(transform.position + VoxelWorld.MainCharacter.transform.up).Fill(droplet);
         var normal = (droplet.transform.position - transform.position).normalized;
         var r = direction.Value - 2 * Vector3.Dot(direction.Value, normal) * normal;
         var newPos = transform.position + r;

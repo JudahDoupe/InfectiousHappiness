@@ -13,6 +13,10 @@ public class Block : Entity
 
     public virtual void Collide(Droplet droplet)
     {
-        Destroy(droplet.gameObject);
+        var topVox = VoxelWorld.GetVoxel((droplet.transform.position - transform.position).normalized + transform.position);
+        if (topVox.Entity == null)
+            topVox.Fill(droplet);
+        else
+            Destroy(droplet.gameObject);
     }
 }

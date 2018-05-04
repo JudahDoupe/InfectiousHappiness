@@ -17,6 +17,7 @@ public class Undyed : Block
         if (droplet.Type != "")
             Voxel.Fill(EntityConstructor.NewBlock(droplet.Type), Voxel.Puzzle.Number);
         Destroy(droplet.gameObject);
+        VoxelWorld.ActiveLevel.ActivePuzzle.UpdateActiveBlocks(VoxelWorld.MainCharacter.Load,true);
     }
 
 }

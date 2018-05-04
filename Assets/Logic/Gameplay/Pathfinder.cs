@@ -60,20 +60,20 @@ public class Pathfinder : MonoBehaviour
             VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.back),
             VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.left),
             VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.right),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.forward + Vector3.down),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.back + Vector3.down),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.left + Vector3.down),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.right + Vector3.down),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.forward + Vector3.up),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.back + Vector3.up),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.left + Vector3.up),
-            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.right + Vector3.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.forward - VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.back - VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.left - VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.right - VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.forward +  VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.back +  VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.left +  VoxelWorld.MainCharacter.transform.up),
+            VoxelWorld.GetVoxel(vox.WorldPosition + Vector3.right +  VoxelWorld.MainCharacter.transform.up),
 
         };
         foreach (var voxel in voxels)
         {
             if(voxel == null || voxel.Entity != null)continue;
-            var floor = VoxelWorld.GetVoxel(voxel.WorldPosition + Vector3.down);
+            var floor = VoxelWorld.GetVoxel(voxel.WorldPosition - VoxelWorld.MainCharacter.transform.up);
             if (floor == null ||
                 floor.Entity == null ||
                 !(floor.Entity is Block)) continue;
